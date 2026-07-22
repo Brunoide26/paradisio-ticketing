@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Paradisio — Apertura 28 Ago</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://checkout.culqi.com/js/v4"></script>
+<style>
+  :root {
+    --pink: #ff28aa; --pink-dim: #ff28aa55; --white: #ffffff;
+    --bg: #000000; --card: #0a0a0a; --line: #232323;
+  }
+  * { box-sizing: border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--white); margin:0; }
+  .wordmark { display:block; max-width:420px; width:80%; margin:0 auto; filter: drop-shadow(0 0 18px rgba(255,255,255,0.35)); }
+  .hero { text-align:center; padding:64px 20px 40px; border-bottom:1px solid var(--line); }
+  .sub { margin-top:22px; font-size:15px; color:#bbb; max-width:520px; margin-left:auto; margin-right:auto; }
+  .meta { display:flex; justify-content:center; gap:28px; margin-top:28px; flex-wrap:wrap; }
+  .meta-item { text-align:left; }
+  .meta-label { font-size:10px; letter-spacing:1.5px; color:#777; text-transform:uppercase; }
+  .meta-val { font-size:15px; font-weight:600; margin-top:2px; }
+  .countdown { display:flex; justify-content:center; gap:14px; margin-top:36px; }
+  .cd-box { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 16px; min-width:64px; text-align:center; }
+  .cd-num { font-family:'Orbitron',sans-serif; font-size:26px; font-weight:700; }
+  .cd-label { font-size:9px; color:#777; letter-spacing:1px; text-transform:uppercase; margin-top:4px; }
+  .section { max-width:920px; margin:0 auto; padding:56px 20px; }
+  .section-title { font-family:'Orbitron',sans-serif; font-size:20px; text-align:center; margin-bottom:8px; }
+  .section-desc { text-align:center; color:#888; font-size:14px; margin-bottom:36px; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:640px) { .cards { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px 24px; display:flex; flex-direction:column; }
+  .card.accent { border-color:var(--pink-dim); box-shadow:0 0 30px rgba(255,40,170,0.08); }
+  .card-tag { font-size:10px; letter-spacing:1.5px; color:var(--pink); text-transform:uppercase; margin-bottom:10px; }
+  .card-title { font-family:'Orbitron',sans-serif; font-size:20px; margin-bottom:8px; }
+  .card-price { font-size:30px; font-weight:700; margin:10px 0; }
+  .card-price span { font-size:13px; color:#888; font-weight:400; }
+  .card-note { font-size:13px; color:#999; line-height:1.6; margin-bottom:20px; flex-grow:1; }
+  .card-avail { font-size:12px; color:#666; margin-bottom:14px; }
+  .btn { font-family:'Inter',sans-serif; font-weight:600; font-size:14px; padding:14px 20px; border-radius:8px; border:none; cursor:pointer; text-align:center; width:100%; }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-primary { background:var(--white); color:#000; }
+  .btn-accent { background:var(--pink); color:#fff; }
+  .btn-ghost { background:transparent; border:1px solid var(--line); color:#ccc; }
+  .form { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:26px; max-width:440px; margin:24px auto 0; }
+  .form h3 { font-family:'Orbitron',sans-serif; font-size:16px; margin:0 0 18px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12px; color:#999; margin-bottom:6px; }
+  .field input { width:100%; background:#000; border:1px solid var(--line); color:#fff; padding:11px 12px; border-radius:7px; font-size:14px; }
+  .field input:focus { outline:none; border-color:var(--pink); }
+  .form-actions { display:flex; gap:10px; margin-top:20px; }
+  .error { color:#ff6b6b; font-size:12px; margin-top:-6px; margin-bottom:12px; }
+  .ticket { background:var(--card); border:1px solid var(--pink-dim); border-radius:16px; padding:30px; max-width:420px; margin:24px auto 0; text-align:center; }
+  .ticket-type { font-size:11px; letter-spacing:2px; color:var(--pink); text-transform:uppercase; margin-bottom:6px; }
+  .ticket-name { font-family:'Orbitron',sans-serif; font-size:18px; margin-bottom:18px; }
+  .qr-wrap img { background:#fff; padding:14px; border-radius:10px; width:180px; height:180px; }
+  .ticket-id { font-family:monospace; font-size:12px; color:#888; letter-spacing:1px; margin:16px 0; }
+  .ticket-note { font-size:12px; color:#999; line-height:1.6; border-top:1px solid var(--line); padding-top:16px; margin-top:6px; }
+  .ticket-email-note { font-size:12px; color:#7fe0a0; margin-top:10px; }
+  .footer { text-align:center; padding:40px 20px 60px; color:#555; font-size:12px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img class="wordmark" src="logo.jpg" alt="Paradisio" />
+  <div class="sub">Apertura oficial · house, funk, disco y techno clásico. Espacio NHN, Barranco.</div>
+  <div class="meta">
+    <div class="meta-item"><div class="meta-label">Fecha</div><div class="meta-val">Viernes 28 de agosto</div></div>
+    <div class="meta-item"><div class="meta-label">Lugar</div><div class="meta-val">Espacio NHN — Barranco</div></div>
+    <div class="meta-item"><div class="meta-label">Puertas</div><div class="meta-val">10:00 pm</div></div>
+  </div>
+  <div class="countdown" id="countdown"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Entradas</div>
+  <div class="section-desc">Lista gratis hasta las 11:00 pm · después de esa hora, entrada única S/45</div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag">Lista gratis</div>
+      <div class="card-title">Antes de las 11pm</div>
+      <div class="card-price">Gratis</div>
+      <div class="card-note">Anótate y recibe tu QR al instante, aquí y en tu correo. Válido solo para ingreso antes de las 11:00 pm.</div>
+      <div class="card-avail" id="free-avail">Cargando…</div>
+      <button class="btn btn-primary" id="btn-free">Anotarme gratis</button>
+    </div>
+    <div class="card accent">
+      <div class="card-tag">Entrada anticipada</div>
+      <div class="card-title">Ingreso a cualquier hora</div>
+      <div class="card-price">S/ 45 <span>trago incluido</span></div>
+      <div class="card-note">Paga con tarjeta y recibe tu QR al instante, aquí y en tu correo. Válida toda la noche.</div>
+      <div class="card-avail" id="paid-avail">Cargando…</div>
+      <button class="btn btn-accent" id="btn-paid">Comprar entrada</button>
+    </div>
+  </div>
+
+  <div id="form-area"></div>
+</div>
+
+<div class="footer">Paradisio © 2026</div>
+
+<script>
+  const EVENT_DATE = new Date('2026-08-28T22:00:00-05:00');
+  // Set this to your Culqi PUBLIC key (safe to expose in the browser).
+  const CULQI_PUBLIC_KEY = 'PON_AQUI_TU_LLAVE_PUBLICA_DE_CULQI';
+
+  function fmt2(n){ return String(n).padStart(2,'0'); }
+  function renderCountdown(){
+    const now = new Date();
+    let diff = Math.max(0, EVENT_DATE - now);
+    const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000);
+    const m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+    document.getElementById('countdown').innerHTML = [[d,'días'],[h,'hrs'],[m,'min'],[s,'seg']]
+      .map(p => '<div class="cd-box"><div class="cd-num">'+fmt2(p[0])+'</div><div class="cd-label">'+p[1]+'</div></div>').join('');
+  }
+  renderCountdown();
+  setInterval(renderCountdown, 1000);
+
+  async function refreshAvailability(){
+    try {
+      const r = await fetch('/api/availability');
+      const d = await r.json();
+      document.getElementById('free-avail').textContent = d.freeLeft>0 ? ('Quedan '+d.freeLeft+' cupos') : 'Lista gratis agotada';
+      document.getElementById('paid-avail').textContent = d.paidLeft>0 ? ('Quedan '+d.paidLeft+' entradas') : 'Entradas agotadas';
+      document.getElementById('btn-free').disabled = d.freeLeft<=0;
+      document.getElementById('btn-paid').disabled = d.paidLeft<=0;
+    } catch(e){
+      document.getElementById('free-avail').textContent = '—';
+      document.getElementById('paid-avail').textContent = '—';
+    }
+  }
+  refreshAvailability();
+
+  function renderForm(type){
+    const area = document.getElementById('form-area');
+    const isPaid = type === 'paid';
+    area.innerHTML = `
+      <div class="form">
+        <h3>${isPaid ? 'Entrada anticipada — S/45' : 'Anotarme a la lista gratis'}</h3>
+        <div class="field"><label>Nombre completo</label><input type="text" id="in-name" /></div>
+        <div class="field"><label>WhatsApp</label><input type="text" id="in-phone" placeholder="9XXXXXXXX" /></div>
+        <div class="field"><label>Email</label><input type="email" id="in-email" /></div>
+        <div id="form-error"></div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" id="form-cancel">Cancelar</button>
+          <button class="btn ${isPaid?'btn-accent':'btn-primary'}" id="form-submit">${isPaid ? 'Pagar S/45' : 'Confirmar'}</button>
+        </div>
+      </div>`;
+    document.getElementById('form-cancel').onclick = () => area.innerHTML = '';
+    document.getElementById('form-submit').onclick = () => handleSubmit(type);
+    area.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function validate(){
+    const name = document.getElementById('in-name').value.trim();
+    const phone = document.getElementById('in-phone').value.trim();
+    const email = document.getElementById('in-email').value.trim();
+    const errEl = document.getElementById('form-error');
+    errEl.innerHTML = '';
+    if(!name || !phone || !email){
+      errEl.innerHTML = '<div class="error">Completa nombre, WhatsApp y correo.</div>';
+      return null;
+    }
+    return { name, phone, email };
+  }
+
+  async function handleSubmit(type){
+    const data = validate();
+    if(!data) return;
+    if(type === 'free'){
+      await submitFree(data);
+    } else {
+      openCulqiCheckout(data);
+    }
+  }
+
+  async function submitFree(data){
+    const area = document.getElementById('form-area');
+    area.innerHTML = '<div class="form" style="text-align:center;color:#888;">Generando tu entrada…</div>';
+    try {
+      const r = await fetch('/api/register-free', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+      });
+      const d = await r.json();
+      if(!r.ok){ throw new Error(d.error || 'error'); }
+      renderTicket(d.ticket, d.qr, data.email);
+    } catch(e){
+      area.innerHTML = '<div class="form" style="text-align:center;color:#ff6b6b;">No se pudo generar tu entrada. Intenta de nuevo.</div>';
+    }
+    refreshAvailability();
+  }
+
+  function openCulqiCheckout(data){
+    Culqi.publicKey = CULQI_PUBLIC_KEY;
+    Culqi.settings({
+      title: 'Paradisio',
+      currency: 'PEN',
+      amount: 4500, // S/45.00 in cents
+      description: 'Entrada Apertura 28 Ago',
+    });
+    Culqi.options({
+      lang: 'es',
+      installments: false,
+      paymentMethods: { tarjeta: true, yape: true },
+    });
+    window.culqiPendingData = data;
+    Culqi.open();
+  }
+
+  // Culqi calls this global function after the user completes the checkout form.
+  window.culqi = async function(){
+    const area = document.getElementById('form-area');
+    if (Culqi.token) {
+      const data = window.culqiPendingData;
+      area.innerHTML = '<div class="form" style="text-align:center;color:#888;">Confirmando tu pago…</div>';
+      try {
+        const r = await fetch('/api/charge', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ token: Culqi.token.id, ...data })
+        });
+        const d = await r.json();
+        if(!r.ok){ throw new Error(d.detail || d.error || 'error'); }
+        renderTicket(d.ticket, d.qr, data.email);
+      } catch(e){
+        area.innerHTML = '<div class="form" style="text-align:center;color:#ff6b6b;">El pago no pudo procesarse: ' + e.message + '</div>';
+      }
+      refreshAvailability();
+    } else if (Culqi.order) {
+      // handled if using order-based flows (Yape, etc.) — extend as needed
+    } else {
+      console.log('Culqi error', Culqi.error);
+    }
+  };
+
+  function renderTicket(ticket, qr, email){
+    const area = document.getElementById('form-area');
+    area.innerHTML = `
+      <div class="ticket">
+        <div class="ticket-type">${ticket.type==='paid' ? 'Entrada pagada · S/45' : 'Lista gratis · antes de 11pm'}</div>
+        <div class="ticket-name">${ticket.name}</div>
+        <div class="qr-wrap"><img src="${qr}" alt="QR" /></div>
+        <div class="ticket-id">${ticket.id}</div>
+        <div class="ticket-email-note">✓ También te lo enviamos a ${email}</div>
+        <div class="ticket-note">Muestra este código en la puerta de Espacio NHN, Barranco. ${ticket.type==='free' ? 'Válido solo hasta las 11:00 pm, después aplica el cover de S/45.' : 'Válido toda la noche.'}</div>
+      </div>`;
+  }
+
+  document.getElementById('btn-free').onclick = () => renderForm('free');
+  document.getElementById('btn-paid').onclick = () => renderForm('paid');
+</script>
+</body>
+</html>

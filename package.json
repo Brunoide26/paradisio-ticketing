@@ -1,0 +1,13 @@
+{
+  "name": "paradisio-ticketing",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.31.0",
+    "resend": "^3.4.0",
+    "qrcode": "^1.5.3"
+  }
+}

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Paradisio — Checkout</title>
+<style>
+  @font-face { font-family:'Orbitron'; src:url('fonts/Orbitron.ttf') format('truetype'); font-weight:400 900; font-display:swap; }
+  @font-face { font-family:'Inter'; src:url('fonts/Inter.ttf') format('truetype'); font-weight:100 900; font-display:swap; }
+</style>
+<script src="https://checkout.culqi.com/js/v4"></script>
+<style>
+  :root {
+    --accent: #FD5400; --accent-dim: #FD540055; --white: #ffffff;
+    --bg: #000000; --card: #0a0a0a; --line: #232323;
+  }
+  * { box-sizing: border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--white); margin:0; padding:40px 16px 60px; }
+  .wrap { max-width:460px; margin:0 auto; }
+  .back { display:inline-block; color:#888; font-size:13px; text-decoration:none; margin-bottom:24px; }
+  .wordmark { display:block; max-width:220px; width:60%; margin:0 auto 32px; filter: drop-shadow(0 0 14px rgba(253,84,0,0.3)); }
+  .form { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px; }
+  .form h3 { font-family:'Orbitron',sans-serif; font-size:17px; margin:0 0 4px; }
+  .form .price-note { color:#999; font-size:13px; margin-bottom:22px; }
+  .field { margin-bottom:16px; }
+  .field label { display:block; font-size:12px; color:#999; margin-bottom:6px; }
+  .field input[type=text], .field input[type=email], .field input[type=date] { width:100%; background:#000; border:1px solid var(--line); color:#fff; padding:12px; border-radius:7px; font-size:14px; }
+  .field input:focus { outline:none; border-color:var(--accent); }
+  .checkbox-field { display:flex; align-items:flex-start; gap:10px; margin-bottom:18px; }
+  .checkbox-field input { margin-top:3px; width:16px; height:16px; accent-color:var(--accent); flex-shrink:0; }
+  .checkbox-field label { font-size:12.5px; color:#bbb; line-height:1.5; }
+  .btn { font-family:'Inter',sans-serif; font-weight:600; font-size:14px; padding:14px 20px; border-radius:8px; border:none; cursor:pointer; text-align:center; width:100%; }
+  .btn-accent { background:var(--accent); color:#fff; }
+  .btn-primary { background:var(--white); color:#000; }
+  .error { background:#2a0a0a; border:1px solid #5a1a1a; color:#ff8a8a; font-size:13px; padding:12px 14px; border-radius:8px; margin-bottom:16px; line-height:1.5; }
+  .ticket { background:var(--card); border:1px solid var(--accent-dim); border-radius:16px; padding:30px; text-align:center; }
+  .ticket-type { font-size:11px; letter-spacing:2px; color:var(--accent); text-transform:uppercase; margin-bottom:6px; }
+  .ticket-name { font-family:'Orbitron',sans-serif; font-size:18px; margin-bottom:4px; }
+  .ticket-dni { font-size:12px; color:#888; margin-bottom:18px; }
+  .qr-wrap img { background:#fff; padding:14px; border-radius:10px; width:190px; height:190px; }
+  .ticket-id { font-family:monospace; font-size:12px; color:#888; letter-spacing:1px; margin:16px 0; }
+  .ticket-email-note { font-size:12px; color:#7fe0a0; margin-top:10px; }
+  .ticket-note { font-size:12px; color:#999; line-height:1.6; border-top:1px solid var(--line); padding-top:16px; margin-top:16px; }
+  .loading { text-align:center; color:#888; padding:40px 0; }
+  .age-block { text-align:center; }
+  .age-block .icon { font-size:36px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="tickets.html">← Volver a entradas</a>
+  <img class="wordmark" src="logo.jpg" alt="Paradisio" />
+  <div id="app"></div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const TYPE = params.get('type') === 'paid' ? 'paid' : 'free';
+  const CULQI_PUBLIC_KEY = 'PON_AQUI_TU_LLAVE_PUBLICA_DE_CULQI';
+  const app = document.getElementById('app');
+
+  function calcAge(dobStr){
+    const dob = new Date(dobStr + 'T00:00:00');
+    if (isNaN(dob.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age;
+  }
+
+  function renderForm(){
+    const isPaid = TYPE === 'paid';
+    app.innerHTML = `
+      <div class="form">
+        <h3>${isPaid ? 'Entrada anticipada' : 'Lista gratis'}</h3>
+        <div class="price-note">${isPaid ? 'S/ 45 · pago con tarjeta · válida toda la noche' : 'Gratis · válido solo hasta las 11:00 pm'}</div>
+        <div id="form-error"></div>
+        <div class="field"><label>Nombre completo</label><input type="text" id="in-name" /></div>
+        <div class="field"><label>DNI</label><input type="text" id="in-dni" inputmode="numeric" maxlength="8" /></div>
+        <div class="field"><label>Fecha de nacimiento</label><input type="date" id="in-dob" /></div>
+        <div class="field"><label>Número de teléfono</label><input type="text" id="in-phone" placeholder="9XXXXXXXX" /></div>
+        <div class="field"><label>Email</label><input type="email" id="in-email" /></div>
+        <div class="checkbox-field">
+          <input type="checkbox" id="in-declare" />
+          <label for="in-declare">Declaro bajo mi responsabilidad que soy mayor de 18 años y que la información brindada es correcta.</label>
+        </div>
+        <button class="btn ${isPaid?'btn-accent':'btn-primary'}" id="btn-submit">${isPaid ? 'Continuar al pago' : 'Confirmar registro'}</button>
+      </div>`;
+    document.getElementById('btn-submit').onclick = handleSubmit;
+  }
+
+  function showError(msg){
+    document.getElementById('form-error').innerHTML = '<div class="error">' + msg + '</div>';
+  }
+
+  function validate(){
+    const name = document.getElementById('in-name').value.trim();
+    const dni = document.getElementById('in-dni').value.trim();
+    const dob = document.getElementById('in-dob').value;
+    const phone = document.getElementById('in-phone').value.trim();
+    const email = document.getElementById('in-email').value.trim();
+    const declared = document.getElementById('in-declare').checked;
+
+    if(!name || !dni || !dob || !phone || !email){
+      showError('Completa todos los campos.');
+      return null;
+    }
+    const age = calcAge(dob);
+    if(age === null){
+      showError('Fecha de nacimiento inválida.');
+      return null;
+    }
+    if(age < 18){
+      app.innerHTML = `
+        <div class="form age-block">
+          <div class="icon">🔞</div>
+          <h3>Evento solo para mayores de 18 años</h3>
+          <div class="price-note">Por normativa, no podemos generar entradas ni QRs para menores de edad.</div>
+        </div>`;
+      return null;
+    }
+    if(!declared){
+      showError('Debes marcar la declaración de mayoría de edad para continuar.');
+      return null;
+    }
+    return { name, dni, dob, phone, email };
+  }
+
+  async function handleSubmit(){
+    const data = validate();
+    if(!data) return;
+    if(TYPE === 'free'){
+      await submitFree(data);
+    } else {
+      openCulqiCheckout(data);
+    }
+  }
+
+  async function submitFree(data){
+    app.innerHTML = '<div class="loading">Generando tu entrada…</div>';
+    try {
+      const r = await fetch('/api/register-free', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+      });
+      const d = await r.json();
+      if(!r.ok){
+        if(d.error === 'underage'){
+          app.innerHTML = '<div class="form age-block"><div class="icon">🔞</div><h3>Evento solo para mayores de 18 años</h3></div>';
+        } else if(d.error === 'sold_out'){
+          app.innerHTML = '<div class="form age-block"><h3>La lista gratis se acaba de agotar</h3><div class="price-note">Prueba con entrada anticipada.</div></div>';
+        } else {
+          throw new Error(d.error || 'error');
+        }
+        return;
+      }
+      renderTicket(d.ticket, d.qr, data.email);
+    } catch(e){
+      app.innerHTML = '<div class="form"><div class="error">No se pudo generar tu entrada. Intenta de nuevo.</div></div>';
+    }
+  }
+
+  function openCulqiCheckout(data){
+    Culqi.publicKey = CULQI_PUBLIC_KEY;
+    Culqi.settings({
+      title: 'Paradisio',
+      currency: 'PEN',
+      amount: 4500, // S/45.00 in cents
+      description: 'Entrada Apertura 28 Ago',
+    });
+    Culqi.options({
+      lang: 'es',
+      installments: false,
+      paymentMethods: { tarjeta: true, yape: true },
+    });
+    window.culqiPendingData = data;
+    Culqi.open();
+  }
+
+  window.culqi = async function(){
+    if (Culqi.token) {
+      const data = window.culqiPendingData;
+      app.innerHTML = '<div class="loading">Confirmando tu pago…</div>';
+      try {
+        const r = await fetch('/api/charge', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ token: Culqi.token.id, ...data })
+        });
+        const d = await r.json();
+        if(!r.ok){
+          if(d.error === 'underage'){
+            app.innerHTML = '<div class="form age-block"><div class="icon">🔞</div><h3>Evento solo para mayores de 18 años</h3></div>';
+            return;
+          }
+          throw new Error(d.detail || d.error || 'error');
+        }
+        renderTicket(d.ticket, d.qr, data.email);
+      } catch(e){
+        app.innerHTML = '<div class="form"><div class="error">El pago no pudo procesarse: ' + e.message + '</div></div>';
+      }
+    } else {
+      console.log('Culqi error', Culqi.error);
+    }
+  };
+
+  function renderTicket(ticket, qr, email){
+    app.innerHTML = `
+      <div class="ticket">
+        <div class="ticket-type">${ticket.type==='paid' ? 'Entrada pagada · S/45' : 'Lista gratis · antes de 11pm'}</div>
+        <div class="ticket-name">${ticket.name}</div>
+        <div class="ticket-dni">DNI: ${ticket.dni || '—'}</div>
+        <div class="qr-wrap"><img src="${qr}" alt="QR" /></div>
+        <div class="ticket-id">${ticket.id}</div>
+        <div class="ticket-email-note">✓ También te lo enviamos a ${email}</div>
+        <div class="ticket-note">Muestra este código en la puerta de Espacio NHN, Barranco. ${ticket.type==='free' ? 'Válido solo hasta las 11:00 pm, después aplica el cover de S/45.' : 'Válido toda la noche.'}</div>
+      </div>`;
+  }
+
+  renderForm();
+</script>
+</body>
+</html>

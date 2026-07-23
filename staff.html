@@ -4,13 +4,16 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Paradisio — Staff check-in</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family:'Orbitron'; src:url('fonts/Orbitron.ttf') format('truetype'); font-weight:400 900; font-display:swap; }
+  @font-face { font-family:'Inter'; src:url('fonts/Inter.ttf') format('truetype'); font-weight:100 900; font-display:swap; }
+</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <style>
   #qr-reader { width:100%; border-radius:10px; overflow:hidden; margin-bottom:14px; }
   #qr-reader video { border-radius:10px; }
   .scan-toggle { width:100%; margin-bottom:14px; }
-  :root { --pink:#ff28aa; --white:#fff; --bg:#000; --card:#0a0a0a; --line:#232323; }
+  :root { --pink:#FD5400; --white:#fff; --bg:#000; --card:#0a0a0a; --line:#232323; }
   * { box-sizing:border-box; }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--white); margin:0; padding:40px 16px; }
   .wrap { max-width:420px; margin:0 auto; }
@@ -24,7 +27,7 @@
   .field label { display:block; font-size:12px; color:#999; margin-bottom:6px; }
   .field input { width:100%; background:#000; border:1px solid var(--line); color:#fff; padding:12px; border-radius:7px; font-size:15px; }
   .btn { width:100%; font-weight:600; font-size:14px; padding:14px; border-radius:8px; border:none; cursor:pointer; background:var(--white); color:#000; }
-  .result { margin-top:16px; padding:14px; border-radius:8px; font-size:14px; }
+  .result { margin-top:16px; padding:18px; border-radius:8px; font-size:17px; font-weight:700; text-align:center; line-height:1.5; }
   .ok { background:#0a2a12; color:#7fe0a0; border:1px solid #1a5a30; }
   .bad { background:#2a0a0a; color:#e07f7f; border:1px solid #5a1a1a; }
   .used { background:#2a2200; color:#e0c87f; border:1px solid #5a4a1a; }
@@ -50,6 +53,8 @@
   </div>
 </div>
 <script>
+  document.getElementById('passcode').value = localStorage.getItem('paradisio_staff_passcode') || '';
+
   async function refreshStats(){
     try {
       const r = await fetch('/api/availability');
@@ -65,6 +70,8 @@
     const passcode = document.getElementById('passcode').value;
     const resultEl = document.getElementById('result');
     if(!ticketId) return;
+    resultEl.innerHTML = '<div class="result">Verificando…</div>';
+    resultEl.scrollIntoView({behavior:'smooth', block:'center'});
     try {
       const r = await fetch('/api/checkin', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -72,24 +79,31 @@
       });
       const d = await r.json();
       if(r.status === 401){
-        resultEl.innerHTML = '<div class="result bad">Clave de staff incorrecta.</div>';
+        resultEl.innerHTML = '<div class="result bad">✗ Clave de staff incorrecta.</div>';
+        resultEl.scrollIntoView({behavior:'smooth', block:'center'});
         return;
       }
+      // passcode was accepted -> remember it on this device so staff don't retype it
+      localStorage.setItem('paradisio_staff_passcode', passcode);
+
       if(!d.ok){
         if(d.reason === 'not_found'){
-          resultEl.innerHTML = '<div class="result bad">Ticket no encontrado: '+ticketId+'</div>';
+          resultEl.innerHTML = '<div class="result bad">✗ INVÁLIDO — ticket no encontrado: '+ticketId+'</div>';
         } else if(d.reason === 'already_used'){
-          resultEl.innerHTML = '<div class="result used">Ya ingresó — '+d.ticket.name+' ('+new Date(d.ticket.checkedInAt).toLocaleTimeString()+')</div>';
+          resultEl.innerHTML = '<div class="result used">⚠ YA INGRESÓ — '+d.ticket.name+' (DNI '+(d.ticket.dni||'—')+') a las '+new Date(d.ticket.checkedInAt).toLocaleTimeString()+'</div>';
         } else if(d.reason === 'voided'){
-          resultEl.innerHTML = '<div class="result bad">⚠ Ticket ANULADO — '+d.ticket.name+' — no debe ingresar</div>';
+          resultEl.innerHTML = '<div class="result bad">✗ ANULADO — '+d.ticket.name+' (DNI '+(d.ticket.dni||'—')+') — NO debe ingresar</div>';
         }
+        resultEl.scrollIntoView({behavior:'smooth', block:'center'});
         return;
       }
-      resultEl.innerHTML = '<div class="result ok">✓ Ingreso validado — '+d.ticket.name+' ('+(d.ticket.type==='paid'?'Pagada':'Lista gratis')+')</div>';
+      resultEl.innerHTML = '<div class="result ok">✓ VÁLIDO — '+d.ticket.name+'<br/>DNI '+(d.ticket.dni||'—')+' · '+(d.ticket.type==='paid'?'Entrada pagada':'Lista gratis')+'</div>';
+      resultEl.scrollIntoView({behavior:'smooth', block:'center'});
       document.getElementById('ticket-id').value = '';
       refreshStats();
     } catch(e){
       resultEl.innerHTML = '<div class="result bad">Error de conexión, intenta de nuevo.</div>';
+      resultEl.scrollIntoView({behavior:'smooth', block:'center'});
     }
   }
 

@@ -4,9 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Paradisio — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --pink:#ff28aa; --white:#fff; --bg:#000; --card:#0a0a0a; --line:#232323; }
+  @font-face { font-family:'Orbitron'; src:url('fonts/Orbitron.ttf') format('truetype'); font-weight:400 900; font-display:swap; }
+  @font-face { font-family:'Inter'; src:url('fonts/Inter.ttf') format('truetype'); font-weight:100 900; font-display:swap; }
+</style>
+<style>
+  :root { --pink:#FD5400; --white:#fff; --bg:#000; --card:#0a0a0a; --line:#232323; }
   * { box-sizing:border-box; }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--white); margin:0; padding:24px 16px 60px; }
   .wrap { max-width:1100px; margin:0 auto; }
@@ -55,7 +58,7 @@
   <div id="dashboard-area" style="display:none;">
     <div class="stat-row" id="stats"></div>
     <div class="toolbar">
-      <input type="text" id="search" placeholder="Buscar por nombre, email, WhatsApp o código..." />
+      <input type="text" id="search" placeholder="Buscar por nombre, email, teléfono o código..." />
       <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
       <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
     </div>
@@ -63,7 +66,7 @@
       <table>
         <thead>
           <tr>
-            <th>Código</th><th>Nombre</th><th>WhatsApp</th><th>Email</th>
+            <th>Código</th><th>Nombre</th><th>DNI</th><th>F. Nac.</th><th>Teléfono</th><th>Email</th>
             <th>Tipo</th><th>Monto</th><th>Registrado</th><th>Estado</th><th>Acciones</th>
           </tr>
         </thead>
@@ -135,6 +138,8 @@
       return `<tr>
         <td style="font-family:monospace;">${t.id}</td>
         <td>${escapeHtml(t.name)}</td>
+        <td>${escapeHtml(t.dni||'')}</td>
+        <td>${escapeHtml(t.dob||'')}</td>
         <td>${escapeHtml(t.phone||'')}</td>
         <td>${escapeHtml(t.email||'')}</td>
         <td>${typeBadge}</td>
@@ -169,6 +174,7 @@
       (t.name||'').toLowerCase().includes(q) ||
       (t.email||'').toLowerCase().includes(q) ||
       (t.phone||'').toLowerCase().includes(q) ||
+      (t.dni||'').toLowerCase().includes(q) ||
       (t.id||'').toLowerCase().includes(q)
     );
     renderTable(filtered);
@@ -177,9 +183,9 @@
   document.getElementById('refresh-btn').onclick = loadData;
 
   document.getElementById('export-btn').onclick = function(){
-    const headers = ['Codigo','Nombre','WhatsApp','Email','Tipo','Monto','Registrado','CheckedIn','Anulado'];
+    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','Registrado','CheckedIn','Anulado'];
     const rows = allTickets.map(t => [
-      t.id, t.name, t.phone, t.email, t.type, t.amount,
+      t.id, t.name, t.dni, t.dob, t.phone, t.email, t.type, t.amount,
       t.createdAt, t.checkedIn ? 'si' : 'no', t.voided ? 'si' : 'no'
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');

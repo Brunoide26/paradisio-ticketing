@@ -69,18 +69,36 @@ Vuelve a desplegar (`git push` si usas GitHub, se redespliega solo).
 ## Estructura del proyecto
 
 ```
-/index.html            → landing pública
-/staff.html            → panel de check-in en puerta (con lector de QR por cámara)
-/admin.html            → dashboard: ver todos los registros, exportar CSV, anular tickets
-/logo.jpg               → tu logo
-/api/register-free.js   → registro lista gratis + envío de QR
-/api/charge.js           → cobro con Culqi + envío de QR
-/api/availability.js     → cupos disponibles
-/api/checkin.js           → validar entrada en puerta
-/api/admin-list.js         → lista completa de tickets (protegido con STAFF_PASSCODE)
-/api/admin-void.js          → anular/reactivar un ticket (protegido con STAFF_PASSCODE)
-/lib/tickets.js               → funciones compartidas (Redis, Resend, QR)
+/index.html             → HOME pública: solo logo + countdown, sin info del evento
+/tickets.html            → página privada (solo con link): info completa + entradas — NO indexada, no enlazada desde el home
+/checkout.html            → registro/pago por separado, con verificación de edad (+18 obligatorio)
+/staff.html               → panel de check-in en puerta (con lector de QR por cámara)
+/admin.html                → dashboard: ver todos los registros, exportar CSV, anular tickets
+/logo.jpg                   → tu logo
+/api/register-free.js        → registro lista gratis + verificación de edad + envío de QR
+/api/charge.js                 → cobro con Culqi + verificación de edad + envío de QR
+/api/availability.js            → cupos disponibles
+/api/checkin.js                  → validar entrada en puerta
+/api/admin-list.js                 → lista completa de tickets (protegido con STAFF_PASSCODE)
+/api/admin-void.js                   → anular/reactivar un ticket (protegido con STAFF_PASSCODE)
+/lib/tickets.js                        → funciones compartidas (Redis, Resend, QR, verificación de edad)
 ```
+
+## Flujo de navegación
+
+1. `paradisioclub.com` — lo que ve cualquier visitante: solo el logo y el countdown. No hay fecha, lugar ni entradas visibles.
+2. `paradisioclub.com/tickets` — página con toda la información y las entradas. **No está enlazada desde el home** — solo accesible para quien tenga el link directo (para tus pruebas por ahora).
+3. Al hacer click en "Anotarme gratis" o "Comprar entrada", se abre `checkout.html?type=free` o `checkout.html?type=paid` — una página aparte con el formulario.
+
+## Verificación de edad (+18)
+
+El checkout pide **fecha de nacimiento** + una casilla de declaración jurada. Si la persona tiene menos de 18 años:
+- En el navegador, se bloquea antes de enviar el formulario
+- **Además, el backend (`register-free.js` y `charge.js`) vuelve a calcular la edad y rechaza la creación del ticket** aunque alguien intente saltarse la validación del navegador — así que no depende solo del frontend, que se puede manipular.
+
+## Color de marca
+
+Naranja oficial: `#FD5400`
 
 ## Panel de admin (`/admin.html`)
 

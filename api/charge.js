@@ -1,4 +1,4 @@
-const { checkCapacity, createTicket, sendTicketEmail, qrDataUrl } = require('../lib/tickets');
+const { checkCapacity, createTicket, sendTicketEmail, qrDataUrl, calcAge } = require('../lib/tickets');
 
 const TICKET_PRICE_SOLES = 45;
 
@@ -6,9 +6,14 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   try {
-    const { token, name, phone, email } = req.body || {};
-    if (!token || !name || !phone || !email) {
+    const { token, name, phone, email, dni, dob } = req.body || {};
+    if (!token || !name || !phone || !email || !dni || !dob) {
       return res.status(400).json({ error: 'missing_fields' });
+    }
+
+    const age = calcAge(dob);
+    if (age === null || age < 18) {
+      return res.status(403).json({ error: 'underage' });
     }
 
     const ok = await checkCapacity('paid');
@@ -39,7 +44,7 @@ module.exports = async (req, res) => {
     }
 
     // Payment succeeded -> issue the ticket
-    const ticket = await createTicket({ name, phone, email, type: 'paid', amount: TICKET_PRICE_SOLES });
+    const ticket = await createTicket({ name, phone, email, dni, dob, type: 'paid', amount: TICKET_PRICE_SOLES });
     ticket.culqiChargeId = culqiData.id;
 
     try {

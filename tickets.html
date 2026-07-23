@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Paradisio — Entradas</title>
+<style>
+  @font-face { font-family:'Orbitron'; src:url('fonts/Orbitron.ttf') format('truetype'); font-weight:400 900; font-display:swap; }
+  @font-face { font-family:'Inter'; src:url('fonts/Inter.ttf') format('truetype'); font-weight:100 900; font-display:swap; }
+</style>
+<style>
+  :root {
+    --accent: #FD5400; --accent-dim: #FD540055; --white: #ffffff;
+    --bg: #000000; --card: #0a0a0a; --line: #232323;
+  }
+  * { box-sizing: border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--white); margin:0; }
+  .wordmark { display:block; max-width:420px; width:80%; margin:0 auto; filter: drop-shadow(0 0 18px rgba(253,84,0,0.35)); }
+  .hero { text-align:center; padding:64px 20px 40px; border-bottom:1px solid var(--line); }
+  .sub { margin-top:22px; font-size:15px; color:#bbb; max-width:520px; margin-left:auto; margin-right:auto; }
+  .meta { display:flex; justify-content:center; gap:28px; margin-top:28px; flex-wrap:wrap; }
+  .meta-item { text-align:left; }
+  .meta-label { font-size:10px; letter-spacing:1.5px; color:#777; text-transform:uppercase; }
+  .meta-val { font-size:15px; font-weight:600; margin-top:2px; }
+  .countdown { display:flex; justify-content:center; gap:14px; margin-top:36px; }
+  .cd-box { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 16px; min-width:64px; text-align:center; }
+  .cd-num { font-family:'Orbitron',sans-serif; font-size:26px; font-weight:700; }
+  .cd-label { font-size:9px; color:#777; letter-spacing:1px; text-transform:uppercase; margin-top:4px; }
+  .section { max-width:920px; margin:0 auto; padding:56px 20px; }
+  .section-title { font-family:'Orbitron',sans-serif; font-size:20px; text-align:center; margin-bottom:8px; }
+  .section-desc { text-align:center; color:#888; font-size:14px; margin-bottom:36px; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:640px) { .cards { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px 24px; display:flex; flex-direction:column; }
+  .card.accent { border-color:var(--accent-dim); box-shadow:0 0 30px rgba(253,84,0,0.10); }
+  .card-tag { font-size:10px; letter-spacing:1.5px; color:var(--accent); text-transform:uppercase; margin-bottom:10px; }
+  .card-title { font-family:'Orbitron',sans-serif; font-size:20px; margin-bottom:8px; }
+  .card-price { font-size:30px; font-weight:700; margin:10px 0; }
+  .card-note { font-size:13px; color:#999; line-height:1.6; margin-bottom:20px; flex-grow:1; }
+  .card-avail { font-size:12px; color:#666; margin-bottom:14px; }
+  .btn { font-family:'Inter',sans-serif; font-weight:600; font-size:14px; padding:14px 20px; border-radius:8px; border:none; cursor:pointer; text-align:center; width:100%; display:block; text-decoration:none; box-sizing:border-box; }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-primary { background:var(--white); color:#000; }
+  .btn-accent { background:var(--accent); color:#fff; }
+  .footer { text-align:center; padding:40px 20px 60px; color:#555; font-size:12px; }
+
+  @media (max-width: 480px) {
+    .hero { padding:40px 16px 28px; }
+    .wordmark { width:92%; max-width:300px; }
+    .sub { font-size:13px; }
+    .meta { gap:16px; }
+    .meta-label { font-size:9px; }
+    .meta-val { font-size:13px; }
+    .countdown { gap:8px; }
+    .cd-box { padding:9px 10px; min-width:52px; }
+    .cd-num { font-size:20px; }
+    .section { padding:36px 16px; }
+    .section-title { font-size:17px; }
+    .card { padding:22px 18px; }
+    .card-price { font-size:26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img class="wordmark" src="logo.jpg" alt="Paradisio" />
+  <div class="sub">Apertura oficial · house, funk, disco y techno clásico. Espacio NHN, Barranco.</div>
+  <div class="meta">
+    <div class="meta-item"><div class="meta-label">Fecha</div><div class="meta-val">Viernes 28 de agosto</div></div>
+    <div class="meta-item"><div class="meta-label">Lugar</div><div class="meta-val">Espacio NHN — Barranco</div></div>
+    <div class="meta-item"><div class="meta-label">Puertas</div><div class="meta-val">10:00 pm</div></div>
+  </div>
+  <div class="countdown" id="countdown"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Entradas</div>
+  <div class="section-desc">Lista gratis hasta las 11:00 pm · después de esa hora, entrada única S/45 · Evento estrictamente +18</div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag">Lista gratis</div>
+      <div class="card-title">Antes de las 11pm</div>
+      <div class="card-price">Gratis</div>
+      <div class="card-note">Anótate y recibe tu QR al instante, aquí y en tu correo. Válido solo para ingreso antes de las 11:00 pm.</div>
+      <div class="card-avail" id="free-avail">Cargando…</div>
+      <a class="btn btn-primary" id="btn-free" href="checkout.html?type=free">Anotarme gratis</a>
+    </div>
+    <div class="card accent">
+      <div class="card-tag">Entrada anticipada</div>
+      <div class="card-title">Ingreso a cualquier hora</div>
+      <div class="card-price">S/ 45</div>
+      <div class="card-note">Paga con tarjeta y recibe tu QR al instante, aquí y en tu correo. Válida toda la noche.</div>
+      <div class="card-avail" id="paid-avail">Cargando…</div>
+      <a class="btn btn-accent" id="btn-paid" href="checkout.html?type=paid">Comprar entrada</a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Paradisio © 2026 · +18 · Evento privado, no compartir este enlace</div>
+
+<script>
+  const EVENT_DATE = new Date('2026-08-28T22:00:00-05:00');
+  function fmt2(n){ return String(n).padStart(2,'0'); }
+  function renderCountdown(){
+    const now = new Date();
+    let diff = Math.max(0, EVENT_DATE - now);
+    const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000);
+    const m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+    document.getElementById('countdown').innerHTML = [[d,'días'],[h,'hrs'],[m,'min'],[s,'seg']]
+      .map(p => '<div class="cd-box"><div class="cd-num">'+fmt2(p[0])+'</div><div class="cd-label">'+p[1]+'</div></div>').join('');
+  }
+  renderCountdown();
+  setInterval(renderCountdown, 1000);
+
+  async function refreshAvailability(){
+    try {
+      const r = await fetch('/api/availability');
+      const d = await r.json();
+      document.getElementById('free-avail').textContent = d.freeLeft>0 ? 'Cupos limitados' : 'Lista gratis agotada';
+      document.getElementById('paid-avail').textContent = d.paidLeft>0 ? 'Disponibilidad limitada' : 'Entradas agotadas';
+      if(d.freeLeft<=0){ const b=document.getElementById('btn-free'); b.style.pointerEvents='none'; b.style.opacity='0.4'; b.textContent='Lista gratis agotada'; }
+      if(d.paidLeft<=0){ const b=document.getElementById('btn-paid'); b.style.pointerEvents='none'; b.style.opacity='0.4'; b.textContent='Entradas agotadas'; }
+    } catch(e){
+      document.getElementById('free-avail').textContent = '';
+      document.getElementById('paid-avail').textContent = '';
+    }
+  }
+  refreshAvailability();
+</script>
+</body>
+</html>

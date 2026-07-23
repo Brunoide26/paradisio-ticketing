@@ -17,7 +17,11 @@
   * { box-sizing: border-box; }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--white); margin:0; }
   .wordmark { display:block; max-width:420px; width:80%; margin:0 auto; filter: drop-shadow(0 0 18px rgba(253,84,0,0.35)); }
-  .hero { text-align:center; padding:64px 20px 40px; border-bottom:1px solid var(--line); }
+  .ticker { position:relative; z-index:10; overflow:hidden; background:var(--accent); padding:10px 0; border-bottom:3px solid #000; }
+  .ticker-track { display:flex; white-space:nowrap; width:max-content; animation:scrollLeft 20s linear infinite; }
+  .ticker span { font-family:'Orbitron',sans-serif; font-weight:800; font-size:12px; letter-spacing:3px; padding:0 20px; color:#000; }
+  @keyframes scrollLeft { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+  .hero { text-align:center; padding:64px 20px 40px; border-bottom:1px solid var(--line); background:#000; }
   .sub { margin-top:22px; font-size:15px; color:#bbb; max-width:520px; margin-left:auto; margin-right:auto; }
   .meta { display:flex; justify-content:center; gap:28px; margin-top:28px; flex-wrap:wrap; }
   .meta-item { text-align:left; }
@@ -64,8 +68,16 @@
 </head>
 <body>
 
+<div class="ticker">
+  <div class="ticker-track">
+    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
+    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
+    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
+  </div>
+</div>
+
 <div class="hero">
-  <img class="wordmark" src="logo.jpg" alt="Paradisio" />
+  <img class="wordmark" src="logo-white.png" alt="Paradisio" />
   <div class="sub">Apertura oficial · house, funk, disco y techno clásico. Espacio NHN, Barranco.</div>
   <div class="meta">
     <div class="meta-item"><div class="meta-label">Fecha</div><div class="meta-val">Viernes 28 de agosto</div></div>

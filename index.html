@@ -8,20 +8,25 @@
 <style>
   @font-face { font-family:'Orbitron'; src:url('fonts/Orbitron.ttf') format('truetype'); font-weight:400 900; font-display:swap; }
   @font-face { font-family:'Inter'; src:url('fonts/Inter.ttf') format('truetype'); font-weight:100 900; font-display:swap; }
-
   :root { --orange:#FD5400; --yellow:#FFC700; --red:#E8291C; --black:#0a0a0a; --white:#fff; }
   * { box-sizing:border-box; margin:0; padding:0; }
   html { scroll-behavior:smooth; }
   body { font-family:'Inter',sans-serif; background:#000; color:#fff; overflow-x:hidden; }
 
-  /* ============ WALL OF TILED TEXT (hero, Amnesia "MEMORIES" style) ============ */
+  /* ============ top ticker ============ */
+  .ticker { position:relative; z-index:10; overflow:hidden; background:var(--yellow); padding:12px 0; border-bottom:3px solid #000; }
+  .ticker-track { display:flex; white-space:nowrap; width:max-content; animation:scrollLeft 20s linear infinite; }
+  .ticker span { font-family:'Orbitron',sans-serif; font-weight:800; font-size:14px; letter-spacing:3px; padding:0 24px; color:#000; }
+  @keyframes scrollLeft { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+
+  /* ============ WALL OF TILED TEXT (hero, collage style) ============ */
   .wall {
     position:relative;
-    min-height:100vh;
+    min-height:92vh;
     background:#000;
     display:flex; flex-direction:column; justify-content:center;
     overflow:hidden;
-    padding:70px 0;
+    padding:50px 0;
   }
   .wall-row { display:flex; white-space:nowrap; line-height:0.86; }
   .wall-row span {
@@ -31,31 +36,38 @@
   .wall-row.fill-orange span { color:var(--orange); }
   .wall-row.fill-yellow span { color:var(--yellow); }
   .wall-row.fill-red span { color:var(--red); }
-  .wall-row.fill-white span { color:#fff; -webkit-text-stroke:2px var(--orange); }
   .wall-row.fill-outline span { color:transparent; -webkit-text-stroke:2px #3a2416; }
 
-  /* center hero content sitting on top of the wall */
   .hero-center {
     position:absolute; inset:0; z-index:5; display:flex; flex-direction:column;
     align-items:center; justify-content:center; text-align:center; padding:24px;
     pointer-events:none;
   }
   .hero-frame {
-    background:rgba(0,0,0,0.62); backdrop-filter:blur(3px); border:2px solid var(--orange);
-    padding:44px 40px; pointer-events:auto; position:relative;
+    background:rgba(0,0,0,0.72); backdrop-filter:blur(3px); border:2px solid var(--orange);
+    padding:44px 48px; pointer-events:auto; position:relative;
   }
   .hero-frame::before, .hero-frame::after {
     content:''; position:absolute; width:22px; height:22px; border:3px solid var(--orange);
   }
   .hero-frame::before { top:-3px; left:-3px; border-right:none; border-bottom:none; }
   .hero-frame::after { bottom:-3px; right:-3px; border-left:none; border-top:none; }
-  .wordmark { display:block; max-width:400px; width:62vw; margin:0 auto; filter: drop-shadow(0 0 30px rgba(253,84,0,0.7)); }
-  .tagline { margin-top:20px; font-size:11px; letter-spacing:5px; text-transform:uppercase; color:#ffcaa3; font-weight:600; }
-  .countdown { display:flex; justify-content:center; gap:12px; margin-top:30px; flex-wrap:wrap; }
-  .cd-box { background:var(--orange); color:#000; border-radius:0; padding:12px 16px; min-width:64px; transform:skewX(-6deg); }
+  .wordmark { display:block; max-width:420px; width:60vw; margin:0 auto; filter: drop-shadow(0 0 26px rgba(253,84,0,0.7)); }
+
+  .countdown { display:flex; justify-content:center; gap:12px; margin-top:34px; flex-wrap:wrap; }
+  .cd-box { background:var(--orange); color:#000; padding:12px 16px; min-width:64px; transform:skewX(-6deg); }
   .cd-box-inner { transform:skewX(6deg); }
   .cd-num { font-family:'Orbitron',sans-serif; font-size:26px; font-weight:900; }
   .cd-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; font-weight:700; }
+
+  /* ============ big diagonal phrase, Amnesia-style bold overlay copy ============ */
+  .phrase {
+    position:absolute; z-index:6; font-family:'Orbitron',sans-serif; font-weight:800; text-transform:uppercase;
+    color:var(--red); font-size:26px; line-height:1.15; transform:rotate(-7deg); text-shadow:2px 2px 0 #000;
+    max-width:340px; pointer-events:none;
+  }
+  .phrase-1 { top:10%; right:4%; text-align:right; }
+  .phrase-2 { bottom:8%; left:3%; color:var(--yellow); font-size:20px; max-width:260px; transform:rotate(5deg); }
 
   /* ============ scattered sticker sheet ============ */
   .sticker { position:absolute; z-index:6; }
@@ -70,48 +82,46 @@
   .st-badge2 { width:70px; height:70px; border:2px solid var(--black); border-radius:50%; display:flex; align-items:center;
     justify-content:center; text-align:center; font-family:'Orbitron',sans-serif; font-size:8px; font-weight:700;
     letter-spacing:0.5px; text-transform:uppercase; color:#000; background:var(--yellow); animation:spin 20s linear infinite reverse; }
-  .st-scribble { width:70px; height:50px; opacity:0.9; }
   @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
 
-  .pos-1 { top:6%; left:5%; }
-  .pos-2 { top:8%; right:6%; }
-  .pos-3 { bottom:10%; left:6%; }
-  .pos-4 { bottom:14%; right:8%; }
-  .pos-5 { top:42%; left:3%; }
-  .pos-6 { top:38%; right:4%; }
+  .pos-1 { top:4%; left:4%; }
+  .pos-3 { bottom:4%; right:24%; }
+  .pos-4 { top:44%; right:3%; }
 
   @media (max-width:640px) {
     .wall-row span { font-size:20vw; -webkit-text-stroke:1.5px #000; }
-    .hero-frame { padding:30px 22px; }
-    .wordmark { width:78vw; }
-    .sticker { transform:scale(0.6); }
-    .pos-1 { top:4%; left:2%; } .pos-2 { top:5%; right:2%; }
-    .pos-3 { bottom:6%; left:2%; } .pos-4 { bottom:8%; right:2%; }
-    .pos-5, .pos-6 { display:none; }
+    .hero-frame { padding:30px 24px; }
+    .wordmark { width:64vw; }
+    .phrase { font-size:16px; max-width:180px; }
+    .phrase-2 { font-size:13px; max-width:140px; }
+    .sticker { transform:scale(0.55); }
+    .pos-1 { top:2%; left:1%; } .pos-3 { bottom:2%; right:16%; } .pos-4 { display:none; }
   }
 
   /* ============ diagonal stripe band ============ */
-  .stripe-band { position:relative; height:120px; overflow:hidden; background:#000;
+  .stripe-band { position:relative; height:110px; overflow:hidden; background:#000;
     display:flex; align-items:center; transform:skewY(-2deg); margin:-2px 0; z-index:4; }
   .stripe-band-inner { transform:skewY(2deg); width:100%; }
   .stripes { display:flex; width:200%; animation:stripeScroll 14s linear infinite; }
-  .stripe { flex:0 0 auto; width:70px; height:120px; }
+  .stripe { flex:0 0 auto; width:70px; height:110px; }
   .stripe:nth-child(4n+1) { background:var(--orange); }
   .stripe:nth-child(4n+2) { background:var(--black); }
   .stripe:nth-child(4n+3) { background:var(--yellow); }
   .stripe:nth-child(4n+4) { background:var(--red); }
   @keyframes stripeScroll { from { transform:translateX(0); } to { transform:translateX(-50%); } }
 
-  /* ============ bottom ticker ============ */
-  .ticker { position:relative; z-index:4; overflow:hidden; background:var(--yellow); padding:12px 0; border-top:3px solid #000; border-bottom:3px solid #000; }
-  .ticker-track { display:flex; white-space:nowrap; width:max-content; animation:scrollLeft 20s linear infinite; }
-  .ticker span { font-family:'Orbitron',sans-serif; font-weight:800; font-size:14px; letter-spacing:3px; padding:0 24px; color:#000; }
-  @keyframes scrollLeft { from { transform:translateX(0); } to { transform:translateX(-50%); } }
-
   .footer-note { text-align:center; padding:26px 16px; font-size:11px; color:#666; letter-spacing:1px; background:#000; }
 </style>
 </head>
 <body>
+
+<div class="ticker">
+  <div class="ticker-track">
+    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
+    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
+    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
+  </div>
+</div>
 
 <div class="wall">
   <div class="wall-row fill-yellow"><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span></div>
@@ -121,25 +131,15 @@
   <div class="wall-row fill-orange"><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span></div>
 
   <div class="sticker st-ring pos-1">PRÓXIMAMENTE</div>
-  <div class="sticker pos-2"><div class="st-ribbon">2026</div></div>
-  <div class="sticker st-badge2 pos-3">BARRANCO<br/>LIMA</div>
-  <div class="sticker pos-4"><div class="st-triangle"></div></div>
-  <div class="sticker pos-5">
-    <svg class="st-scribble" viewBox="0 0 100 70" fill="none" stroke="var(--yellow)" stroke-width="4" stroke-linecap="round">
-      <path d="M5 40 Q 20 10, 35 35 T 65 30 Q 80 15, 95 40" />
-    </svg>
-  </div>
-  <div class="sticker pos-6">
-    <svg class="st-scribble" viewBox="0 0 100 70" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round">
-      <circle cx="30" cy="35" r="18" />
-      <path d="M55 20 L90 50 M90 20 L55 50" />
-    </svg>
-  </div>
+  <div class="sticker pos-3"><div class="st-triangle"></div></div>
+  <div class="sticker st-badge2 pos-4">BARRANCO<br/>LIMA</div>
+
+  <div class="phrase phrase-1">ENTRA Y OLVÍDATE<br/>DEL AFUERA.</div>
+  <div class="phrase phrase-2">AQUÍ SOLO<br/>EXISTE LA PISTA.</div>
 
   <div class="hero-center">
     <div class="hero-frame">
-      <img class="wordmark" src="logo.jpg" alt="Paradisio" />
-      <div class="tagline">Algo se está armando</div>
+      <img class="wordmark" src="logo-white.png" alt="Paradisio" />
       <div class="countdown" id="countdown"></div>
     </div>
   </div>
@@ -151,18 +151,9 @@
   </div>
 </div>
 
-<div class="ticker">
-  <div class="ticker-track">
-    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
-    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
-    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
-  </div>
-</div>
-
 <div class="footer-note">Paradisio © 2026</div>
 
 <script>
-  // build the diagonal stripe band
   const stripesEl = document.getElementById('stripes');
   for (let i = 0; i < 40; i++) {
     const d = document.createElement('div');

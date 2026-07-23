@@ -58,6 +58,24 @@
   .ticket-note { font-size:12px; color:#999; line-height:1.6; border-top:1px solid var(--line); padding-top:16px; margin-top:6px; }
   .ticket-email-note { font-size:12px; color:#7fe0a0; margin-top:10px; }
   .footer { text-align:center; padding:40px 20px 60px; color:#555; font-size:12px; }
+
+  @media (max-width: 480px) {
+    .hero { padding:40px 16px 28px; }
+    .wordmark { width:92%; max-width:300px; }
+    .sub { font-size:13px; }
+    .meta { gap:16px; }
+    .meta-label { font-size:9px; }
+    .meta-val { font-size:13px; }
+    .countdown { gap:8px; }
+    .cd-box { padding:9px 10px; min-width:52px; }
+    .cd-num { font-size:20px; }
+    .section { padding:36px 16px; }
+    .section-title { font-size:17px; }
+    .card { padding:22px 18px; }
+    .card-price { font-size:26px; }
+    .ticket { padding:22px; }
+    .qr-wrap img { width:160px; height:160px; }
+  }
 </style>
 </head>
 <body>
@@ -122,13 +140,13 @@
     try {
       const r = await fetch('/api/availability');
       const d = await r.json();
-      document.getElementById('free-avail').textContent = d.freeLeft>0 ? ('Quedan '+d.freeLeft+' cupos') : 'Lista gratis agotada';
-      document.getElementById('paid-avail').textContent = d.paidLeft>0 ? ('Quedan '+d.paidLeft+' entradas') : 'Entradas agotadas';
+      document.getElementById('free-avail').textContent = d.freeLeft>0 ? 'Cupos limitados' : 'Lista gratis agotada';
+      document.getElementById('paid-avail').textContent = d.paidLeft>0 ? 'Disponibilidad limitada' : 'Entradas agotadas';
       document.getElementById('btn-free').disabled = d.freeLeft<=0;
       document.getElementById('btn-paid').disabled = d.paidLeft<=0;
     } catch(e){
-      document.getElementById('free-avail').textContent = '—';
-      document.getElementById('paid-avail').textContent = '—';
+      document.getElementById('free-avail').textContent = '';
+      document.getElementById('paid-avail').textContent = '';
     }
   }
   refreshAvailability();

@@ -69,15 +69,30 @@ Vuelve a desplegar (`git push` si usas GitHub, se redespliega solo).
 ## Estructura del proyecto
 
 ```
-/index.html          → landing pública
-/staff.html           → panel de check-in en puerta
-/logo.jpg              → tu logo
-/api/register-free.js  → registro lista gratis + envío de QR
-/api/charge.js          → cobro con Culqi + envío de QR
-/api/availability.js    → cupos disponibles
-/api/checkin.js          → validar entrada en puerta
-/lib/tickets.js           → funciones compartidas (Redis, Resend, QR)
+/index.html            → landing pública
+/staff.html            → panel de check-in en puerta (con lector de QR por cámara)
+/admin.html            → dashboard: ver todos los registros, exportar CSV, anular tickets
+/logo.jpg               → tu logo
+/api/register-free.js   → registro lista gratis + envío de QR
+/api/charge.js           → cobro con Culqi + envío de QR
+/api/availability.js     → cupos disponibles
+/api/checkin.js           → validar entrada en puerta
+/api/admin-list.js         → lista completa de tickets (protegido con STAFF_PASSCODE)
+/api/admin-void.js          → anular/reactivar un ticket (protegido con STAFF_PASSCODE)
+/lib/tickets.js               → funciones compartidas (Redis, Resend, QR)
 ```
+
+## Panel de admin (`/admin.html`)
+
+Entra con tu `STAFF_PASSCODE`. Desde ahí puedes:
+- Ver la lista completa de quién se registró/compró, con búsqueda por nombre, email, WhatsApp o código
+- Exportar todo a CSV (útil para cruzar con Culqi o para tu equipo)
+- **Anular un ticket** — si alguien pide reembolso o detectas un duplicado, lo anulas y ya no podrá usarse para entrar aunque muestre el QR (el check-in de puerta lo va a rechazar y avisar "ANULADO")
+- Reactivarlo si fue un error
+
+## Lector de QR con cámara (`/staff.html`)
+
+Ahora el panel de puerta tiene un botón "📷 Escanear QR con cámara" — usa la cámara del celular para leer el QR directo, sin escribir el código a mano. Si prefieren texto (o la cámara falla), el campo manual sigue disponible debajo.
 
 ## Notas importantes
 

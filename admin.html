@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Paradisio — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --pink:#ff28aa; --white:#fff; --bg:#000; --card:#0a0a0a; --line:#232323; }
+  * { box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--white); margin:0; padding:24px 16px 60px; }
+  .wrap { max-width:1100px; margin:0 auto; }
+  h1 { font-family:'Orbitron',sans-serif; font-size:18px; margin-bottom:20px; }
+  .login-card { max-width:360px; margin:80px auto; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px; }
+  .login-card h2 { font-family:'Orbitron',sans-serif; font-size:16px; margin-top:0; }
+  .field input { width:100%; background:#000; border:1px solid var(--line); color:#fff; padding:12px; border-radius:7px; font-size:15px; margin-top:10px; }
+  .btn { font-weight:600; font-size:14px; padding:12px 18px; border-radius:8px; border:none; cursor:pointer; background:var(--white); color:#000; }
+  .btn-pink { background:var(--pink); color:#fff; }
+  .btn-ghost { background:transparent; border:1px solid var(--line); color:#ccc; }
+  .btn-sm { padding:6px 12px; font-size:12px; }
+  .stat-row { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+  .stat { flex:1; min-width:100px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px; text-align:center; }
+  .stat-num { font-family:'Orbitron',sans-serif; font-size:24px; }
+  .stat-label { font-size:10px; color:#777; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+  .toolbar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+  .toolbar input { flex:1; min-width:180px; background:var(--card); border:1px solid var(--line); color:#fff; padding:10px 12px; border-radius:7px; font-size:14px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:13px; }
+  th, td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th { color:#888; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
+  tr:last-child td { border-bottom:none; }
+  .badge { display:inline-block; padding:3px 8px; border-radius:12px; font-size:11px; }
+  .badge-free { background:#1a2a3a; color:#7fbfe0; }
+  .badge-paid { background:#2a1a3a; color:#c07fe0; }
+  .badge-in { background:#0a2a12; color:#7fe0a0; }
+  .badge-out { background:#2a2a2a; color:#999; }
+  .badge-void { background:#2a0a0a; color:#e07f7f; }
+  .table-scroll { overflow-x:auto; }
+  .hint { color:#666; font-size:12px; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Paradisio · Panel de admin</h1>
+
+  <div id="login-area">
+    <div class="login-card">
+      <h2>Ingresar</h2>
+      <div class="field">
+        <input type="password" id="passcode-input" placeholder="Clave de staff" />
+      </div>
+      <button class="btn" style="width:100%;margin-top:14px;" id="login-btn">Entrar</button>
+    </div>
+  </div>
+
+  <div id="dashboard-area" style="display:none;">
+    <div class="stat-row" id="stats"></div>
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Buscar por nombre, email, WhatsApp o código..." />
+      <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
+      <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th><th>Nombre</th><th>WhatsApp</th><th>Email</th>
+            <th>Tipo</th><th>Monto</th><th>Registrado</th><th>Estado</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="hint">Los tickets anulados no se podrán usar para ingresar, aunque muestren el QR.</div>
+  </div>
+</div>
+
+<script>
+  let PASSCODE = '';
+  let allTickets = [];
+
+  document.getElementById('login-btn').onclick = async function(){
+    PASSCODE = document.getElementById('passcode-input').value;
+    await loadData();
+  };
+  document.getElementById('passcode-input').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+
+  async function loadData(){
+    try {
+      const r = await fetch('/api/admin-list', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE })
+      });
+      if(r.status === 401){
+        alert('Clave incorrecta');
+        return;
+      }
+      const d = await r.json();
+      allTickets = d.tickets;
+      document.getElementById('login-area').style.display = 'none';
+      document.getElementById('dashboard-area').style.display = 'block';
+      renderStats(d.counters);
+      renderTable(allTickets);
+    } catch(e){
+      alert('Error de conexión');
+    }
+  }
+
+  function renderStats(c){
+    const el = document.getElementById('stats');
+    const items = [
+      [c.free||0, 'Lista gratis'],
+      [c.paid||0, 'Pagadas'],
+      [c.checkedin||0, 'En puerta'],
+      [(c.free||0)+(c.paid||0), 'Total'],
+    ];
+    el.innerHTML = items.map(i => `<div class="stat"><div class="stat-num">${i[0]}</div><div class="stat-label">${i[1]}</div></div>`).join('');
+  }
+
+  function renderTable(tickets){
+    const body = document.getElementById('table-body');
+    if(tickets.length === 0){
+      body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#666;">Sin resultados</td></tr>';
+      return;
+    }
+    body.innerHTML = tickets.map(t => {
+      const typeBadge = t.type==='paid' ? '<span class="badge badge-paid">Pagada</span>' : '<span class="badge badge-free">Gratis</span>';
+      let statusBadge = t.checkedIn ? '<span class="badge badge-in">En puerta</span>' : '<span class="badge badge-out">Pendiente</span>';
+      if(t.voided) statusBadge = '<span class="badge badge-void">Anulada</span>';
+      const date = new Date(t.createdAt).toLocaleString('es-PE', { dateStyle:'short', timeStyle:'short' });
+      const voidBtn = t.voided
+        ? `<button class="btn btn-ghost btn-sm" onclick="toggleVoid('${t.id}','unvoid')">Reactivar</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="toggleVoid('${t.id}','void')">Anular</button>`;
+      return `<tr>
+        <td style="font-family:monospace;">${t.id}</td>
+        <td>${escapeHtml(t.name)}</td>
+        <td>${escapeHtml(t.phone||'')}</td>
+        <td>${escapeHtml(t.email||'')}</td>
+        <td>${typeBadge}</td>
+        <td>${t.amount ? 'S/'+t.amount : '—'}</td>
+        <td>${date}</td>
+        <td>${statusBadge}</td>
+        <td>${voidBtn}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  window.toggleVoid = async function(ticketId, action){
+    if(action === 'void' && !confirm('¿Anular el ticket ' + ticketId + '? No podrá usarse para ingresar.')) return;
+    try {
+      await fetch('/api/admin-void', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ ticketId, passcode: PASSCODE, action })
+      });
+      await loadData();
+    } catch(e){
+      alert('Error al actualizar el ticket');
+    }
+  };
+
+  document.getElementById('search').addEventListener('input', function(e){
+    const q = e.target.value.toLowerCase();
+    const filtered = allTickets.filter(t =>
+      (t.name||'').toLowerCase().includes(q) ||
+      (t.email||'').toLowerCase().includes(q) ||
+      (t.phone||'').toLowerCase().includes(q) ||
+      (t.id||'').toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+  });
+
+  document.getElementById('refresh-btn').onclick = loadData;
+
+  document.getElementById('export-btn').onclick = function(){
+    const headers = ['Codigo','Nombre','WhatsApp','Email','Tipo','Monto','Registrado','CheckedIn','Anulado'];
+    const rows = allTickets.map(t => [
+      t.id, t.name, t.phone, t.email, t.type, t.amount,
+      t.createdAt, t.checkedIn ? 'si' : 'no', t.voided ? 'si' : 'no'
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'paradisio-tickets.csv';
+    a.click();
+  };
+</script>
+</body>
+</html>

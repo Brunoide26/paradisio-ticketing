@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Paradisio — Staff check-in</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <style>
+  #qr-reader { width:100%; border-radius:10px; overflow:hidden; margin-bottom:14px; }
+  #qr-reader video { border-radius:10px; }
+  .scan-toggle { width:100%; margin-bottom:14px; }
   :root { --pink:#ff28aa; --white:#fff; --bg:#000; --card:#0a0a0a; --line:#232323; }
   * { box-sizing:border-box; }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--white); margin:0; padding:40px 16px; }
@@ -36,7 +40,11 @@
       <div class="stat"><div class="stat-num" id="s-in">–</div><div class="stat-label">En puerta</div></div>
     </div>
     <div class="field"><label>Clave de staff</label><input type="password" id="passcode" /></div>
-    <div class="field"><label>Código de ticket (PDS-XXXXXX)</label><input type="text" id="ticket-id" autocapitalize="characters" /></div>
+
+    <button class="btn scan-toggle" id="btn-scan" style="background:var(--pink);">📷 Escanear QR con cámara</button>
+    <div id="qr-reader" style="display:none;"></div>
+
+    <div class="field"><label>O escribe el código manualmente (PDS-XXXXXX)</label><input type="text" id="ticket-id" autocapitalize="characters" /></div>
     <button class="btn" id="btn-checkin">Validar e ingresar</button>
     <div id="result"></div>
   </div>
@@ -53,9 +61,8 @@
   }
   refreshStats();
 
-  document.getElementById('btn-checkin').onclick = async function(){
+  async function doCheckin(ticketId){
     const passcode = document.getElementById('passcode').value;
-    const ticketId = document.getElementById('ticket-id').value.trim().toUpperCase();
     const resultEl = document.getElementById('result');
     if(!ticketId) return;
     try {
@@ -73,6 +80,8 @@
           resultEl.innerHTML = '<div class="result bad">Ticket no encontrado: '+ticketId+'</div>';
         } else if(d.reason === 'already_used'){
           resultEl.innerHTML = '<div class="result used">Ya ingresó — '+d.ticket.name+' ('+new Date(d.ticket.checkedInAt).toLocaleTimeString()+')</div>';
+        } else if(d.reason === 'voided'){
+          resultEl.innerHTML = '<div class="result bad">⚠ Ticket ANULADO — '+d.ticket.name+' — no debe ingresar</div>';
         }
         return;
       }
@@ -82,6 +91,45 @@
     } catch(e){
       resultEl.innerHTML = '<div class="result bad">Error de conexión, intenta de nuevo.</div>';
     }
+  }
+
+  document.getElementById('btn-checkin').onclick = function(){
+    const ticketId = document.getElementById('ticket-id').value.trim().toUpperCase();
+    doCheckin(ticketId);
+  };
+
+  let scanner = null;
+  let scanning = false;
+  document.getElementById('btn-scan').onclick = function(){
+    const container = document.getElementById('qr-reader');
+    if(scanning){
+      if(scanner) scanner.stop().catch(()=>{});
+      container.style.display = 'none';
+      scanning = false;
+      document.getElementById('btn-scan').textContent = '📷 Escanear QR con cámara';
+      return;
+    }
+    container.style.display = 'block';
+    scanning = true;
+    document.getElementById('btn-scan').textContent = '✕ Cerrar cámara';
+    scanner = new Html5Qrcode('qr-reader');
+    scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: 240 },
+      function(decodedText){
+        document.getElementById('ticket-id').value = decodedText.trim().toUpperCase();
+        doCheckin(decodedText.trim().toUpperCase());
+        // brief pause so staff can see the result before scanning the next person
+        scanner.pause(true);
+        setTimeout(function(){ if(scanning) scanner.resume(); }, 2000);
+      },
+      function(){ /* ignore per-frame scan errors */ }
+    ).catch(function(err){
+      document.getElementById('result').innerHTML = '<div class="result bad">No se pudo acceder a la cámara: '+err+'</div>';
+      scanning = false;
+      container.style.display = 'none';
+      document.getElementById('btn-scan').textContent = '📷 Escanear QR con cámara';
+    });
   };
 </script>
 </body>

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-24T18:00:00Z",
+  "title": "Design System: Paradisio",
+  "extensions": {
+    "colorMeta": {
+      "orange": { "role": "primary", "displayName": "Fire Orange", "canonical": "#FD5400", "tonalRamp": ["#260D00", "#591D00", "#983200", "#D74700", "#FD5400", "#FE7F40", "#FEAA80", "#FFD4BF"] },
+      "yellow": { "role": "secondary", "displayName": "Acid Yellow", "canonical": "#FFC700", "tonalRamp": ["#261E00", "#594600", "#997700", "#D9A900", "#FFC700", "#FFD540", "#FFE380", "#FFF1BF"] },
+      "red": { "role": "tertiary", "displayName": "Alarm Red", "canonical": "#E8291C", "tonalRamp": ["#230604", "#510E0A", "#8B1911", "#C52318", "#E8291C", "#EE5F55", "#F4948E", "#F9CAC6"] },
+      "pure-black": { "role": "neutral", "displayName": "Pure Black", "canonical": "#000000" },
+      "card-black": { "role": "neutral", "displayName": "Card Black", "canonical": "#0a0a0a" },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#232323" },
+      "paper-white": { "role": "neutral", "displayName": "Paper White", "canonical": "#ffffff" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Oversized tiled hero wall text on the landing page only." },
+      "headline": { "displayName": "Headline", "purpose": "Card titles, ticket-type name, section titles." },
+      "label": { "displayName": "Label", "purpose": "Ticker, countdown, stat, and badge labels — always uppercase." },
+      "body": { "displayName": "Body", "purpose": "Form labels, descriptions, notes, paragraphs." }
+    },
+    "shadows": [
+      { "name": "ambient-accent-glow", "value": "0 0 30px rgba(253,84,0,0.10)", "purpose": "Marks the single featured/accent card on an Operate screen." },
+      { "name": "sticker-offset", "value": "4px 4px 0 #000", "purpose": "Hard offset shadow on hero collage stickers (ribbon element)." }
+    ],
+    "motion": [
+      { "name": "ticker-scroll", "value": "translateX marquee, 20s linear infinite", "purpose": "Horizontal auto-scroll for the brand/genre ticker band." },
+      { "name": "stripe-scroll", "value": "translateX marquee, 14s linear infinite", "purpose": "Diagonal stripe section-break band on the landing hero." },
+      { "name": "sticker-spin", "value": "rotate 360deg, 16-20s linear infinite (one reversed)", "purpose": "Slow continuous rotation on the circular hero stickers." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "480px" },
+      { "name": "md", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default/safe action — white fill, black text.",
+      "html": "<button class=\"ds-btn-primary\">Confirmar</button>",
+      "css": ".ds-btn-primary { display:block; width:100%; font-family:'Inter',sans-serif; font-weight:600; font-size:14px; padding:14px 20px; border-radius:8px; border:none; cursor:pointer; text-align:center; background:#ffffff; color:#000000; transition:opacity 0.2s; } .ds-btn-primary:hover { opacity:0.9; } .ds-btn-primary:focus-visible { outline:2px solid #FD5400; outline-offset:2px; }"
+    },
+    {
+      "name": "Accent Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "Paid/upsell action — orange fill, white text.",
+      "html": "<button class=\"ds-btn-accent\">Comprar entrada</button>",
+      "css": ".ds-btn-accent { display:block; width:100%; font-family:'Inter',sans-serif; font-weight:600; font-size:14px; padding:14px 20px; border-radius:8px; border:none; cursor:pointer; text-align:center; background:#FD5400; color:#ffffff; transition:opacity 0.2s; } .ds-btn-accent:hover { opacity:0.9; } .ds-btn-accent:focus-visible { outline:2px solid #ffffff; outline-offset:2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary/in-row action — transparent with hairline border.",
+      "html": "<button class=\"ds-btn-ghost\">Exportar CSV</button>",
+      "css": ".ds-btn-ghost { font-family:'Inter',sans-serif; font-weight:600; font-size:12px; padding:6px 12px; border-radius:8px; border:1px solid #232323; background:transparent; color:#cccccc; cursor:pointer; transition:border-color 0.2s; } .ds-btn-ghost:hover { border-color:#FD5400; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Generic content card — flat, one step off black, hairline border.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-tag\">Lista gratis</div><div class=\"ds-card-title\">Antes de las 11pm</div><div class=\"ds-card-note\">Anótate y recibe tu QR al instante.</div></div>",
+      "css": ".ds-card { background:#0a0a0a; border:1px solid #232323; border-radius:14px; padding:28px 24px; color:#ffffff; font-family:'Inter',sans-serif; } .ds-card-tag { font-size:10px; letter-spacing:1.5px; color:#FD5400; text-transform:uppercase; margin-bottom:10px; font-weight:700; } .ds-card-title { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:700; margin-bottom:8px; } .ds-card-note { font-size:13px; color:#999999; line-height:1.6; }"
+    },
+    {
+      "name": "Ticket Card",
+      "kind": "custom",
+      "refersTo": "ticket-card",
+      "description": "The generated ticket — signature component, QR always on a white tile.",
+      "html": "<div class=\"ds-ticket\"><div class=\"ds-ticket-type\">Entrada pagada · S/45</div><div class=\"ds-ticket-name\">Nombre Apellido</div><div class=\"ds-ticket-qr\">QR</div><div class=\"ds-ticket-id\">PDS-A1B2C3</div><div class=\"ds-ticket-note\">Muestra este código en la puerta.</div></div>",
+      "css": ".ds-ticket { background:#0a0a0a; border:1px solid #FD540055; border-radius:16px; padding:30px; text-align:center; color:#ffffff; font-family:'Inter',sans-serif; box-shadow:0 0 30px rgba(253,84,0,0.10); } .ds-ticket-type { font-size:11px; letter-spacing:2px; color:#FD5400; text-transform:uppercase; margin-bottom:6px; font-weight:700; } .ds-ticket-name { font-family:'Orbitron',sans-serif; font-size:18px; font-weight:700; margin-bottom:18px; } .ds-ticket-qr { background:#ffffff; color:#000; width:180px; height:180px; margin:0 auto; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:monospace; } .ds-ticket-id { font-family:monospace; font-size:12px; color:#888888; letter-spacing:1px; margin:16px 0; } .ds-ticket-note { font-size:12px; color:#999999; line-height:1.6; border-top:1px solid #232323; padding-top:16px; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": null,
+      "description": "Text/email/date field with label above, orange focus border.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\">Email</label><input class=\"ds-field-input\" type=\"email\" /></div>",
+      "css": ".ds-field-label { display:block; font-size:12px; color:#999999; margin-bottom:6px; font-family:'Inter',sans-serif; } .ds-field-input { width:100%; background:#000000; border:1px solid #232323; color:#ffffff; padding:12px; border-radius:7px; font-size:14px; font-family:'Inter',sans-serif; box-sizing:border-box; } .ds-field-input:focus { outline:none; border-color:#FD5400; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Pill-shaped ticket-state indicator, semantic palette separate from brand colors.",
+      "html": "<span class=\"ds-badge ds-badge-paid\">Pagada</span>",
+      "css": ".ds-badge { display:inline-block; padding:3px 8px; border-radius:12px; font-size:11px; font-family:'Inter',sans-serif; } .ds-badge-free { background:#1a2a3a; color:#7fbfe0; } .ds-badge-paid { background:#2a1a3a; color:#c07fe0; } .ds-badge-in { background:#0a2a12; color:#7fe0a0; } .ds-badge-out { background:#2a2a2a; color:#999999; } .ds-badge-void { background:#2a0a0a; color:#e07f7f; }"
+    },
+    {
+      "name": "Ticker Marquee",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Auto-scrolling brand/genre band; doubles as header and section divider.",
+      "html": "<div class=\"ds-ticker\"><div class=\"ds-ticker-track\"><span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span></div></div>",
+      "css": ".ds-ticker { overflow:hidden; background:#FFC700; padding:12px 0; border-bottom:3px solid #000000; } .ds-ticker-track { display:flex; white-space:nowrap; width:max-content; animation:ds-scroll-left 20s linear infinite; } .ds-ticker span { font-family:'Orbitron',sans-serif; font-weight:800; font-size:14px; letter-spacing:3px; padding:0 24px; color:#000000; } @keyframes ds-scroll-left { from { transform:translateX(0); } to { transform:translateX(-50%); } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Barranco Blackout Flyer",
+    "overview": "Paradisio's landing page is a black wall papered over in oversized, stroked-outline type and screen-printed stickers — the visual grammar of a photocopied rave flyer stapled to a Barranco lamppost, not a polished nightlife brand deck. Three inks do all the work on that wall: fire orange, acid yellow, and alarm red, laid down flat and hard-edged against pure black, the way spray paint and marker sit on a poster rather than the way a gradient sits on a screen. Nothing here is soft, pastel, or \"elegant nightlife\" — it commits fully to maximalist, high-contrast collage, and it explicitly avoids the white-sand, sun-bleached Ibiza-flyer cliché in favor of something louder, blacker, and more concrete.\n\nOnce a visitor commits — buying a ticket, checking in at the door, running the admin panel — the system deliberately quiets down. Checkout, the ticket picker, staff check-in, and the admin dashboard all drop to a single accent (orange) on flat dark cards with hairline borders: legible, calm, and fast to scan under bad lighting at 1am. The loud collage world and the quiet operational world share one type system and one accent color, so the app never feels like two products, but they never bleed into each other stylistically either.",
+    "keyCharacteristics": [
+      "Pure black canvas, everywhere, with color used as ink, not as tint or gradient.",
+      "Oversized stroked-outline Orbitron type as the dominant landing-page motif.",
+      "Exactly one accent color (orange) survives past the hero; yellow and red are hero-only.",
+      "Hard, offset \"sticker\" shadows on the collage; no shadows at all on operational screens except one ambient accent glow.",
+      "Skewed geometry (ticker, countdown chips, stripe band) on the hero; upright, calm geometry everywhere else."
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Every screen past the landing hero (checkout, ticket picker, staff, admin) uses exactly one accent color — orange. Yellow and red are reserved for the collage and never appear in the operational UI.", "section": "colors" },
+      { "name": "The All-Caps Shout Rule", "body": "Orbitron only ever appears uppercase — it is never used in sentence case, and it is never used for body copy.", "section": "typography" },
+      { "name": "The Sticker Shadow Rule", "body": "Any shadow on the hero collage is a hard, zero-blur offset — never a soft blur. It reads as paper on paper, not glass floating.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep exactly one accent color (orange #FD5400) on every Operate screen; reserve yellow and red for the landing hero only.",
+      "Do give the QR code a white background tile even on fully dark screens — scanner legibility overrides theme consistency.",
+      "Do use Orbitron only in uppercase, and only for shouted, structural, or numeric content — never for body copy.",
+      "Do keep cards flat (hairline border only) outside the hero; reserve the ambient glow shadow for the single featured/accent card on a screen."
+    ],
+    "donts": [
+      "Don't introduce a fourth brand hue; the palette is fixed to orange / yellow / red / black / white.",
+      "Don't apply the hero's hard sticker shadows or skewed geometry to Operate screens — those stay upright, calm, and shadow-free.",
+      "Don't confuse the ticket-status badge colors (blue/purple/green/gray/red-tinted) with the three brand accents — they are a separate semantic palette.",
+      "Don't give a collage/sticker element a soft blurred shadow — it's a hard offset or nothing."
+    ]
+  }
+}

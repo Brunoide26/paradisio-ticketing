@@ -1,0 +1,32 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-07-24T17:49:12.622Z",
+        "reason": "Font documented as intentional in DESIGN.md/PRODUCT.md"
+      },
+      {
+        "rule": "marquee",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-07-24T17:49:16.125Z",
+        "reason": "Documented signature ticker component; reduced-motion handled separately"
+      },
+      {
+        "rule": "marquee",
+        "value": "*",
+        "files": [
+          "tickets.html"
+        ],
+        "createdAt": "2026-07-24T17:49:16.183Z",
+        "reason": "Documented signature ticker component; reduced-motion handled separately"
+      }
+    ]
+  }
+}

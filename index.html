@@ -146,6 +146,8 @@
   .pd-confirm-qr { background:#fff; padding:14px; display:inline-flex; flex-direction:column; align-items:center; gap:10px; }
   .pd-confirm-qr img { width:150px; height:150px; display:block; }
   .pd-confirm-qr span { font-family:monospace; font-size:12px; color:#000; letter-spacing:1px; }
+  .pd-confirm-spam { margin:24px 0 0; font-size:13px; line-height:1.6; color:rgba(0,0,0,0.6); max-width:60ch; }
+  .pd-confirm-spam strong { color:#000; }
 
   .pd-legal { padding:24px 48px; border-top:1px solid var(--line); }
   .pd-legal p { margin:0; font-size:12px; color:rgba(136,136,128,0.55); line-height:1.6; }
@@ -265,7 +267,7 @@
         <p class="pd-tier-price is-free">FREE</p>
         <div>
           <p class="pd-tier-name">Cortesía Opening</p>
-          <p class="pd-tier-note">Acceso hasta las 12 am</p>
+          <p class="pd-tier-note">Acceso hasta la medianoche</p>
         </div>
       </div>
       <span class="pd-tier-select">Seleccionar</span>
@@ -345,6 +347,7 @@
     <p class="pd-confirm-headline">Nos vemos en la pista</p>
     <p class="pd-confirm-line" id="confirm-line"></p>
     <div class="pd-confirm-qrs" id="confirm-qrs"></div>
+    <p class="pd-confirm-spam" id="confirm-spam"></p>
   </div>
 
   <div class="pd-legal pd-pad">
@@ -568,7 +571,13 @@
       box.appendChild(span);
       qrsWrap.appendChild(box);
     });
+    document.getElementById('confirm-spam').innerHTML =
+      'Tu entrada llegó a <strong>' + escapeHtmlIndex(email) + '</strong>. Si no la ves en unos minutos, revisa spam y promociones, y márcala como "No es spam".';
     confirmEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }
+
+  function escapeHtmlIndex(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
   function handleApiError(err, data){

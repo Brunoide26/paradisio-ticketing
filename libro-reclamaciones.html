@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Libro de Reclamaciones — Paradisio</title>
+<meta name="description" content="Libro de Reclamaciones virtual de Paradisio Club, conforme al Código de Protección y Defensa del Consumidor." />
+<meta name="robots" content="noindex" />
+<style>
+  @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
+  @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
+
+  :root {
+    --bg:#090909; --ink:#F2EDE4; --primary:#FF2800; --primary-hover:#FF9A00;
+    --muted:#888880; --line:rgba(255,40,0,0.18); --card:#141414; --field:#1A1A1A;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; background:var(--bg); }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:var(--primary); text-decoration:none; }
+  a:hover { color:var(--primary-hover); }
+  input::placeholder, textarea::placeholder { color:#55554f; }
+  ::selection { background:var(--primary); color:#0A0A0A; }
+  button { font-family:inherit; }
+
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .pd-pad { padding-left:40px; padding-right:40px; }
+  @media (max-width:860px) { .pd-pad { padding-left:22px !important; padding-right:22px !important; } .pd-hide-sm { display:none !important; } }
+
+  /* ---- header (static dark state — no hero on this page) ---- */
+  .pd-header { position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between; height:64px; background:rgba(9,9,9,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+  .pd-header .logo-link { display:block; flex:none; line-height:0; }
+  .pd-header .logo-link img { display:block; width:142px; height:28px; }
+  .pd-nav { display:flex; align-items:center; gap:30px; }
+  .pd-nav-link { font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:500; color:rgba(242,237,228,0.5); transition:color 240ms ease; }
+  .pd-nav-link:hover { color:var(--ink); }
+  .pd-nav-cta { padding:11px 20px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; background:var(--primary); color:#0A0A0A; transition:background 240ms ease; }
+  .pd-nav-cta:hover { background:var(--primary-hover); color:#0A0A0A; }
+
+  .pd-eyebrow { margin:0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+
+  /* ---- hero / intro ---- */
+  .legal-hero { padding:150px 0 48px; border-bottom:1px solid var(--line); }
+  .legal-hero-inner { max-width:70ch; margin:0 auto; }
+  .legal-title { margin:14px 0 0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem,5vw,3.2rem); line-height:1.05; letter-spacing:-0.02em; color:var(--ink); }
+  .legal-intro { margin:20px 0 0; font-size:15px; line-height:1.75; color:var(--muted); max-width:60ch; }
+
+  /* ---- form shell ---- */
+  .lr-body { max-width:70ch; margin:0 auto; padding:56px 0 96px; }
+  .lr-block { padding-bottom:40px; margin-bottom:40px; border-bottom:1px solid var(--line); }
+  .lr-block:last-of-type { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .lr-block-num { display:block; margin-bottom:10px; font-size:11px; letter-spacing:0.3em; color:rgba(136,136,128,0.55); font-variant-numeric:tabular-nums; }
+  .lr-block h2 { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:clamp(1.1rem,2.4vw,1.35rem); line-height:1.3; color:var(--ink); }
+  .lr-block-sub { margin:0 0 24px; font-size:14px; line-height:1.6; color:var(--muted); }
+
+  .lr-provider { background:var(--card); border:1px solid var(--line); padding:24px; }
+  .lr-provider dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:10px 20px; }
+  .lr-provider dt { font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+  .lr-provider dd { margin:0; font-size:14px; color:var(--ink); }
+  .lr-provider dd#lr-hoja-num { color:var(--primary); font-weight:700; }
+
+  .lr-field { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+  .lr-field label.lr-label { font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+  .lr-field label.lr-required::after { content:' *'; color:var(--primary); }
+  .lr-input, .lr-select, .lr-textarea {
+    background:var(--field); border:1px solid var(--line); padding:14px 16px; font-family:'DM Sans',sans-serif;
+    font-size:14px; color:var(--ink); outline:none; width:100%;
+  }
+  .lr-input:focus, .lr-select:focus, .lr-textarea:focus { border-color:var(--primary); }
+  .lr-textarea { resize:vertical; min-height:110px; line-height:1.6; }
+  .lr-charcount { align-self:flex-end; font-size:11px; color:rgba(136,136,128,0.6); }
+  .lr-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:600px) { .lr-grid-2 { grid-template-columns:1fr; } }
+
+  .lr-radio-group { display:flex; flex-wrap:wrap; gap:22px; margin-bottom:8px; }
+  .lr-radio-option { display:flex; align-items:center; gap:8px; }
+  .lr-radio-option input { width:16px; height:16px; accent-color:var(--primary); }
+  .lr-radio-option label { font-size:14px; color:var(--ink); }
+
+  .lr-checkrow { display:flex; align-items:flex-start; gap:10px; margin-bottom:16px; }
+  .lr-checkrow input { margin-top:3px; width:16px; height:16px; accent-color:var(--primary); flex-shrink:0; }
+  .lr-checkrow label { font-size:13px; color:var(--muted); line-height:1.5; }
+
+  .lr-note { border-left:2px solid var(--primary); padding:2px 0 2px 18px; margin:0 0 22px; font-size:13.5px; line-height:1.7; color:var(--muted); }
+  .lr-note strong { color:var(--ink); }
+
+  .lr-legal-notice { background:var(--card); border:1px solid var(--line); padding:22px 24px; margin-bottom:24px; font-size:13.5px; line-height:1.75; color:var(--muted); }
+  .lr-legal-notice p { margin:0 0 12px; }
+  .lr-legal-notice p:last-child { margin-bottom:0; }
+
+  .lr-error { margin:0 0 16px; font-size:12px; letter-spacing:0.02em; color:var(--primary-hover); }
+  .lr-submit-btn { padding:17px 46px; background:var(--primary); border:none; color:#0A0A0A; font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:background 180ms; }
+  .lr-submit-btn:hover { background:var(--primary-hover); }
+  .lr-submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .lr-fieldset-hidden { display:none; }
+  .lr-hp-field { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+
+  /* ---- confirmation / printable sheet ---- */
+  .lr-confirm { border-top:1px solid var(--primary); background:var(--primary); padding:48px; }
+  .lr-confirm-eyebrow { margin:0 0 10px; font-size:10px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(0,0,0,0.6); font-weight:500; }
+  .lr-confirm-headline { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.6rem, 4vw, 2.6rem); line-height:1; text-transform:uppercase; color:#000; }
+  .lr-confirm-num { margin:0 0 28px; font-size:16px; color:rgba(0,0,0,0.78); font-weight:700; }
+  .lr-confirm-note { margin:0 0 28px; font-size:14px; color:rgba(0,0,0,0.72); }
+  .lr-print-btn { display:inline-flex; align-items:center; gap:10px; padding:15px 32px; background:#000; color:var(--ink); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; border:none; cursor:pointer; }
+  .lr-print-btn:hover { background:#1a1a1a; color:var(--primary-hover); }
+
+  .lr-print-sheet { background:#0f0f0f; border:1px solid rgba(0,0,0,0.3); padding:28px; margin-top:32px; }
+  .lr-print-sheet h3 { margin:0 0 16px; font-family:'Unbounded',sans-serif; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:#fff; }
+  .lr-print-sheet dl { margin:0 0 20px; display:grid; grid-template-columns:220px 1fr; gap:8px 16px; }
+  .lr-print-sheet dl:last-of-type { margin-bottom:0; }
+  .lr-print-sheet dt { font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:#999; }
+  .lr-print-sheet dd { margin:0; font-size:13.5px; color:#eee; white-space:pre-wrap; }
+
+  /* ---- footer (shared across every page) ---- */
+  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; }
+  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
+  .pd-footer-brand { max-width:300px; }
+  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
+  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
+  .pd-footer-col p.pd-eyebrow { margin-bottom:16px; }
+  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); transition:color 180ms; }
+  .pd-footer-col a:hover { color:var(--ink); }
+  .pd-footer-col p.pd-addr { margin:8px 0 0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-social { display:inline-flex; align-items:center; gap:8px; }
+  .pd-libro-notice { border-top:1px solid var(--primary); padding-top:28px; margin-bottom:28px; }
+  .pd-libro-title { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); }
+  .pd-libro-text { margin:0 0 12px; max-width:520px; font-size:13px; line-height:1.6; color:var(--muted); }
+  .pd-libro-link { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary); }
+  .pd-libro-link:hover { color:var(--primary-hover); }
+  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
+  .pd-footer-bottom a { color:inherit; }
+  .pd-footer-bottom a:hover { color:var(--primary); }
+
+  /* ---- print ---- */
+  @media print {
+    .pd-header, .pd-footer, .lr-hide-print, .legal-hero { display:none !important; }
+    body, html { background:#fff !important; color:#000 !important; }
+    .lr-print-sheet { background:#fff !important; border:1px solid #000 !important; padding:0 !important; margin-top:0 !important; }
+    .lr-print-sheet dt { color:#444 !important; }
+    .lr-print-sheet dd { color:#000 !important; }
+    .lr-print-sheet h3 { color:#000 !important; }
+    .lr-confirm { background:#fff !important; padding:0 !important; }
+    .lr-confirm-headline, .lr-confirm-eyebrow, .lr-confirm-num, .lr-confirm-note { color:#000 !important; }
+    .lr-body { padding-top:0 !important; max-width:100% !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="pd-header pd-pad">
+  <a href="index.html#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
+  <nav class="pd-nav">
+    <a href="index.html#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
+    <a href="index.html#entradas" class="pd-nav-cta">Comprar</a>
+  </nav>
+</header>
+
+<main>
+  <section class="legal-hero pd-pad">
+    <div class="legal-hero-inner">
+      <p class="pd-eyebrow">Libro de Reclamaciones</p>
+      <h1 class="legal-title">Hoja de Reclamación</h1>
+      <p class="legal-intro">Conforme al Código de Protección y Defensa del Consumidor (Ley N.º 29571) y al Anexo I del D.S. N.º 011-2011-PCM. Cualquier persona puede presentar un reclamo o queja aquí, sin necesidad de haber comprado una entrada ni de registrarse.</p>
+    </div>
+  </section>
+
+  <div class="lr-body pd-pad">
+
+    <div id="lr-form-wrap">
+      <div class="lr-block">
+        <span class="lr-block-num">Bloque 1</span>
+        <h2>Datos del proveedor</h2>
+        <p class="lr-block-sub">Información fija del establecimiento, no editable.</p>
+        <div class="lr-provider">
+          <dl>
+            <dt>Razón social</dt><dd>Bruno Yofreed Espinoza Pérez</dd>
+            <dt>RUC</dt><dd>10720126589</dd>
+            <dt>Nombre comercial</dt><dd>Paradisio Club</dd>
+            <dt>Domicilio</dt><dd>Jr. 28 de Julio 277, Barranco, Lima</dd>
+            <dt>Fecha del reclamo</dt><dd id="lr-fecha"></dd>
+            <dt>N.º de hoja</dt><dd id="lr-hoja-num">Se asigna automáticamente al enviar</dd>
+          </dl>
+        </div>
+      </div>
+
+      <form id="lr-form" novalidate>
+        <div class="lr-block">
+          <span class="lr-block-num">Bloque 2</span>
+          <h2>Identificación del consumidor</h2>
+
+          <div class="lr-field">
+            <label class="lr-label lr-required" for="lr-nombres">Nombres y apellidos</label>
+            <input class="lr-input" type="text" id="lr-nombres" autocomplete="name" required />
+          </div>
+
+          <div class="lr-grid-2">
+            <div class="lr-field">
+              <label class="lr-label lr-required" for="lr-tipo-doc">Tipo de documento</label>
+              <select class="lr-select" id="lr-tipo-doc" required>
+                <option value="DNI">DNI</option>
+                <option value="CE">Carné de Extranjería</option>
+                <option value="Pasaporte">Pasaporte</option>
+                <option value="RUC">RUC</option>
+              </select>
+            </div>
+            <div class="lr-field">
+              <label class="lr-label lr-required" for="lr-num-doc">Número de documento</label>
+              <input class="lr-input" type="text" id="lr-num-doc" required />
+            </div>
+          </div>
+
+          <div class="lr-field">
+            <label class="lr-label lr-required" for="lr-domicilio">Domicilio</label>
+            <input class="lr-input" type="text" id="lr-domicilio" autocomplete="street-address" required />
+          </div>
+
+          <div class="lr-grid-2">
+            <div class="lr-field">
+              <label class="lr-label lr-required" for="lr-email">Correo electrónico</label>
+              <input class="lr-input" type="email" id="lr-email" autocomplete="email" required />
+            </div>
+            <div class="lr-field">
+              <label class="lr-label" for="lr-telefono">Teléfono</label>
+              <input class="lr-input" type="tel" id="lr-telefono" autocomplete="tel" />
+            </div>
+          </div>
+
+          <div class="lr-checkrow">
+            <input type="checkbox" id="lr-menor" />
+            <label for="lr-menor">El consumidor es menor de edad.</label>
+          </div>
+
+          <div class="lr-field" id="lr-apoderado-wrap" style="display:none;">
+            <label class="lr-label lr-required" for="lr-apoderado">Nombre del padre, madre o apoderado</label>
+            <input class="lr-input" type="text" id="lr-apoderado" />
+          </div>
+        </div>
+
+        <div class="lr-block">
+          <span class="lr-block-num">Bloque 3</span>
+          <h2>Identificación del bien contratado</h2>
+
+          <div class="lr-field">
+            <label class="lr-label lr-required">Tipo</label>
+            <div class="lr-radio-group">
+              <div class="lr-radio-option">
+                <input type="radio" name="lr-tipo-bien" id="lr-bien-producto" value="Producto" />
+                <label for="lr-bien-producto">Producto</label>
+              </div>
+              <div class="lr-radio-option">
+                <input type="radio" name="lr-tipo-bien" id="lr-bien-servicio" value="Servicio" checked />
+                <label for="lr-bien-servicio">Servicio</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="lr-field">
+            <label class="lr-label lr-required" for="lr-desc-bien">Descripción (evento, tipo de entrada, código de ticket)</label>
+            <textarea class="lr-textarea" id="lr-desc-bien" style="min-height:70px;" required></textarea>
+          </div>
+
+          <div class="lr-field">
+            <label class="lr-label" for="lr-monto">Monto reclamado en S/</label>
+            <input class="lr-input" type="number" id="lr-monto" min="0" step="0.01" inputmode="decimal" />
+          </div>
+        </div>
+
+        <div class="lr-block">
+          <span class="lr-block-num">Bloque 4</span>
+          <h2>Detalle de la reclamación</h2>
+
+          <div class="lr-note">
+            <strong>Reclamo:</strong> disconformidad relacionada a los productos o servicios.<br>
+            <strong>Queja:</strong> disconformidad no relacionada a los productos o servicios; o malestar o descontento respecto a la atención al público.
+          </div>
+
+          <div class="lr-field">
+            <label class="lr-label lr-required">Tipo</label>
+            <div class="lr-radio-group">
+              <div class="lr-radio-option">
+                <input type="radio" name="lr-tipo-reclamo" id="lr-tipo-r" value="Reclamo" checked />
+                <label for="lr-tipo-r">Reclamo</label>
+              </div>
+              <div class="lr-radio-option">
+                <input type="radio" name="lr-tipo-reclamo" id="lr-tipo-q" value="Queja" />
+                <label for="lr-tipo-q">Queja</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="lr-field">
+            <label class="lr-label lr-required" for="lr-detalle">Detalle</label>
+            <textarea class="lr-textarea" id="lr-detalle" maxlength="2000" required></textarea>
+            <span class="lr-charcount"><span id="lr-detalle-count">0</span>/2000</span>
+          </div>
+
+          <div class="lr-field">
+            <label class="lr-label lr-required" for="lr-pedido">Pedido concreto del consumidor</label>
+            <textarea class="lr-textarea" id="lr-pedido" maxlength="1000" style="min-height:80px;" required></textarea>
+            <span class="lr-charcount"><span id="lr-pedido-count">0</span>/1000</span>
+          </div>
+        </div>
+
+        <div class="lr-block">
+          <span class="lr-block-num">Bloque 5</span>
+          <h2>Antes de enviar</h2>
+
+          <div class="lr-legal-notice">
+            <p>La formulación del reclamo no impide acudir a otras vías de solución de controversias ni es requisito previo para interponer una denuncia ante el INDECOPI.</p>
+            <p>El proveedor deberá dar respuesta al reclamo o queja en un plazo no mayor a quince (15) días hábiles improrrogables, contados desde el día siguiente de su presentación.</p>
+          </div>
+
+          <div class="lr-checkrow">
+            <input type="checkbox" id="lr-declaracion" required />
+            <label for="lr-declaracion">Declaro que la información brindada es veraz y autorizo el tratamiento de mis datos personales para la atención de esta reclamación.</label>
+          </div>
+
+          <p class="lr-error" id="lr-error" hidden></p>
+
+          <div class="lr-hp-field" aria-hidden="true">
+            <label for="lr-website">Sitio web</label>
+            <input type="text" id="lr-website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <button type="submit" class="lr-submit-btn" id="lr-submit-btn">Enviar reclamación</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="lr-confirm-wrap" hidden>
+      <div class="lr-confirm">
+        <p class="lr-confirm-eyebrow">Hoja registrada</p>
+        <h2 class="lr-confirm-headline">Reclamación recibida</h2>
+        <p class="lr-confirm-num" id="lr-confirm-id"></p>
+        <p class="lr-confirm-note">Se envió una copia de esta hoja al correo que registraste. Puedes imprimirla para tu respaldo.</p>
+        <button class="lr-print-btn lr-hide-print" id="lr-print-btn">Imprimir hoja</button>
+      </div>
+
+      <div class="lr-print-sheet" id="lr-print-sheet"></div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="pd-footer pd-pad">
+  <div class="pd-footer-top">
+    <div class="pd-footer-brand">
+      <img src="logo-white.png" alt="Paradisio" />
+      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
+    </div>
+    <div class="pd-footer-cols">
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Contacto</p>
+        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="tel:+51970457825">970 457 825</a>
+        <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Síguenos</p>
+        <a class="pd-social" href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          Instagram
+        </a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Ubicación del evento</p>
+        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Legal</p>
+        <a href="terminos.html">Términos y condiciones</a>
+        <a href="devoluciones.html">Cambios y devoluciones</a>
+        <a href="privacidad.html">Privacidad</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="pd-libro-notice">
+    <p class="pd-libro-title">Libro de Reclamaciones</p>
+    <p class="pd-libro-text">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de Reclamaciones a tu disposición.</p>
+    <a class="pd-libro-link" href="libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a>
+  </div>
+
+  <div class="pd-footer-bottom">
+    <span>© 2026 Paradisio</span>
+    <span>Lima, Perú</span>
+  </div>
+</footer>
+
+<script>
+  const today = new Date();
+  document.getElementById('lr-fecha').textContent = today.toLocaleDateString('es-PE', { day:'numeric', month:'long', year:'numeric' });
+
+  const menorCheckbox = document.getElementById('lr-menor');
+  const apoderadoWrap = document.getElementById('lr-apoderado-wrap');
+  const apoderadoInput = document.getElementById('lr-apoderado');
+  menorCheckbox.addEventListener('change', function(){
+    apoderadoWrap.style.display = menorCheckbox.checked ? 'flex' : 'none';
+    if (!menorCheckbox.checked) apoderadoInput.value = '';
+  });
+
+  function wireCounter(taId, countId){
+    const ta = document.getElementById(taId);
+    const count = document.getElementById(countId);
+    ta.addEventListener('input', function(){ count.textContent = ta.value.length; });
+  }
+  wireCounter('lr-detalle', 'lr-detalle-count');
+  wireCounter('lr-pedido', 'lr-pedido-count');
+
+  function showError(msg){
+    const el = document.getElementById('lr-error');
+    if (!msg) { el.hidden = true; el.textContent = ''; return; }
+    el.hidden = false;
+    el.textContent = msg;
+    el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+
+  function readForm(){
+    return {
+      nombres: document.getElementById('lr-nombres').value.trim(),
+      tipoDocumento: document.getElementById('lr-tipo-doc').value,
+      numeroDocumento: document.getElementById('lr-num-doc').value.trim(),
+      domicilio: document.getElementById('lr-domicilio').value.trim(),
+      email: document.getElementById('lr-email').value.trim(),
+      telefono: document.getElementById('lr-telefono').value.trim(),
+      esMenorEdad: menorCheckbox.checked,
+      apoderado: apoderadoInput.value.trim(),
+      tipoBien: document.querySelector('input[name="lr-tipo-bien"]:checked').value,
+      descripcionBien: document.getElementById('lr-desc-bien').value.trim(),
+      montoReclamado: document.getElementById('lr-monto').value,
+      tipoReclamo: document.querySelector('input[name="lr-tipo-reclamo"]:checked').value,
+      detalle: document.getElementById('lr-detalle').value.trim(),
+      pedidoConcreto: document.getElementById('lr-pedido').value.trim(),
+      declaracionVeraz: document.getElementById('lr-declaracion').checked,
+      website: document.getElementById('lr-website').value.trim(),
+    };
+  }
+
+  function validate(d){
+    if (!d.nombres) return 'Ingresa tus nombres y apellidos.';
+    if (!d.numeroDocumento) return 'Ingresa tu número de documento.';
+    if (!d.domicilio) return 'Ingresa tu domicilio.';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return 'Ingresa un correo electrónico válido.';
+    if (d.esMenorEdad && !d.apoderado) return 'Ingresa el nombre del padre, madre o apoderado.';
+    if (!d.descripcionBien) return 'Describe el producto o servicio contratado.';
+    if (!d.detalle) return 'Describe el detalle de tu reclamación.';
+    if (d.detalle.length > 2000) return 'El detalle no puede superar los 2000 caracteres.';
+    if (!d.pedidoConcreto) return 'Indica tu pedido concreto.';
+    if (d.pedidoConcreto.length > 1000) return 'El pedido concreto no puede superar los 1000 caracteres.';
+    if (!d.declaracionVeraz) return 'Debes declarar que la información es veraz para continuar.';
+    return null;
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function renderPrintSheet(reclamo, form, plazoLimite){
+    const fecha = new Date(reclamo.createdAt).toLocaleDateString('es-PE', { day:'numeric', month:'long', year:'numeric' });
+    const fechaLimite = plazoLimite ? new Date(plazoLimite).toLocaleDateString('es-PE', { day:'numeric', month:'long', year:'numeric' }) : '—';
+    document.getElementById('lr-print-sheet').innerHTML = `
+      <h3>Bloque 1 — Datos del proveedor</h3>
+      <dl>
+        <dt>Razón social</dt><dd>Bruno Yofreed Espinoza Pérez</dd>
+        <dt>RUC</dt><dd>10720126589</dd>
+        <dt>Nombre comercial</dt><dd>Paradisio Club</dd>
+        <dt>Domicilio</dt><dd>Jr. 28 de Julio 277, Barranco, Lima</dd>
+        <dt>Fecha del reclamo</dt><dd>${fecha}</dd>
+        <dt>N.º de hoja</dt><dd>${reclamo.id}</dd>
+      </dl>
+      <h3>Bloque 2 — Identificación del consumidor</h3>
+      <dl>
+        <dt>Nombres y apellidos</dt><dd>${escapeHtml(form.nombres)}</dd>
+        <dt>Documento</dt><dd>${escapeHtml(form.tipoDocumento)} ${escapeHtml(form.numeroDocumento)}</dd>
+        <dt>Domicilio</dt><dd>${escapeHtml(form.domicilio)}</dd>
+        <dt>Correo electrónico</dt><dd>${escapeHtml(form.email)}</dd>
+        <dt>Teléfono</dt><dd>${escapeHtml(form.telefono) || '—'}</dd>
+        ${form.esMenorEdad ? `<dt>Padre/madre/apoderado</dt><dd>${escapeHtml(form.apoderado)}</dd>` : ''}
+      </dl>
+      <h3>Bloque 3 — Identificación del bien contratado</h3>
+      <dl>
+        <dt>Tipo</dt><dd>${escapeHtml(form.tipoBien)}</dd>
+        <dt>Descripción</dt><dd>${escapeHtml(form.descripcionBien)}</dd>
+        <dt>Monto reclamado</dt><dd>${form.montoReclamado ? 'S/ ' + form.montoReclamado : '—'}</dd>
+      </dl>
+      <h3>Bloque 4 — Detalle de la reclamación</h3>
+      <dl>
+        <dt>Tipo</dt><dd>${escapeHtml(form.tipoReclamo)}</dd>
+        <dt>Detalle</dt><dd>${escapeHtml(form.detalle)}</dd>
+        <dt>Pedido concreto</dt><dd>${escapeHtml(form.pedidoConcreto)}</dd>
+      </dl>
+      <h3>Bloque 5 — Nota legal</h3>
+      <dl>
+        <dt>Plazo de respuesta</dt><dd>El proveedor deberá dar respuesta al reclamo o queja en un plazo no mayor a quince (15) días hábiles improrrogables, contados desde el día siguiente de su presentación. Fecha límite de respuesta: ${fechaLimite}.</dd>
+        <dt>Otras vías</dt><dd>La formulación del reclamo no impide acudir a otras vías de solución de controversias ni es requisito previo para interponer una denuncia ante el INDECOPI.</dd>
+      </dl>
+    `;
+  }
+
+  document.getElementById('lr-form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const form = readForm();
+    const err = validate(form);
+    if (err) { showError(err); return; }
+    showError('');
+
+    const submitBtn = document.getElementById('lr-submit-btn');
+    submitBtn.disabled = true;
+    try {
+      const r = await fetch('/api/reclamo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const d = await r.json();
+      if (r.status === 429) {
+        showError('Has alcanzado el límite de envíos por hora. Intenta de nuevo más tarde o escríbenos a ritmo@paradisioclub.com.');
+        return;
+      }
+      if (!r.ok) {
+        showError('Ocurrió un error al enviar tu reclamación. Revisa los datos ingresados o escríbenos a ritmo@paradisioclub.com.');
+        return;
+      }
+      document.getElementById('lr-form-wrap').hidden = true;
+      document.getElementById('lr-confirm-wrap').hidden = false;
+      if (d.reclamo) {
+        document.getElementById('lr-confirm-id').textContent = 'N.º de hoja: ' + d.reclamo.id;
+        renderPrintSheet(d.reclamo, form, d.plazoLimite);
+      } else {
+        document.getElementById('lr-confirm-id').textContent = '';
+        document.getElementById('lr-print-sheet').hidden = true;
+      }
+      document.getElementById('lr-confirm-wrap').scrollIntoView({ behavior:'smooth', block:'start' });
+    } catch (e2) {
+      showError('Error de conexión. Intenta de nuevo o escríbenos a ritmo@paradisioclub.com.');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('lr-print-btn').onclick = function(){ window.print(); };
+</script>
+</body>
+</html>

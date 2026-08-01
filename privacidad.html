@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Política de Privacidad — Paradisio</title>
+<meta name="description" content="Política de privacidad y tratamiento de datos personales de Paradisio." />
+<meta name="robots" content="noindex" />
+<style>
+  @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
+  @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
+
+  :root {
+    --bg:#090909; --ink:#F2EDE4; --primary:#FF2800; --primary-hover:#FF9A00;
+    --muted:#888880; --line:rgba(255,40,0,0.18); --card:#141414; --field:#1A1A1A;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; background:var(--bg); }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:var(--primary); text-decoration:none; }
+  a:hover { color:var(--primary-hover); }
+  ::selection { background:var(--primary); color:#0A0A0A; }
+
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .pd-pad { padding-left:40px; padding-right:40px; }
+  @media (max-width:860px) { .pd-pad { padding-left:22px !important; padding-right:22px !important; } .pd-hide-sm { display:none !important; } }
+
+  .pd-header { position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between; height:64px; background:rgba(9,9,9,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+  .pd-header .logo-link { display:block; flex:none; line-height:0; }
+  .pd-header .logo-link img { display:block; width:142px; height:28px; }
+  .pd-nav { display:flex; align-items:center; gap:30px; }
+  .pd-nav-link { font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:500; color:rgba(242,237,228,0.5); transition:color 240ms ease; }
+  .pd-nav-link:hover { color:var(--ink); }
+  .pd-nav-cta { padding:11px 20px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; background:var(--primary); color:#0A0A0A; transition:background 240ms ease; }
+  .pd-nav-cta:hover { background:var(--primary-hover); color:#0A0A0A; }
+
+  .pd-eyebrow { margin:0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+
+  .legal-hero { padding:150px 0 48px; border-bottom:1px solid var(--line); }
+  .legal-hero-inner { max-width:70ch; margin:0 auto; }
+  .legal-title { margin:14px 0 0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem,5vw,3.2rem); line-height:1.05; letter-spacing:-0.02em; color:var(--ink); }
+  .legal-updated { margin:16px 0 0; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+  .legal-intro { margin:20px 0 0; font-size:15px; line-height:1.75; color:var(--muted); max-width:60ch; }
+
+  .legal-toc { max-width:70ch; margin:40px auto 0; padding:28px 0 0; border-top:1px solid var(--line); list-style:none; column-count:2; column-gap:32px; }
+  .legal-toc li { margin-bottom:8px; break-inside:avoid; }
+  .legal-toc a { font-size:13px; color:var(--muted); }
+  .legal-toc a:hover { color:var(--primary); }
+
+  .legal-body { max-width:70ch; margin:0 auto; padding:56px 0 96px; }
+  .legal-section { padding-bottom:36px; margin-bottom:36px; border-bottom:1px solid var(--line); scroll-margin-top:90px; }
+  .legal-section:last-of-type { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .legal-section-num { display:block; margin-bottom:10px; font-size:11px; letter-spacing:0.3em; color:rgba(136,136,128,0.55); font-variant-numeric:tabular-nums; }
+  .legal-section h2 { margin:0 0 16px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:clamp(1.1rem,2.4vw,1.35rem); line-height:1.3; color:var(--ink); }
+  .legal-section p { margin:0 0 16px; font-size:15px; line-height:1.75; color:var(--ink); }
+  .legal-section p:last-child { margin-bottom:0; }
+  .legal-section strong { color:var(--ink); font-weight:700; }
+  .legal-section ul, .legal-section ol { margin:0 0 16px; padding-left:22px; }
+  .legal-section li { margin-bottom:10px; font-size:15px; line-height:1.7; }
+  .legal-section li:last-child { margin-bottom:0; }
+  .legal-callout { border-left:2px solid var(--primary); padding:2px 0 2px 18px; margin:20px 0; font-size:15px; line-height:1.7; color:var(--ink); font-weight:700; }
+  .legal-table-wrap { overflow-x:auto; margin:16px 0 20px; border:1px solid var(--line); }
+  .legal-table { width:100%; min-width:460px; border-collapse:collapse; font-size:14px; }
+  .legal-table th, .legal-table td { text-align:left; padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .legal-table tr:last-child td { border-bottom:none; }
+  .legal-table th { font-family:'Unbounded',sans-serif; font-weight:700; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--primary); background:var(--card); }
+  .legal-table td { color:var(--muted); line-height:1.6; }
+  .legal-note { font-size:13px; color:var(--muted); font-style:italic; }
+
+  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; }
+  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
+  .pd-footer-brand { max-width:300px; }
+  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
+  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
+  .pd-footer-col p.pd-eyebrow { margin-bottom:16px; }
+  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); transition:color 180ms; }
+  .pd-footer-col a:hover { color:var(--ink); }
+  .pd-footer-col p.pd-addr { margin:8px 0 0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-social { display:inline-flex; align-items:center; gap:8px; }
+  .pd-libro-notice { border-top:1px solid var(--primary); padding-top:28px; margin-bottom:28px; }
+  .pd-libro-title { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); }
+  .pd-libro-text { margin:0 0 12px; max-width:520px; font-size:13px; line-height:1.6; color:var(--muted); }
+  .pd-libro-link { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary); }
+  .pd-libro-link:hover { color:var(--primary-hover); }
+  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
+  .pd-footer-bottom a { color:inherit; }
+  .pd-footer-bottom a:hover { color:var(--primary); }
+</style>
+</head>
+<body>
+
+<header class="pd-header pd-pad">
+  <a href="index.html#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
+  <nav class="pd-nav">
+    <a href="index.html#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
+    <a href="index.html#entradas" class="pd-nav-cta">Comprar</a>
+  </nav>
+</header>
+
+<main>
+  <section class="legal-hero pd-pad">
+    <div class="legal-hero-inner">
+      <p class="pd-eyebrow">Legal</p>
+      <h1 class="legal-title">Política de Privacidad</h1>
+      <p class="legal-updated">Última actualización: 1 de agosto de 2026</p>
+      <p class="legal-intro">Cómo Paradisio recolecta, usa y protege los datos personales de quienes compran o se registran para sus eventos.</p>
+    </div>
+    <ul class="legal-toc">
+      <li><a href="#s1">1. Responsable del tratamiento</a></li>
+      <li><a href="#s2">2. Datos que recolectamos</a></li>
+      <li><a href="#s3">3. Finalidades del tratamiento</a></li>
+      <li><a href="#s4">4. Base legal</a></li>
+      <li><a href="#s5">5. Plazo de conservación</a></li>
+      <li><a href="#s6">6. Almacenamiento y transferencias</a></li>
+      <li><a href="#s7">7. Medidas de seguridad</a></li>
+      <li><a href="#s8">8. Derechos del titular (ARCO)</a></li>
+      <li><a href="#s9">9. Menores de edad</a></li>
+      <li><a href="#s10">10. Cookies</a></li>
+      <li><a href="#s11">11. Cambios en esta política</a></li>
+    </ul>
+  </section>
+
+  <div class="legal-body pd-pad">
+
+    <section class="legal-section" id="s1">
+      <span class="legal-section-num">01</span>
+      <h2>Responsable del tratamiento</h2>
+      <ul>
+        <li><strong>Titular:</strong> Bruno Yofreed Espinoza Pérez</li>
+        <li><strong>RUC:</strong> 10720126589</li>
+        <li><strong>Nombre comercial:</strong> Paradisio Club</li>
+        <li><strong>Domicilio:</strong> Jr. 28 de Julio 277, Barranco, Lima, Perú</li>
+        <li><strong>Correo para asuntos de datos personales:</strong> ritmo@paradisioclub.com</li>
+        <li><strong>Teléfono:</strong> 970 457 825</li>
+      </ul>
+      <p>El tratamiento se realiza conforme a la <strong>Ley N.º 29733, Ley de Protección de Datos Personales</strong>, y su reglamento vigente.</p>
+    </section>
+
+    <section class="legal-section" id="s2">
+      <span class="legal-section-num">02</span>
+      <h2>Datos que recolectamos</h2>
+      <p>Al registrar o adquirir una entrada, recolectamos:</p>
+      <div class="legal-table-wrap">
+        <table class="legal-table">
+          <thead><tr><th>Dato</th><th>Finalidad</th></tr></thead>
+          <tbody>
+            <tr><td>Nombre completo</td><td>Emisión de la entrada nominal y verificación en puerta</td></tr>
+            <tr><td>Tipo y número de documento de identidad</td><td>Verificación de identidad en el ingreso y control antifraude</td></tr>
+            <tr><td>Fecha de nacimiento</td><td>Verificación obligatoria de mayoría de edad (18 años)</td></tr>
+            <tr><td>Correo electrónico</td><td>Envío de la entrada con código QR y comunicaciones sobre el evento</td></tr>
+            <tr><td>Teléfono (opcional)</td><td>Contacto ante incidencias con la entrada</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="legal-callout">No recolectamos ni almacenamos datos de tarjetas de crédito o débito. Esa información es procesada directamente por Culqi, pasarela de pagos autorizada, bajo sus propias políticas de seguridad y estándares PCI-DSS.</p>
+    </section>
+
+    <section class="legal-section" id="s3">
+      <span class="legal-section-num">03</span>
+      <h2>Finalidades del tratamiento</h2>
+      <p><strong>Finalidades necesarias</strong> (sin ellas no es posible prestar el servicio):</p>
+      <ol>
+        <li>Emitir la entrada nominal y su código QR</li>
+        <li>Verificar el cumplimiento del requisito legal de mayoría de edad</li>
+        <li>Validar el ingreso al evento mediante escaneo del código</li>
+        <li>Comunicar información esencial del evento (confirmación, cambios, cancelación, reprogramación)</li>
+        <li>Atender solicitudes, reclamos y devoluciones</li>
+        <li>Prevenir el fraude y la reventa no autorizada</li>
+        <li>Cumplir obligaciones tributarias y de conservación documental</li>
+      </ol>
+      <p><strong>Finalidad adicional y opcional:</strong></p>
+      <ol start="8">
+        <li>Envío de comunicaciones sobre futuros eventos de Paradisio, <strong>únicamente si el usuario otorga su consentimiento expreso</strong> marcando la casilla correspondiente. Este consentimiento es revocable en cualquier momento, sin afectar la validez de la entrada adquirida.</li>
+      </ol>
+    </section>
+
+    <section class="legal-section" id="s4">
+      <span class="legal-section-num">04</span>
+      <h2>Base legal</h2>
+      <p>El tratamiento de los datos indicados en las finalidades 1 a 7 se sustenta en la <strong>ejecución de la relación contractual</strong> entre el usuario y Paradisio y en el <strong>cumplimiento de obligaciones legales</strong>, por lo que no requiere consentimiento adicional.</p>
+      <p>La finalidad 8 se sustenta en el <strong>consentimiento libre, previo, expreso e informado</strong> del titular.</p>
+    </section>
+
+    <section class="legal-section" id="s5">
+      <span class="legal-section-num">05</span>
+      <h2>Plazo de conservación</h2>
+      <ul>
+        <li><strong>Datos de asistentes al evento:</strong> se conservan por el plazo necesario para atender reclamos y cumplir obligaciones legales, y en ningún caso más de <strong>doce (12) meses</strong> desde la fecha del evento, salvo que exista un procedimiento en curso.</li>
+        <li><strong>Registros contables y tributarios:</strong> por el plazo que exija la normativa tributaria peruana.</li>
+        <li><strong>Datos para comunicaciones comerciales:</strong> hasta que el titular revoque su consentimiento o solicite su cancelación.</li>
+        <li><strong>Hojas del Libro de Reclamaciones:</strong> por un plazo mínimo de <strong>dos (2) años</strong>, conforme al Reglamento del Libro de Reclamaciones.</li>
+      </ul>
+    </section>
+
+    <section class="legal-section" id="s6">
+      <span class="legal-section-num">06</span>
+      <h2>Almacenamiento y transferencias</h2>
+      <p>Los datos se almacenan en servidores de proveedores de infraestructura tecnológica ubicados fuera del territorio peruano, lo que constituye un <strong>flujo transfronterizo de datos personales</strong>. Los encargados de tratamiento son:</p>
+      <div class="legal-table-wrap">
+        <table class="legal-table">
+          <thead><tr><th>Proveedor</th><th>Servicio</th><th>Ubicación</th></tr></thead>
+          <tbody>
+            <tr><td>Vercel Inc.</td><td>Alojamiento del sitio web</td><td>Estados Unidos</td></tr>
+            <tr><td>Upstash Inc.</td><td>Base de datos de entradas</td><td>Estados Unidos / Unión Europea</td></tr>
+            <tr><td>Resend</td><td>Envío de correo transaccional</td><td>Estados Unidos</td></tr>
+            <tr><td>Culqi S.A.C.</td><td>Procesamiento de pagos</td><td>Perú</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Todos los proveedores mantienen estándares de seguridad reconocidos internacionalmente. Paradisio no vende, cede ni comparte datos personales con terceros para fines comerciales ajenos a los descritos en esta política.</p>
+      <p>Los datos podrán ser comunicados a autoridades competentes cuando exista un requerimiento legal válido.</p>
+    </section>
+
+    <section class="legal-section" id="s7">
+      <span class="legal-section-num">07</span>
+      <h2>Medidas de seguridad</h2>
+      <p>Paradisio aplica medidas técnicas y organizativas razonables para proteger los datos, incluyendo cifrado en tránsito mediante certificado SSL en todo el sitio, control de accesos al panel administrativo y limitación del acceso a los datos al personal estrictamente necesario para la operación del evento.</p>
+    </section>
+
+    <section class="legal-section" id="s8">
+      <span class="legal-section-num">08</span>
+      <h2>Derechos del titular (ARCO)</h2>
+      <p>El titular de los datos puede ejercer en cualquier momento sus derechos de <strong>acceso, rectificación, cancelación y oposición</strong>, así como los derechos de información, tratamiento objetivo y revocación del consentimiento.</p>
+      <p><strong>Cómo ejercerlos:</strong> enviando una solicitud a <strong>ritmo@paradisioclub.com</strong> con el asunto "Derechos ARCO", indicando nombre completo, número de documento de identidad y el derecho que desea ejercer.</p>
+      <p>Paradisio responderá dentro de los plazos establecidos por la Ley N.º 29733 y su reglamento.</p>
+      <p>Si el titular considera que su solicitud no fue atendida adecuadamente, puede presentar un reclamo ante la <strong>Autoridad Nacional de Protección de Datos Personales del Ministerio de Justicia y Derechos Humanos</strong>.</p>
+    </section>
+
+    <section class="legal-section" id="s9">
+      <span class="legal-section-num">09</span>
+      <h2>Menores de edad</h2>
+      <p>El servicio está dirigido <strong>exclusivamente a mayores de 18 años</strong>. Paradisio no recolecta intencionalmente datos de menores de edad y rechaza automáticamente todo registro cuya fecha de nacimiento indique minoría de edad.</p>
+      <p>Si se detecta que se han recolectado datos de un menor, serán eliminados de inmediato. Los padres o tutores que adviertan esta situación pueden comunicarlo a ritmo@paradisioclub.com.</p>
+    </section>
+
+    <section class="legal-section" id="s10">
+      <span class="legal-section-num">10</span>
+      <h2>Cookies</h2>
+      <p>paradisioclub.com utiliza únicamente cookies técnicas necesarias para el funcionamiento del sitio y el procesamiento seguro del pago. No se utilizan cookies de perfilamiento publicitario de terceros.</p>
+      <p class="legal-note">Nota de implementación: si más adelante se instala Meta Pixel, Google Analytics o similar, esta sección debe actualizarse y agregarse un banner de consentimiento de cookies.</p>
+    </section>
+
+    <section class="legal-section" id="s11">
+      <span class="legal-section-num">11</span>
+      <h2>Cambios en esta política</h2>
+      <p>Paradisio podrá actualizar esta política. La fecha de la última actualización se indica al inicio del documento. Los cambios sustanciales serán comunicados por correo electrónico a los usuarios registrados.</p>
+    </section>
+
+  </div>
+</main>
+
+<footer class="pd-footer pd-pad">
+  <div class="pd-footer-top">
+    <div class="pd-footer-brand">
+      <img src="logo-white.png" alt="Paradisio" />
+      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
+    </div>
+    <div class="pd-footer-cols">
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Contacto</p>
+        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="tel:+51970457825">970 457 825</a>
+        <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Síguenos</p>
+        <a class="pd-social" href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          Instagram
+        </a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Ubicación del evento</p>
+        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Legal</p>
+        <a href="terminos.html">Términos y condiciones</a>
+        <a href="devoluciones.html">Cambios y devoluciones</a>
+        <a href="privacidad.html">Privacidad</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="pd-libro-notice">
+    <p class="pd-libro-title">Libro de Reclamaciones</p>
+    <p class="pd-libro-text">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de Reclamaciones a tu disposición.</p>
+    <a class="pd-libro-link" href="libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a>
+  </div>
+
+  <div class="pd-footer-bottom">
+    <span>© 2026 Paradisio</span>
+    <span>Lima, Perú</span>
+  </div>
+</footer>
+
+</body>
+</html>

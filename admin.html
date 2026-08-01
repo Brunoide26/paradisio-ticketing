@@ -39,6 +39,45 @@
   .badge-void { background:#2a0a0a; color:#e07f7f; }
   .table-scroll { overflow-x:auto; }
   .hint { color:#666; font-size:12px; margin-top:8px; }
+
+  .tabs { display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid var(--line); }
+  .tab-btn { background:none; border:none; color:#888; font-family:inherit; font-size:13px; font-weight:600; padding:10px 4px; margin-right:20px; cursor:pointer; border-bottom:2px solid transparent; }
+  .tab-btn.is-active { color:#fff; border-bottom-color:var(--pink); }
+
+  .semaforo-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  .semaforo-green { background:#4fd07a; }
+  .semaforo-amber { background:#e0b83f; }
+  .semaforo-red { background:#e0605f; }
+  .semaforo-none { background:#555; }
+  .badge-pendiente { background:#2a2200; color:#e0c87f; }
+  .badge-respondido { background:#0a2a12; color:#7fe0a0; }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; z-index:100; }
+  .modal-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px; max-width:640px; width:100%; }
+  .modal-card h3 { font-family:'Unbounded',sans-serif; font-size:16px; margin:0 0 18px; }
+  .modal-field { margin-bottom:14px; }
+  .modal-field .modal-label { display:block; font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; }
+  .modal-field .modal-value { font-size:14px; color:#eee; white-space:pre-wrap; line-height:1.5; }
+  .modal-field textarea { width:100%; background:#000; border:1px solid var(--line); color:#fff; padding:10px; border-radius:7px; font-size:13px; font-family:inherit; min-height:100px; resize:vertical; }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+
+  /* ---- shared site footer ---- */
+  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; margin:60px -16px -60px; }
+  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
+  .pd-footer-brand { max-width:300px; }
+  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
+  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:#888880; }
+  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
+  .pd-footer-col p.pd-eyebrow { margin:0 0 16px; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--pink); font-weight:500; }
+  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:#888880; text-decoration:none; transition:color 180ms; }
+  .pd-footer-col a:hover { color:var(--white); }
+  .pd-footer-col p.pd-addr { margin:8px 0 0; font-size:14px; line-height:1.7; color:#888880; }
+  .pd-social { display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+  .pd-libro-notice { border-top:1px solid var(--pink); padding-top:28px; margin-bottom:28px; }
+  .pd-libro-title { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--white); }
+  .pd-libro-text { margin:0 0 12px; max-width:520px; font-size:13px; line-height:1.6; color:#888880; }
+  .pd-libro-link { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--pink); text-decoration:none; }
+  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
 </style>
 </head>
 <body>
@@ -56,26 +95,102 @@
   </div>
 
   <div id="dashboard-area" style="display:none;">
-    <div class="stat-row" id="stats"></div>
-    <div class="toolbar">
-      <input type="text" id="search" placeholder="Buscar por nombre, email, teléfono o código..." />
-      <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
-      <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
+    <div class="tabs">
+      <button class="tab-btn is-active" id="tab-tickets">Tickets</button>
+      <button class="tab-btn" id="tab-reclamos">Reclamaciones</button>
     </div>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Código</th><th>Nombre</th><th>DNI</th><th>F. Nac.</th><th>Teléfono</th><th>Email</th>
-            <th>Tipo</th><th>Monto</th><th>Registrado</th><th>Estado</th><th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-      </table>
+
+    <div id="tickets-panel">
+      <div class="stat-row" id="stats"></div>
+      <div class="toolbar">
+        <input type="text" id="search" placeholder="Buscar por nombre, email, teléfono o código..." />
+        <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
+        <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th><th>Nombre</th><th>DNI</th><th>F. Nac.</th><th>Teléfono</th><th>Email</th>
+              <th>Tipo</th><th>Monto</th><th>Registrado</th><th>Estado</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      <div class="hint">Los tickets anulados no se podrán usar para ingresar, aunque muestren el QR.</div>
     </div>
-    <div class="hint">Los tickets anulados no se podrán usar para ingresar, aunque muestren el QR.</div>
+
+    <div id="reclamos-panel" style="display:none;">
+      <div class="stat-row" id="reclamos-stats"></div>
+      <div class="toolbar">
+        <input type="text" id="reclamos-search" placeholder="Buscar por nombre, hoja o email..." />
+        <button class="btn btn-ghost" id="reclamos-export-btn">Exportar CSV</button>
+        <button class="btn btn-ghost" id="reclamos-refresh-btn">Actualizar</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>N.º de hoja</th><th>Fecha</th><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Días hábiles restantes</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="reclamos-table-body"></tbody>
+        </table>
+      </div>
+      <div class="hint">El plazo de respuesta es de 15 días hábiles improrrogables desde el día siguiente a la presentación. Verde: más de 7 días. Ámbar: 3 a 7 días. Rojo: menos de 3 días o vencido.</div>
+    </div>
   </div>
 </div>
+
+<div class="modal-overlay" id="reclamo-modal" style="display:none;">
+  <div class="modal-card" id="reclamo-modal-card"></div>
+</div>
+
+<footer class="pd-footer">
+  <div class="pd-footer-top">
+    <div class="pd-footer-brand">
+      <img src="logo-white.png" alt="Paradisio" />
+      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
+    </div>
+    <div class="pd-footer-cols">
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Contacto</p>
+        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="tel:+51970457825">970 457 825</a>
+        <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Síguenos</p>
+        <a class="pd-social" href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          Instagram
+        </a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Ubicación del evento</p>
+        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Legal</p>
+        <a href="terminos.html">Términos y condiciones</a>
+        <a href="devoluciones.html">Cambios y devoluciones</a>
+        <a href="privacidad.html">Privacidad</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="pd-libro-notice">
+    <p class="pd-libro-title">Libro de Reclamaciones</p>
+    <p class="pd-libro-text">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de Reclamaciones a tu disposición.</p>
+    <a class="pd-libro-link" href="libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a>
+  </div>
+
+  <div class="pd-footer-bottom">
+    <span>© 2026 Paradisio</span>
+    <span>Lima, Perú</span>
+  </div>
+</footer>
 
 <script>
   let PASSCODE = '';
@@ -193,6 +308,171 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'paradisio-tickets.csv';
+    a.click();
+  };
+
+  /* ---- Reclamaciones tab ---- */
+  let allReclamos = [];
+  let reclamosLoaded = false;
+
+  document.getElementById('tab-tickets').onclick = function(){
+    document.getElementById('tab-tickets').classList.add('is-active');
+    document.getElementById('tab-reclamos').classList.remove('is-active');
+    document.getElementById('tickets-panel').style.display = 'block';
+    document.getElementById('reclamos-panel').style.display = 'none';
+  };
+  document.getElementById('tab-reclamos').onclick = function(){
+    document.getElementById('tab-reclamos').classList.add('is-active');
+    document.getElementById('tab-tickets').classList.remove('is-active');
+    document.getElementById('reclamos-panel').style.display = 'block';
+    document.getElementById('tickets-panel').style.display = 'none';
+    if (!reclamosLoaded) loadReclamos();
+  };
+
+  async function loadReclamos(){
+    try {
+      const r = await fetch('/api/admin-reclamos', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE })
+      });
+      if(r.status === 401){ alert('Clave incorrecta'); return; }
+      const d = await r.json();
+      allReclamos = d.reclamos || [];
+      reclamosLoaded = true;
+      renderReclamosStats(allReclamos);
+      renderReclamosTable(allReclamos);
+    } catch(e){
+      alert('Error de conexión al cargar reclamaciones');
+    }
+  }
+
+  function renderReclamosStats(reclamos){
+    const pendientes = reclamos.filter(r => r.status === 'pendiente').length;
+    const respondidos = reclamos.filter(r => r.status === 'respondido').length;
+    const vencidos = reclamos.filter(r => r.status === 'pendiente' && r.diasHabilesRestantes < 0).length;
+    const items = [
+      [reclamos.length, 'Total'],
+      [pendientes, 'Pendientes'],
+      [respondidos, 'Respondidos'],
+      [vencidos, 'Vencidos'],
+    ];
+    document.getElementById('reclamos-stats').innerHTML = items.map(i => `<div class="stat"><div class="stat-num">${i[0]}</div><div class="stat-label">${i[1]}</div></div>`).join('');
+  }
+
+  function diasRestantesLabel(r){
+    if (r.status === 'respondido') return '—';
+    if (r.diasHabilesRestantes < 0) return 'Vencido (' + Math.abs(r.diasHabilesRestantes) + ' días)';
+    return r.diasHabilesRestantes + ' días';
+  }
+
+  function renderReclamosTable(reclamos){
+    const body = document.getElementById('reclamos-table-body');
+    if(reclamos.length === 0){
+      body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#666;">Sin resultados</td></tr>';
+      return;
+    }
+    body.innerHTML = reclamos.map(r => {
+      const fecha = new Date(r.createdAt).toLocaleString('es-PE', { dateStyle:'short', timeStyle:'short' });
+      const estadoBadge = r.status === 'respondido'
+        ? '<span class="badge badge-respondido">Respondido</span>'
+        : '<span class="badge badge-pendiente">Pendiente</span>';
+      return `<tr>
+        <td style="font-family:monospace;">${r.id}</td>
+        <td>${fecha}</td>
+        <td>${escapeHtml(r.nombres)}</td>
+        <td>${escapeHtml(r.tipoReclamo)}</td>
+        <td>${estadoBadge}</td>
+        <td><span class="semaforo-dot semaforo-${r.semaforo}"></span>${diasRestantesLabel(r)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="openReclamo('${r.id}')">Ver</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  window.openReclamo = function(id){
+    const r = allReclamos.find(x => x.id === id);
+    if (!r) return;
+    const fecha = new Date(r.createdAt).toLocaleString('es-PE', { dateStyle:'long', timeStyle:'short' });
+    const card = document.getElementById('reclamo-modal-card');
+    card.innerHTML = `
+      <h3>${r.id} · ${escapeHtml(r.tipoReclamo)}</h3>
+      <div class="modal-field"><span class="modal-label">Fecha de presentación</span><div class="modal-value">${fecha}</div></div>
+      <div class="modal-field"><span class="modal-label">Días hábiles restantes</span><div class="modal-value"><span class="semaforo-dot semaforo-${r.semaforo}"></span>${diasRestantesLabel(r)}</div></div>
+      <div class="modal-field"><span class="modal-label">Consumidor</span><div class="modal-value">${escapeHtml(r.nombres)} · ${escapeHtml(r.tipoDocumento)} ${escapeHtml(r.numeroDocumento)}</div></div>
+      <div class="modal-field"><span class="modal-label">Domicilio</span><div class="modal-value">${escapeHtml(r.domicilio)}</div></div>
+      <div class="modal-field"><span class="modal-label">Contacto</span><div class="modal-value">${escapeHtml(r.email)} · ${escapeHtml(r.telefono) || '—'}</div></div>
+      ${r.esMenorEdad ? `<div class="modal-field"><span class="modal-label">Padre/madre/apoderado</span><div class="modal-value">${escapeHtml(r.apoderado)}</div></div>` : ''}
+      <div class="modal-field"><span class="modal-label">Bien contratado</span><div class="modal-value">${escapeHtml(r.tipoBien)} — ${escapeHtml(r.descripcionBien)}</div></div>
+      <div class="modal-field"><span class="modal-label">Monto reclamado</span><div class="modal-value">${r.montoReclamado ? 'S/ ' + r.montoReclamado : '—'}</div></div>
+      <div class="modal-field"><span class="modal-label">Detalle</span><div class="modal-value">${escapeHtml(r.detalle)}</div></div>
+      <div class="modal-field"><span class="modal-label">Pedido concreto</span><div class="modal-value">${escapeHtml(r.pedidoConcreto)}</div></div>
+      <div class="modal-field">
+        <span class="modal-label">Observaciones y acciones adoptadas por el proveedor</span>
+        <textarea id="reclamo-respuesta">${escapeHtml(r.respuesta)}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="reclamo-modal-close">Cerrar</button>
+        ${r.status === 'respondido'
+          ? '<button class="btn btn-ghost" disabled>Ya respondido</button>'
+          : `<button class="btn btn-pink" id="reclamo-modal-respond">Marcar como respondido y enviar</button>`}
+      </div>
+    `;
+    document.getElementById('reclamo-modal').style.display = 'flex';
+    document.getElementById('reclamo-modal-close').onclick = closeReclamoModal;
+    const respondBtn = document.getElementById('reclamo-modal-respond');
+    if (respondBtn) {
+      respondBtn.onclick = async function(){
+        const respuesta = document.getElementById('reclamo-respuesta').value.trim();
+        if (!respuesta) { alert('Escribe una respuesta antes de enviarla.'); return; }
+        if (!confirm('¿Enviar esta respuesta al consumidor por correo y marcar la reclamación como respondida?')) return;
+        respondBtn.disabled = true;
+        try {
+          const resp = await fetch('/api/admin-reclamo-respond', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ id, passcode: PASSCODE, respuesta })
+          });
+          const rd = await resp.json();
+          if (!resp.ok || !rd.ok) { alert('No se pudo enviar la respuesta.'); respondBtn.disabled = false; return; }
+          closeReclamoModal();
+          await loadReclamos();
+        } catch(e){
+          alert('Error de conexión al enviar la respuesta.');
+          respondBtn.disabled = false;
+        }
+      };
+    }
+  };
+
+  function closeReclamoModal(){
+    document.getElementById('reclamo-modal').style.display = 'none';
+  }
+  document.getElementById('reclamo-modal').addEventListener('click', function(e){
+    if (e.target === this) closeReclamoModal();
+  });
+
+  document.getElementById('reclamos-search').addEventListener('input', function(e){
+    const q = e.target.value.toLowerCase();
+    const filtered = allReclamos.filter(r =>
+      (r.nombres||'').toLowerCase().includes(q) ||
+      (r.email||'').toLowerCase().includes(q) ||
+      (r.id||'').toLowerCase().includes(q)
+    );
+    renderReclamosTable(filtered);
+  });
+
+  document.getElementById('reclamos-refresh-btn').onclick = loadReclamos;
+
+  document.getElementById('reclamos-export-btn').onclick = function(){
+    const headers = ['NumeroHoja','Fecha','Nombres','TipoDocumento','NumeroDocumento','Email','Telefono','TipoBien','DescripcionBien','MontoReclamado','TipoReclamo','Detalle','PedidoConcreto','Estado','DiasHabilesRestantes','Respuesta'];
+    const rows = allReclamos.map(r => [
+      r.id, r.createdAt, r.nombres, r.tipoDocumento, r.numeroDocumento, r.email, r.telefono,
+      r.tipoBien, r.descripcionBien, r.montoReclamado, r.tipoReclamo, r.detalle, r.pedidoConcreto,
+      r.status, r.diasHabilesRestantes, r.respuesta
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'paradisio-reclamaciones.csv';
     a.click();
   };
 </script>

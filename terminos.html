@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Términos y Condiciones — Paradisio</title>
+<meta name="description" content="Términos y condiciones de compra de entradas de Paradisio." />
+<meta name="robots" content="noindex" />
+<style>
+  @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
+  @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
+
+  :root {
+    --bg:#090909; --ink:#F2EDE4; --primary:#FF2800; --primary-hover:#FF9A00;
+    --muted:#888880; --line:rgba(255,40,0,0.18); --card:#141414; --field:#1A1A1A;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; background:var(--bg); }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:var(--primary); text-decoration:none; }
+  a:hover { color:var(--primary-hover); }
+  ::selection { background:var(--primary); color:#0A0A0A; }
+
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .pd-pad { padding-left:40px; padding-right:40px; }
+  @media (max-width:860px) { .pd-pad { padding-left:22px !important; padding-right:22px !important; } .pd-hide-sm { display:none !important; } }
+
+  /* ---- header (static dark state — these pages have no hero to sit over) ---- */
+  .pd-header { position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between; height:64px; background:rgba(9,9,9,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+  .pd-header .logo-link { display:block; flex:none; line-height:0; }
+  .pd-header .logo-link img { display:block; width:142px; height:28px; }
+  .pd-nav { display:flex; align-items:center; gap:30px; }
+  .pd-nav-link { font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:500; color:rgba(242,237,228,0.5); transition:color 240ms ease; }
+  .pd-nav-link:hover { color:var(--ink); }
+  .pd-nav-cta { padding:11px 20px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; background:var(--primary); color:#0A0A0A; transition:background 240ms ease; }
+  .pd-nav-cta:hover { background:var(--primary-hover); color:#0A0A0A; }
+
+  .pd-eyebrow { margin:0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+
+  /* ---- legal content ---- */
+  .legal-hero { padding:150px 0 48px; border-bottom:1px solid var(--line); }
+  .legal-hero-inner { max-width:70ch; margin:0 auto; }
+  .legal-title { margin:14px 0 0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem,5vw,3.2rem); line-height:1.05; letter-spacing:-0.02em; color:var(--ink); }
+  .legal-updated { margin:16px 0 0; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+  .legal-intro { margin:20px 0 0; font-size:15px; line-height:1.75; color:var(--muted); max-width:60ch; }
+
+  .legal-toc { max-width:70ch; margin:40px auto 0; padding:28px 0 0; border-top:1px solid var(--line); list-style:none; column-count:2; column-gap:32px; }
+  .legal-toc li { margin-bottom:8px; break-inside:avoid; }
+  .legal-toc a { font-size:13px; color:var(--muted); }
+  .legal-toc a:hover { color:var(--primary); }
+
+  .legal-body { max-width:70ch; margin:0 auto; padding:56px 0 96px; }
+  .legal-section { padding-bottom:36px; margin-bottom:36px; border-bottom:1px solid var(--line); scroll-margin-top:90px; }
+  .legal-section:last-of-type { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .legal-section-num { display:block; margin-bottom:10px; font-size:11px; letter-spacing:0.3em; color:rgba(136,136,128,0.55); font-variant-numeric:tabular-nums; }
+  .legal-section h2 { margin:0 0 16px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:clamp(1.1rem,2.4vw,1.35rem); line-height:1.3; color:var(--ink); }
+  .legal-section p { margin:0 0 16px; font-size:15px; line-height:1.75; color:var(--ink); }
+  .legal-section p:last-child { margin-bottom:0; }
+  .legal-section strong { color:var(--ink); font-weight:700; }
+  .legal-section ul, .legal-section ol { margin:0 0 16px; padding-left:22px; }
+  .legal-section li { margin-bottom:10px; font-size:15px; line-height:1.7; }
+  .legal-section li:last-child { margin-bottom:0; }
+  .legal-section li > ul, .legal-section li > ol { margin-top:10px; }
+  .legal-callout { border-left:2px solid var(--primary); padding:2px 0 2px 18px; margin:20px 0; font-size:15px; line-height:1.7; color:var(--ink); font-weight:700; }
+
+  /* ---- footer (shared across every page) ---- */
+  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; }
+  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
+  .pd-footer-brand { max-width:300px; }
+  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
+  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
+  .pd-footer-col p.pd-eyebrow { margin-bottom:16px; }
+  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); transition:color 180ms; }
+  .pd-footer-col a:hover { color:var(--ink); }
+  .pd-footer-col p.pd-addr { margin:8px 0 0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-social { display:inline-flex; align-items:center; gap:8px; }
+  .pd-libro-notice { border-top:1px solid var(--primary); padding-top:28px; margin-bottom:28px; }
+  .pd-libro-title { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); }
+  .pd-libro-text { margin:0 0 12px; max-width:520px; font-size:13px; line-height:1.6; color:var(--muted); }
+  .pd-libro-link { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary); }
+  .pd-libro-link:hover { color:var(--primary-hover); }
+  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
+  .pd-footer-bottom a { color:inherit; }
+  .pd-footer-bottom a:hover { color:var(--primary); }
+</style>
+</head>
+<body>
+
+<header class="pd-header pd-pad">
+  <a href="index.html#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
+  <nav class="pd-nav">
+    <a href="index.html#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
+    <a href="index.html#entradas" class="pd-nav-cta">Comprar</a>
+  </nav>
+</header>
+
+<main>
+  <section class="legal-hero pd-pad">
+    <div class="legal-hero-inner">
+      <p class="pd-eyebrow">Legal</p>
+      <h1 class="legal-title">Términos y Condiciones</h1>
+      <p class="legal-updated">Última actualización: 1 de agosto de 2026</p>
+      <p class="legal-intro">Aplican a toda compra o registro de entradas realizado a través de paradisioclub.com.</p>
+    </div>
+    <ul class="legal-toc">
+      <li><a href="#s1">1. Identificación del proveedor</a></li>
+      <li><a href="#s2">2. Aceptación de los términos</a></li>
+      <li><a href="#s3">3. Objeto del servicio</a></li>
+      <li><a href="#s4">4. Restricción de edad</a></li>
+      <li><a href="#s5">5. Entrada nominal e intransferible</a></li>
+      <li><a href="#s6">6. Validez del código QR</a></li>
+      <li><a href="#s7">7. Tipos de entrada</a></li>
+      <li><a href="#s8">8. Aforo y reingreso</a></li>
+      <li><a href="#s9">9. Proceso de compra</a></li>
+      <li><a href="#s10">10. Precios y medios de pago</a></li>
+      <li><a href="#s11">11. Entrega de la entrada</a></li>
+      <li><a href="#s12">12. Prohibición de reventa</a></li>
+      <li><a href="#s13">13. Derecho de admisión y permanencia</a></li>
+      <li><a href="#s14">14. Objetos prohibidos</a></li>
+      <li><a href="#s15">15. Consumo responsable de alcohol</a></li>
+      <li><a href="#s16">16. Cancelación o reprogramación</a></li>
+      <li><a href="#s17">17. Fuerza mayor y caso fortuito</a></li>
+      <li><a href="#s18">18. Captación de imagen y sonido</a></li>
+      <li><a href="#s19">19. Protección de datos personales</a></li>
+      <li><a href="#s20">20. Limitación de responsabilidad</a></li>
+      <li><a href="#s21">21. Prevención del fraude</a></li>
+      <li><a href="#s22">22. Libro de Reclamaciones</a></li>
+      <li><a href="#s23">23. Modificación de los términos</a></li>
+      <li><a href="#s24">24. Legislación aplicable</a></li>
+      <li><a href="#s25">25. Contacto</a></li>
+    </ul>
+  </section>
+
+  <div class="legal-body pd-pad">
+
+    <section class="legal-section" id="s1">
+      <span class="legal-section-num">01</span>
+      <h2>Identificación del proveedor</h2>
+      <p>El presente sitio web (paradisioclub.com) y la venta de entradas realizada a través de él son operados por:</p>
+      <ul>
+        <li><strong>Titular:</strong> Bruno Yofreed Espinoza Pérez</li>
+        <li><strong>RUC:</strong> 10720126589</li>
+        <li><strong>Nombre comercial:</strong> Paradisio Club</li>
+        <li><strong>Domicilio:</strong> Jr. 28 de Julio 277, Barranco, Lima, Perú</li>
+        <li><strong>Correo de atención al cliente:</strong> ritmo@paradisioclub.com</li>
+        <li><strong>Teléfono / WhatsApp:</strong> 970 457 825</li>
+      </ul>
+      <p>En adelante, "Paradisio".</p>
+    </section>
+
+    <section class="legal-section" id="s2">
+      <span class="legal-section-num">02</span>
+      <h2>Aceptación de los términos</h2>
+      <p>Al adquirir o registrar una entrada a través de paradisioclub.com, el usuario declara haber leído, comprendido y aceptado íntegramente los presentes Términos y Condiciones, así como la <a href="devoluciones.html">Política de Cambios y Devoluciones</a> y la <a href="privacidad.html">Política de Privacidad</a>, que forman parte integrante de este documento.</p>
+      <p>Si el usuario no está de acuerdo con alguna disposición, debe abstenerse de completar la adquisición o registro.</p>
+    </section>
+
+    <section class="legal-section" id="s3">
+      <span class="legal-section-num">03</span>
+      <h2>Objeto del servicio</h2>
+      <p>Paradisio organiza eventos de música electrónica y comercializa las entradas de dichos eventos a través de su sitio web. La adquisición de una entrada otorga al titular el derecho de ingreso al evento indicado, en la fecha, horario y recinto anunciados, sujeto a las condiciones establecidas en este documento.</p>
+      <p>Paradisio actúa como organizador del evento y como emisor y validador oficial de las entradas.</p>
+    </section>
+
+    <section class="legal-section" id="s4">
+      <span class="legal-section-num">04</span>
+      <h2>Restricción de edad: evento exclusivo para mayores de 18 años</h2>
+      <p class="legal-callout">El ingreso está permitido únicamente a personas mayores de 18 años.</p>
+      <ul>
+        <li>Al momento de la adquisición o registro, el usuario declara bajo su responsabilidad ser mayor de edad y proporcionar información veraz.</li>
+        <li>El sistema rechazará automáticamente todo registro cuya fecha de nacimiento indique que el titular es menor de 18 años a la fecha del evento.</li>
+        <li><strong>El control efectivo de la edad se realiza en la puerta del recinto mediante verificación física del documento de identidad.</strong></li>
+        <li>La declaración falsa de la edad constituye incumplimiento de estos términos. Si en puerta se verifica que el titular es menor de edad, se denegará el ingreso <strong>sin derecho a devolución</strong> del importe pagado.</li>
+      </ul>
+    </section>
+
+    <section class="legal-section" id="s5">
+      <span class="legal-section-num">05</span>
+      <h2>Entrada nominal, intransferible y verificación en puerta</h2>
+      <p>Cada entrada es <strong>nominal e intransferible</strong>. Se emite a nombre de la persona registrada y consigna su número de documento de identidad.</p>
+      <p>Para ingresar al evento es obligatorio presentar:</p>
+      <ol>
+        <li>El <strong>código QR</strong> recibido por correo electrónico (impreso o en pantalla), y</li>
+        <li>El <strong>documento de identidad físico y original</strong> del titular de la entrada (DNI, carné de extranjería o pasaporte).</li>
+      </ol>
+      <p><strong>El nombre y número de documento presentado en puerta deben coincidir exactamente con los datos registrados en la entrada.</strong> Si no coinciden, se denegará el ingreso sin derecho a devolución.</p>
+      <p>No se aceptan fotografías, fotocopias ni imágenes digitales del documento de identidad.</p>
+    </section>
+
+    <section class="legal-section" id="s6">
+      <span class="legal-section-num">06</span>
+      <h2>Validez del código QR</h2>
+      <ul>
+        <li>Cada código QR es válido para <strong>un (1) único ingreso</strong>.</li>
+        <li>Una vez escaneado, el código queda automáticamente inutilizado.</li>
+        <li>En caso de que un mismo código sea presentado más de una vez, ingresará únicamente el primer portador que lo presente. Los presentantes posteriores no tendrán derecho de ingreso ni de devolución.</li>
+        <li>El comprador es el único responsable de la custodia de su código QR. Paradisio no responde por robo, pérdida, captura de pantalla compartida, reenvío a terceros, impresión por terceros o cualquier uso indebido del código.</li>
+      </ul>
+    </section>
+
+    <section class="legal-section" id="s7">
+      <span class="legal-section-num">07</span>
+      <h2>Tipos de entrada y condiciones específicas</h2>
+      <p><strong>Cortesía Opening (S/ 0.00)</strong></p>
+      <ul>
+        <li>Entrada de cortesía sin costo, sujeta a disponibilidad y cupo limitado.</li>
+        <li><strong>Válida para ingreso únicamente hasta las 12:00 a.m.</strong> Pasada esa hora, el código pierde validez y no permite el ingreso.</li>
+        <li>No garantiza el ingreso una vez alcanzado el aforo máximo autorizado del recinto. El acceso se otorga por orden de llegada hasta completar capacidad.</li>
+        <li>No es canjeable por dinero, no tiene valor monetario y no genera derecho a compensación alguna.</li>
+      </ul>
+      <p><strong>Entradas de pago (Preventa Club, Club, Combo Duo, Combo Crew)</strong></p>
+      <ul>
+        <li><strong>Válidas para ingreso hasta las 3:00 a.m.</strong></li>
+        <li>Sujetas al aforo máximo autorizado del recinto.</li>
+        <li><strong>Preventa Club:</strong> disponible hasta el 15 de agosto de 2026 o hasta agotar el stock asignado, lo que ocurra primero.</li>
+        <li><strong>Combo Duo y Combo Crew:</strong> dan derecho de ingreso a dos (2) y cuatro (4) personas respectivamente. El comprador debe registrar los datos de cada asistente al momento de la compra. Cada asistente recibe un código QR individual y debe presentar su propio documento de identidad.</li>
+      </ul>
+    </section>
+
+    <section class="legal-section" id="s8">
+      <span class="legal-section-num">08</span>
+      <h2>Aforo y política de reingreso</h2>
+      <p>El ingreso está sujeto en todo momento a la capacidad máxima autorizada del recinto. Alcanzado el aforo, el ingreso podrá suspenderse temporalmente aunque el portador cuente con una entrada válida, hasta que se libere capacidad.</p>
+      <p><strong>Reingreso:</strong> una vez que el asistente abandona el recinto, su entrada queda consumida y <strong>no permite un nuevo ingreso</strong>.</p>
+    </section>
+
+    <section class="legal-section" id="s9">
+      <span class="legal-section-num">09</span>
+      <h2>Proceso de compra</h2>
+      <p>Antes de confirmar el pago, el comprador debe verificar cuidadosamente:</p>
+      <ul>
+        <li>Evento, fecha, horario y recinto</li>
+        <li>Tipo y cantidad de entradas</li>
+        <li>Nombre completo y número de documento de cada asistente</li>
+        <li>Correo electrónico de contacto</li>
+        <li>Precio total</li>
+      </ul>
+      <p><strong>Toda compra es definitiva</strong> una vez procesado el pago, salvo en los supuestos previstos en la <a href="devoluciones.html">Política de Cambios y Devoluciones</a> o cuando la legislación peruana lo exija.</p>
+      <p>Paradisio no será responsable por errores cometidos por el comprador durante el proceso, incluyendo compra duplicada, cantidad equivocada, tipo de entrada incorrecto, error en el nombre o documento del asistente, o error en el correo electrónico registrado. Estos errores no generan derecho a devolución, sin perjuicio de que el comprador pueda solicitar la corrección de datos escribiendo a ritmo@paradisioclub.com, la cual será atendida en la medida de lo posible y antes del inicio del evento.</p>
+    </section>
+
+    <section class="legal-section" id="s10">
+      <span class="legal-section-num">10</span>
+      <h2>Precios y medios de pago</h2>
+      <ul>
+        <li>Todos los precios se expresan en soles (S/) e incluyen los impuestos que correspondan.</li>
+        <li>Los pagos con tarjeta de crédito o débito son procesados por <strong>Culqi</strong>, pasarela de pagos autorizada. <strong>Paradisio no almacena ni tiene acceso a los datos completos de la tarjeta del comprador.</strong></li>
+        <li>Cualquier cargo adicional por servicio o procesamiento será informado de manera clara antes de finalizar la compra.</li>
+      </ul>
+    </section>
+
+    <section class="legal-section" id="s11">
+      <span class="legal-section-num">11</span>
+      <h2>Entrega de la entrada</h2>
+      <p>La entrada, con su código QR, se envía automáticamente al correo electrónico registrado por el comprador, inmediatamente después de confirmada la operación.</p>
+      <p>Es responsabilidad exclusiva del comprador ingresar correctamente su dirección de correo electrónico y verificar sus bandejas de entrada, spam y promociones.</p>
+      <p>Si transcurridos <strong>treinta (30) minutos</strong> de completada la operación no ha recibido su entrada, el comprador debe comunicarse a <strong>ritmo@paradisioclub.com</strong> o al <strong>970 457 825</strong> para solicitar el reenvío. Paradisio atenderá la solicitud a la brevedad y, en todo caso, antes del inicio del evento.</p>
+    </section>
+
+    <section class="legal-section" id="s12">
+      <span class="legal-section-num">12</span>
+      <h2>Prohibición de reventa</h2>
+      <p>Queda prohibida la reventa no autorizada de entradas, así como su comercialización a través de canales no oficiales.</p>
+      <p>Ante indicios razonables de reventa o fraude, Paradisio podrá invalidar las entradas involucradas, denegar el ingreso y cancelar la compra, sin derecho a devolución.</p>
+    </section>
+
+    <section class="legal-section" id="s13">
+      <span class="legal-section-num">13</span>
+      <h2>Derecho de admisión y permanencia</h2>
+      <p>Paradisio se reserva el derecho de admisión y permanencia conforme a la legislación vigente, ejercido de manera objetiva, razonable y no discriminatoria.</p>
+      <p>Podrá denegarse el ingreso o disponerse el retiro del recinto de quien:</p>
+      <ul>
+        <li>No acredite ser mayor de 18 años con documento físico original</li>
+        <li>Presente datos que no coincidan con los de su entrada</li>
+        <li>Se encuentre en evidente estado de ebriedad o bajo efectos de sustancias</li>
+        <li>Genere disturbios, agreda, acose o amenace a otras personas</li>
+        <li>Intente ingresar objetos prohibidos</li>
+        <li>Dañe bienes del recinto o de terceros</li>
+        <li>Incumpla las instrucciones del personal de seguridad</li>
+        <li>Ponga en riesgo la seguridad del evento o de los asistentes</li>
+      </ul>
+      <p>En estos casos <strong>no procederá devolución alguna</strong>.</p>
+      <p class="legal-callout">Paradisio no discrimina por motivo de raza, sexo, orientación sexual, identidad de género, nacionalidad, religión, discapacidad, condición económica ni ninguna otra condición. Cualquier conducta discriminatoria por parte de asistentes o personal debe ser reportada de inmediato al equipo del evento.</p>
+    </section>
+
+    <section class="legal-section" id="s14">
+      <span class="legal-section-num">14</span>
+      <h2>Objetos prohibidos</h2>
+      <p>No está permitido el ingreso de, entre otros:</p>
+      <ul>
+        <li>Armas de cualquier tipo</li>
+        <li>Sustancias ilícitas</li>
+        <li>Bebidas alcohólicas o alimentos externos</li>
+        <li>Objetos contundentes, punzocortantes o de vidrio</li>
+        <li>Elementos pirotécnicos, bengalas y punteros láser</li>
+        <li>Drones</li>
+        <li>Equipos de grabación profesional sin autorización previa</li>
+      </ul>
+      <p>Paradisio podrá realizar controles de seguridad en el ingreso, respetando en todo momento la dignidad e integridad de las personas.</p>
+    </section>
+
+    <section class="legal-section" id="s15">
+      <span class="legal-section-num">15</span>
+      <h2>Consumo responsable de alcohol</h2>
+      <p>La venta y el consumo de bebidas alcohólicas están permitidos únicamente a mayores de 18 años, conforme a la Ley N.º 28681.</p>
+      <p>El personal del bar podrá <strong>negar el despacho de bebidas alcohólicas</strong> a personas en evidente estado de ebriedad, sin que ello genere derecho a reclamo o devolución.</p>
+    </section>
+
+    <section class="legal-section" id="s16">
+      <span class="legal-section-num">16</span>
+      <h2>Cancelación, reprogramación o modificación del evento</h2>
+      <p>Las condiciones de reembolso ante cancelación o reprogramación se detallan en la <a href="devoluciones.html">Política de Cambios y Devoluciones</a>, que forma parte de estos términos.</p>
+      <p>Paradisio podrá realizar modificaciones menores en la programación (horarios de artistas, orden de presentación, distribución interna del recinto, elementos de producción) sin que ello constituya incumplimiento ni genere derecho a devolución, siempre que se mantengan la fecha, el recinto y la naturaleza esencial del evento.</p>
+    </section>
+
+    <section class="legal-section" id="s17">
+      <span class="legal-section-num">17</span>
+      <h2>Fuerza mayor y caso fortuito</h2>
+      <p>Paradisio no será responsable por el incumplimiento o retraso derivado de hechos que escapen razonablemente a su control, tales como desastres naturales, emergencias sanitarias, disposiciones de autoridad competente, disturbios sociales, actos de terrorismo, incendios, cortes generalizados de energía o cualquier situación que comprometa la seguridad del público.</p>
+      <p>Ante estos supuestos se aplicará lo dispuesto en la <a href="devoluciones.html">Política de Cambios y Devoluciones</a>.</p>
+    </section>
+
+    <section class="legal-section" id="s18">
+      <span class="legal-section-num">18</span>
+      <h2>Captación de imagen y sonido</h2>
+      <p>Durante el evento se realizarán fotografías y grabaciones audiovisuales con fines promocionales, publicitarios e institucionales de Paradisio.</p>
+      <p><strong>El ingreso al recinto implica la autorización del asistente para que su imagen pueda ser captada y utilizada con dichos fines, sin contraprestación económica.</strong> Esta condición se encuentra además señalizada de manera visible en el ingreso al recinto.</p>
+      <p>El asistente que no desee que su imagen sea utilizada puede comunicarlo en el momento de la captación al personal de producción, o solicitar posteriormente la retirada de material que lo identifique de forma reconocible escribiendo a ritmo@paradisioclub.com. Paradisio atenderá dicha solicitud dentro de un plazo razonable.</p>
+    </section>
+
+    <section class="legal-section" id="s19">
+      <span class="legal-section-num">19</span>
+      <h2>Protección de datos personales</h2>
+      <p>Los datos personales proporcionados (nombre, documento de identidad, fecha de nacimiento, correo electrónico y teléfono) son tratados conforme a la <strong>Ley N.º 29733, Ley de Protección de Datos Personales</strong>, y su reglamento.</p>
+      <p>El detalle de las finalidades, plazos de conservación y el procedimiento para ejercer los derechos de acceso, rectificación, cancelación y oposición se encuentra en la <a href="privacidad.html">Política de Privacidad</a> de paradisioclub.com.</p>
+    </section>
+
+    <section class="legal-section" id="s20">
+      <span class="legal-section-num">20</span>
+      <h2>Limitación de responsabilidad</h2>
+      <p>Paradisio no será responsable por pérdidas económicas indirectas, gastos de transporte, hospedaje, lucro cesante, ni por daños derivados del incumplimiento por parte del asistente de las instrucciones del personal de seguridad o de las presentes condiciones.</p>
+      <p>La responsabilidad de Paradisio, cuando legalmente corresponda, estará limitada al importe efectivamente pagado por la entrada, <strong>sin perjuicio de los derechos irrenunciables que la legislación peruana reconoce al consumidor</strong>.</p>
+    </section>
+
+    <section class="legal-section" id="s21">
+      <span class="legal-section-num">21</span>
+      <h2>Prevención del fraude</h2>
+      <p>Paradisio podrá cancelar cualquier operación cuando detecte indicios de uso fraudulento de tarjetas, suplantación de identidad, uso de bots, compra masiva con fines de reventa o manipulación del sistema. En estos casos podrá solicitar documentación adicional antes de emitir la entrada.</p>
+    </section>
+
+    <section class="legal-section" id="s22">
+      <span class="legal-section-num">22</span>
+      <h2>Libro de Reclamaciones</h2>
+      <p>Conforme a la Ley N.º 29571, Código de Protección y Defensa del Consumidor, Paradisio cuenta con un <strong>Libro de Reclamaciones virtual</strong> accesible desde la página de inicio de paradisioclub.com.</p>
+      <p>El reclamo o queja registrado será atendido y respondido en un plazo máximo de <strong>quince (15) días hábiles improrrogables</strong>, contados desde el día siguiente a su presentación.</p>
+      <p>La presentación de un reclamo ante Paradisio no impide al consumidor acudir a otras vías de solución de controversias ni constituye requisito previo para denunciar ante INDECOPI.</p>
+      <p><a href="libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a></p>
+    </section>
+
+    <section class="legal-section" id="s23">
+      <span class="legal-section-num">23</span>
+      <h2>Modificación de los términos</h2>
+      <p>Paradisio podrá actualizar los presentes Términos y Condiciones. Las modificaciones no afectarán las compras ya realizadas, salvo cuando resulten necesarias por mandato legal o cuando mejoren las condiciones del consumidor.</p>
+      <p>La fecha de la última actualización se indica al inicio de este documento.</p>
+    </section>
+
+    <section class="legal-section" id="s24">
+      <span class="legal-section-num">24</span>
+      <h2>Legislación aplicable</h2>
+      <p>Los presentes términos se rigen por las leyes de la República del Perú. Cualquier controversia será resuelta ante la autoridad competente conforme a la normativa peruana, sin perjuicio del derecho del consumidor de recurrir a INDECOPI.</p>
+    </section>
+
+    <section class="legal-section" id="s25">
+      <span class="legal-section-num">25</span>
+      <h2>Contacto</h2>
+      <p>Para cualquier consulta sobre estos términos:</p>
+      <ul>
+        <li><strong>Correo:</strong> ritmo@paradisioclub.com</li>
+        <li><strong>Teléfono / WhatsApp:</strong> 970 457 825</li>
+        <li><strong>Instagram:</strong> <a href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">@paradisioclub___</a></li>
+        <li><strong>Dirección:</strong> Jr. 28 de Julio 277, Barranco, Lima</li>
+      </ul>
+    </section>
+
+  </div>
+</main>
+
+<footer class="pd-footer pd-pad">
+  <div class="pd-footer-top">
+    <div class="pd-footer-brand">
+      <img src="logo-white.png" alt="Paradisio" />
+      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
+    </div>
+    <div class="pd-footer-cols">
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Contacto</p>
+        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="tel:+51970457825">970 457 825</a>
+        <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Síguenos</p>
+        <a class="pd-social" href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          Instagram
+        </a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Ubicación del evento</p>
+        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Legal</p>
+        <a href="terminos.html">Términos y condiciones</a>
+        <a href="devoluciones.html">Cambios y devoluciones</a>
+        <a href="privacidad.html">Privacidad</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="pd-libro-notice">
+    <p class="pd-libro-title">Libro de Reclamaciones</p>
+    <p class="pd-libro-text">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de Reclamaciones a tu disposición.</p>
+    <a class="pd-libro-link" href="libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a>
+  </div>
+
+  <div class="pd-footer-bottom">
+    <span>© 2026 Paradisio</span>
+    <span>Lima, Perú</span>
+  </div>
+</footer>
+
+</body>
+</html>

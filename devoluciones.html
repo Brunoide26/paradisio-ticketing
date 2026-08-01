@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cambios y Devoluciones — Paradisio</title>
+<meta name="description" content="Política de cambios y devoluciones de entradas de Paradisio." />
+<meta name="robots" content="noindex" />
+<style>
+  @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
+  @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
+
+  :root {
+    --bg:#090909; --ink:#F2EDE4; --primary:#FF2800; --primary-hover:#FF9A00;
+    --muted:#888880; --line:rgba(255,40,0,0.18); --card:#141414; --field:#1A1A1A;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; background:var(--bg); }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:var(--primary); text-decoration:none; }
+  a:hover { color:var(--primary-hover); }
+  ::selection { background:var(--primary); color:#0A0A0A; }
+
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .pd-pad { padding-left:40px; padding-right:40px; }
+  @media (max-width:860px) { .pd-pad { padding-left:22px !important; padding-right:22px !important; } .pd-hide-sm { display:none !important; } }
+
+  .pd-header { position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between; height:64px; background:rgba(9,9,9,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+  .pd-header .logo-link { display:block; flex:none; line-height:0; }
+  .pd-header .logo-link img { display:block; width:142px; height:28px; }
+  .pd-nav { display:flex; align-items:center; gap:30px; }
+  .pd-nav-link { font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:500; color:rgba(242,237,228,0.5); transition:color 240ms ease; }
+  .pd-nav-link:hover { color:var(--ink); }
+  .pd-nav-cta { padding:11px 20px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; background:var(--primary); color:#0A0A0A; transition:background 240ms ease; }
+  .pd-nav-cta:hover { background:var(--primary-hover); color:#0A0A0A; }
+
+  .pd-eyebrow { margin:0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+
+  .legal-hero { padding:150px 0 48px; border-bottom:1px solid var(--line); }
+  .legal-hero-inner { max-width:70ch; margin:0 auto; }
+  .legal-title { margin:14px 0 0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem,5vw,3.2rem); line-height:1.05; letter-spacing:-0.02em; color:var(--ink); }
+  .legal-updated { margin:16px 0 0; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+  .legal-intro { margin:20px 0 0; font-size:15px; line-height:1.75; color:var(--muted); max-width:60ch; }
+
+  .legal-toc { max-width:70ch; margin:40px auto 0; padding:28px 0 0; border-top:1px solid var(--line); list-style:none; column-count:2; column-gap:32px; }
+  .legal-toc li { margin-bottom:8px; break-inside:avoid; }
+  .legal-toc a { font-size:13px; color:var(--muted); }
+  .legal-toc a:hover { color:var(--primary); }
+
+  .legal-body { max-width:70ch; margin:0 auto; padding:56px 0 96px; }
+  .legal-section { padding-bottom:36px; margin-bottom:36px; border-bottom:1px solid var(--line); scroll-margin-top:90px; }
+  .legal-section:last-of-type { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .legal-section-num { display:block; margin-bottom:10px; font-size:11px; letter-spacing:0.3em; color:rgba(136,136,128,0.55); font-variant-numeric:tabular-nums; }
+  .legal-section h2 { margin:0 0 16px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:clamp(1.1rem,2.4vw,1.35rem); line-height:1.3; color:var(--ink); }
+  .legal-section p { margin:0 0 16px; font-size:15px; line-height:1.75; color:var(--ink); }
+  .legal-section p:last-child { margin-bottom:0; }
+  .legal-section strong { color:var(--ink); font-weight:700; }
+  .legal-section ul, .legal-section ol { margin:0 0 16px; padding-left:22px; }
+  .legal-section li { margin-bottom:10px; font-size:15px; line-height:1.7; }
+  .legal-section li:last-child { margin-bottom:0; }
+  .legal-callout { border-left:2px solid var(--primary); padding:2px 0 2px 18px; margin:20px 0; font-size:15px; line-height:1.7; color:var(--ink); font-weight:700; }
+
+  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; }
+  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
+  .pd-footer-brand { max-width:300px; }
+  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
+  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
+  .pd-footer-col p.pd-eyebrow { margin-bottom:16px; }
+  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); transition:color 180ms; }
+  .pd-footer-col a:hover { color:var(--ink); }
+  .pd-footer-col p.pd-addr { margin:8px 0 0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-social { display:inline-flex; align-items:center; gap:8px; }
+  .pd-libro-notice { border-top:1px solid var(--primary); padding-top:28px; margin-bottom:28px; }
+  .pd-libro-title { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); }
+  .pd-libro-text { margin:0 0 12px; max-width:520px; font-size:13px; line-height:1.6; color:var(--muted); }
+  .pd-libro-link { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary); }
+  .pd-libro-link:hover { color:var(--primary-hover); }
+  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
+  .pd-footer-bottom a { color:inherit; }
+  .pd-footer-bottom a:hover { color:var(--primary); }
+</style>
+</head>
+<body>
+
+<header class="pd-header pd-pad">
+  <a href="index.html#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
+  <nav class="pd-nav">
+    <a href="index.html#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
+    <a href="index.html#entradas" class="pd-nav-cta">Comprar</a>
+  </nav>
+</header>
+
+<main>
+  <section class="legal-hero pd-pad">
+    <div class="legal-hero-inner">
+      <p class="pd-eyebrow">Legal</p>
+      <h1 class="legal-title">Cambios y Devoluciones</h1>
+      <p class="legal-updated">Última actualización: 1 de agosto de 2026</p>
+      <p class="legal-intro">Esta política forma parte integrante de los <a href="terminos.html">Términos y Condiciones</a> de paradisioclub.com, operado por Bruno Yofreed Espinoza Pérez, RUC 10720126589, bajo el nombre comercial Paradisio Club.</p>
+    </div>
+    <ul class="legal-toc">
+      <li><a href="#s1">1. Naturaleza del servicio</a></li>
+      <li><a href="#s2">2. Compras por decisión del comprador</a></li>
+      <li><a href="#s3">3. Corrección de datos</a></li>
+      <li><a href="#s4">4. Cancelación del evento</a></li>
+      <li><a href="#s5">5. Reprogramación del evento</a></li>
+      <li><a href="#s6">6. Modificación sustancial</a></li>
+      <li><a href="#s7">7. Suspensión durante el evento</a></li>
+      <li><a href="#s8">8. Entradas de cortesía</a></li>
+      <li><a href="#s9">9. Cargos de la pasarela de pagos</a></li>
+      <li><a href="#s10">10. Canal de atención</a></li>
+      <li><a href="#s11">11. Derechos del consumidor</a></li>
+    </ul>
+  </section>
+
+  <div class="legal-body pd-pad">
+
+    <section class="legal-section" id="s1">
+      <span class="legal-section-num">01</span>
+      <h2>Naturaleza del servicio</h2>
+      <p>Las entradas comercializadas por Paradisio corresponden a un servicio de espectáculo con <strong>fecha, horario y aforo determinados</strong>. Por esa razón, y de manera análoga a lo que ocurre en el sector de espectáculos en vivo, la reserva de un cupo tiene efectos inmediatos sobre la disponibilidad para otros consumidores.</p>
+    </section>
+
+    <section class="legal-section" id="s2">
+      <span class="legal-section-num">02</span>
+      <h2>Compras por decisión del comprador</h2>
+      <p class="legal-callout">No procede la devolución del importe pagado cuando el comprador desiste de asistir al evento por motivos propios, incluyendo cambio de planes, impedimentos personales, condiciones climáticas o cualquier causa ajena a Paradisio.</p>
+      <p>Tampoco procede devolución en los siguientes casos, todos atribuibles al comprador:</p>
+      <ul>
+        <li>Compra de una cantidad de entradas distinta a la deseada</li>
+        <li>Compra de un tipo de entrada distinto al deseado</li>
+        <li>Compra duplicada por reintento de pago</li>
+        <li>Error en el nombre, documento o correo electrónico registrado</li>
+        <li>No asistencia al evento (<em>no show</em>)</li>
+        <li>Llegada al recinto fuera del horario de validez de la entrada adquirida</li>
+        <li>Denegación de ingreso por incumplimiento de los Términos y Condiciones (edad, documento no coincidente, estado de ebriedad, objetos prohibidos, conducta, etc.)</li>
+      </ul>
+    </section>
+
+    <section class="legal-section" id="s3">
+      <span class="legal-section-num">03</span>
+      <h2>Corrección de datos</h2>
+      <p>Aunque no proceda la devolución, <strong>el comprador puede solicitar la corrección de errores en el nombre o número de documento</strong> de un asistente, escribiendo a <strong>ritmo@paradisioclub.com</strong> con el código de su entrada.</p>
+      <ul>
+        <li>Plazo para solicitarlo: hasta <strong>24 horas antes</strong> del inicio del evento.</li>
+        <li>Paradisio confirmará la corrección por el mismo medio y reemitirá la entrada si corresponde.</li>
+        <li>La corrección de datos no constituye un cambio de titularidad ni una transferencia de la entrada.</li>
+      </ul>
+    </section>
+
+    <section class="legal-section" id="s4">
+      <span class="legal-section-num">04</span>
+      <h2>Cancelación del evento por parte de Paradisio</h2>
+      <p>Si Paradisio cancela el evento y <strong>no lo reprograma</strong>, el comprador tiene derecho a la <strong>devolución del 100&nbsp;% del importe efectivamente pagado</strong>, incluidos los cargos por servicio si los hubiera.</p>
+      <p><strong>Procedimiento:</strong></p>
+      <ol>
+        <li>Paradisio comunicará la cancelación por correo electrónico a todos los compradores y por sus canales oficiales, dentro de las <strong>48 horas</strong> siguientes a la decisión.</li>
+        <li>La devolución se ejecutará de oficio, sin necesidad de que el consumidor la solicite, al mismo medio de pago utilizado en la compra.</li>
+        <li><strong>Plazo máximo de ejecución: diez (10) días hábiles</strong> contados desde la comunicación de la cancelación.</li>
+        <li>Si el medio de pago original no permitiera el abono, Paradisio coordinará con el comprador un medio alternativo, sin costo para este.</li>
+      </ol>
+    </section>
+
+    <section class="legal-section" id="s5">
+      <span class="legal-section-num">05</span>
+      <h2>Reprogramación del evento</h2>
+      <p>Si el evento se reprograma a una nueva fecha:</p>
+      <ul>
+        <li><strong>La entrada adquirida mantiene plena validez</strong> para la nueva fecha, en las mismas condiciones de tipo y horario, sin costo adicional.</li>
+        <li>El comprador que <strong>no pueda o no desee asistir</strong> en la nueva fecha tiene derecho a solicitar la <strong>devolución del 100&nbsp;% del importe pagado</strong>.</li>
+      </ul>
+      <p><strong>Procedimiento:</strong></p>
+      <ol>
+        <li>Paradisio comunicará la reprogramación por correo electrónico y sus canales oficiales.</li>
+        <li>El comprador cuenta con <strong>siete (7) días calendario</strong> desde dicha comunicación para solicitar la devolución escribiendo a <strong>ritmo@paradisioclub.com</strong>, indicando el código de su entrada.</li>
+        <li>La devolución se ejecutará dentro de los <strong>diez (10) días hábiles</strong> siguientes a la solicitud, al mismo medio de pago utilizado.</li>
+        <li>Vencido el plazo de siete días sin solicitud, se entenderá que el comprador acepta la nueva fecha.</li>
+      </ol>
+    </section>
+
+    <section class="legal-section" id="s6">
+      <span class="legal-section-num">06</span>
+      <h2>Modificación sustancial del evento</h2>
+      <p>Si Paradisio modifica de manera sustancial las condiciones anunciadas —cambio de recinto o cambio de fecha— aplican las reglas del punto 5.</p>
+      <p>Las <strong>modificaciones no sustanciales</strong> no generan derecho a devolución: cambios en el orden o los horarios de presentación de artistas, sustitución de un artista del cartel, distribución interna del recinto, elementos escenográficos o de producción, siempre que se mantengan la fecha, el recinto y la naturaleza del evento.</p>
+    </section>
+
+    <section class="legal-section" id="s7">
+      <span class="legal-section-num">07</span>
+      <h2>Suspensión durante el evento</h2>
+      <p>Si el evento se suspende una vez iniciado por causas de fuerza mayor, disposición de autoridad competente o razones de seguridad:</p>
+      <ul>
+        <li>Si la suspensión ocurre <strong>antes de transcurrida la mitad de la duración anunciada</strong>, el comprador tiene derecho a la devolución del <strong>50&nbsp;%</strong> del importe pagado.</li>
+        <li>Si ocurre <strong>después</strong>, no procede devolución, por haberse prestado sustancialmente el servicio.</li>
+        <li>La solicitud se presenta dentro de los <strong>siete (7) días calendario</strong> siguientes al evento, a ritmo@paradisioclub.com, y se atiende en un plazo de <strong>diez (10) días hábiles</strong>.</li>
+      </ul>
+    </section>
+
+    <section class="legal-section" id="s8">
+      <span class="legal-section-num">08</span>
+      <h2>Entradas de cortesía</h2>
+      <p>Las entradas <strong>Cortesía Opening</strong> son gratuitas, no tienen valor monetario y no generan derecho a devolución, compensación ni canje bajo ningún supuesto, incluida la cancelación del evento.</p>
+    </section>
+
+    <section class="legal-section" id="s9">
+      <span class="legal-section-num">09</span>
+      <h2>Cargos de la pasarela de pagos</h2>
+      <p>Las devoluciones se ejecutan a través de <strong>Culqi</strong>, procesador de pagos utilizado por Paradisio. El tiempo que la entidad emisora de la tarjeta demore en reflejar el abono en el estado de cuenta del comprador <strong>es ajeno a Paradisio</strong> y puede tomar entre 5 y 30 días adicionales según la entidad bancaria.</p>
+      <p>Paradisio entregará al comprador la constancia de la devolución ejecutada.</p>
+    </section>
+
+    <section class="legal-section" id="s10">
+      <span class="legal-section-num">10</span>
+      <h2>Canal de atención</h2>
+      <p>Todas las solicitudes relacionadas con esta política se atienden por:</p>
+      <ul>
+        <li><strong>Correo:</strong> ritmo@paradisioclub.com</li>
+        <li><strong>Teléfono / WhatsApp:</strong> 970 457 825</li>
+        <li><strong>Libro de Reclamaciones virtual:</strong> <a href="libro-reclamaciones.html">disponible aquí</a></li>
+      </ul>
+      <p>Paradisio responderá toda solicitud dentro de un plazo máximo de <strong>quince (15) días hábiles</strong>.</p>
+    </section>
+
+    <section class="legal-section" id="s11">
+      <span class="legal-section-num">11</span>
+      <h2>Derechos del consumidor</h2>
+      <p>Ninguna disposición de esta política limita los derechos irrenunciables que la <strong>Ley N.º 29571, Código de Protección y Defensa del Consumidor</strong>, reconoce a los consumidores en el Perú.</p>
+      <p>El consumidor puede en todo momento presentar su reclamo en el <a href="libro-reclamaciones.html">Libro de Reclamaciones</a> de paradisioclub.com o acudir directamente a <strong>INDECOPI</strong>.</p>
+    </section>
+
+  </div>
+</main>
+
+<footer class="pd-footer pd-pad">
+  <div class="pd-footer-top">
+    <div class="pd-footer-brand">
+      <img src="logo-white.png" alt="Paradisio" />
+      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
+    </div>
+    <div class="pd-footer-cols">
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Contacto</p>
+        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="tel:+51970457825">970 457 825</a>
+        <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Síguenos</p>
+        <a class="pd-social" href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          Instagram
+        </a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Ubicación del evento</p>
+        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Legal</p>
+        <a href="terminos.html">Términos y condiciones</a>
+        <a href="devoluciones.html">Cambios y devoluciones</a>
+        <a href="privacidad.html">Privacidad</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="pd-libro-notice">
+    <p class="pd-libro-title">Libro de Reclamaciones</p>
+    <p class="pd-libro-text">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de Reclamaciones a tu disposición.</p>
+    <a class="pd-libro-link" href="libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a>
+  </div>
+
+  <div class="pd-footer-bottom">
+    <span>© 2026 Paradisio</span>
+    <span>Lima, Perú</span>
+  </div>
+</footer>
+
+</body>
+</html>

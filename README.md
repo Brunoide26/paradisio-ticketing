@@ -69,9 +69,7 @@ Vuelve a desplegar (`git push` si usas GitHub, se redespliega solo).
 ## Estructura del proyecto
 
 ```
-/index.html             → HOME pública: solo logo + countdown, sin info del evento
-/tickets.html            → página privada (solo con link): info completa + entradas — NO indexada, no enlazada desde el home
-/checkout.html            → registro/pago por separado, con verificación de edad (+18 obligatorio)
+/index.html             → página pública real: hero, countdown, info del evento, y las entradas (registro/pago) integradas en la misma página
 /staff.html               → panel de check-in en puerta (con lector de QR por cámara)
 /admin.html                → dashboard: ver todos los registros, exportar CSV, anular tickets
 /logo.jpg                   → tu logo
@@ -86,9 +84,8 @@ Vuelve a desplegar (`git push` si usas GitHub, se redespliega solo).
 
 ## Flujo de navegación
 
-1. `paradisioclub.com` — lo que ve cualquier visitante: solo el logo y el countdown. No hay fecha, lugar ni entradas visibles.
-2. `paradisioclub.com/tickets` — página con toda la información y las entradas. **No está enlazada desde el home** — solo accesible para quien tenga el link directo (para tus pruebas por ahora).
-3. Al hacer click en "Anotarme gratis" o "Comprar entrada", se abre `checkout.html?type=free` o `checkout.html?type=paid` — una página aparte con el formulario.
+1. `paradisioclub.com` — la página pública real: hero, countdown, fecha, lugar y la sección de entradas, todo en una sola página (`index.html#entradas`).
+2. Al hacer click en un tier ("Cortesía Opening" o "Club"), se abre el formulario de registro/pago **inline, en la misma página** (ya no hay un `checkout.html` ni un `tickets.html` separados — esas páginas se retiraron y toda esa lógica vive directamente en `index.html`).
 
 ## Verificación de edad (+18)
 
@@ -98,7 +95,7 @@ El checkout pide **fecha de nacimiento** + una casilla de declaración jurada. S
 
 ## Color de marca
 
-Naranja oficial: `#FD5400`
+Rojo-naranja oficial: `#FF2800`
 
 ## Panel de admin (`/admin.html`)
 

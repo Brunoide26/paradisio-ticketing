@@ -1,10 +1,11 @@
-const { checkCapacity, createTicket, sendTicketEmail, qrDataUrl, calcAge } = require('../lib/tickets');
+const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP } = require('../lib/tickets');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   try {
     const { name, phone, email, dni, dob } = req.body || {};
+    const qty = Math.min(10, Math.max(1, parseInt(req.body?.qty, 10) || 1));
     if (!name || !phone || !email || !dni || !dob) {
       return res.status(400).json({ error: 'missing_fields' });
     }
@@ -14,21 +15,24 @@ module.exports = async (req, res) => {
       return res.status(403).json({ error: 'underage' });
     }
 
-    const ok = await checkCapacity('free');
-    if (!ok) return res.status(409).json({ error: 'sold_out' });
+    const counters = await getCounters();
+    if ((counters.free || 0) + qty > FREE_CAP) return res.status(409).json({ error: 'sold_out' });
 
-    const ticket = await createTicket({ name, phone, email, dni, dob, type: 'free', amount: 0 });
+    const tickets = [];
+    for (let i = 0; i < qty; i++) {
+      tickets.push(await createTicket({ name, phone, email, dni, dob, type: 'free', amount: 0 }));
+    }
 
-    // Send email, but don't fail the request if email delivery has an issue —
-    // the person still gets their QR on screen either way.
+    // Send email(s), but don't fail the request if email delivery has an issue —
+    // the person still gets their QR(s) on screen either way.
     try {
-      await sendTicketEmail(ticket);
+      await Promise.all(tickets.map((t) => sendTicketEmail(t)));
     } catch (emailErr) {
       console.error('Email send failed:', emailErr);
     }
 
-    const qr = await qrDataUrl(ticket.id);
-    return res.status(200).json({ ticket, qr });
+    const qrs = await Promise.all(tickets.map((t) => qrDataUrl(t.id)));
+    return res.status(200).json({ ticket: tickets[0], qr: qrs[0], tickets, qrs });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'server_error' });

@@ -3,184 +3,611 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Paradisio</title>
-<meta name="description" content="Paradisio" />
+<title>Paradisio — Apertura 28 de agosto</title>
+<meta name="description" content="Paradisio — house y disco subterráneo en Barranco, Lima. Viernes 28 de agosto, Espacio NHN." />
+<script src="https://checkout.culqi.com/js/v4"></script>
 <style>
-  @font-face { font-family:'Orbitron'; src:url('fonts/Orbitron.ttf') format('truetype'); font-weight:400 900; font-display:swap; }
-  @font-face { font-family:'Inter'; src:url('fonts/Inter.ttf') format('truetype'); font-weight:100 900; font-display:swap; }
-  :root { --orange:#FD5400; --yellow:#FFC700; --red:#E8291C; --black:#0a0a0a; --white:#fff; }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  html { scroll-behavior:smooth; }
-  body { font-family:'Inter',sans-serif; background:#000; color:#fff; overflow-x:hidden; }
+  @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
+  @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
 
-  /* ============ top ticker ============ */
-  .ticker { position:relative; z-index:10; overflow:hidden; background:var(--yellow); padding:12px 0; border-bottom:3px solid #000; }
-  .ticker-track { display:flex; white-space:nowrap; width:max-content; animation:scrollLeft 20s linear infinite; }
-  .ticker span { font-family:'Orbitron',sans-serif; font-weight:800; font-size:14px; letter-spacing:3px; padding:0 24px; color:#000; }
-  @keyframes scrollLeft { from { transform:translateX(0); } to { transform:translateX(-50%); } }
-
-  /* ============ WALL OF TILED TEXT (hero, collage style) ============ */
-  .wall {
-    position:relative;
-    min-height:92vh;
-    background:#000;
-    display:flex; flex-direction:column; justify-content:center;
-    overflow:hidden;
-    padding:50px 0;
+  :root {
+    --bg:#090909; --ink:#F2EDE4; --primary:#FF2800; --primary-hover:#FF9A00;
+    --muted:#888880; --line:rgba(255,40,0,0.18); --card:#141414; --field:#1A1A1A;
   }
-  .wall-row { display:flex; white-space:nowrap; line-height:0.86; }
-  .wall-row span {
-    font-family:'Orbitron',sans-serif; font-weight:900; font-size:11.5vw; text-transform:uppercase;
-    -webkit-text-stroke:2px #000; padding:0 2px;
-  }
-  .wall-row.fill-orange span { color:var(--orange); }
-  .wall-row.fill-yellow span { color:var(--yellow); }
-  .wall-row.fill-red span { color:var(--red); }
-  .wall-row.fill-outline span { color:transparent; -webkit-text-stroke:2px #3a2416; }
-
-  .hero-center {
-    position:absolute; inset:0; z-index:5; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; text-align:center; padding:24px;
-    pointer-events:none;
-  }
-  .hero-frame {
-    background:rgba(0,0,0,0.72); backdrop-filter:blur(3px); border:2px solid var(--orange);
-    padding:44px 48px; pointer-events:auto; position:relative;
-  }
-  .hero-frame::before, .hero-frame::after {
-    content:''; position:absolute; width:22px; height:22px; border:3px solid var(--orange);
-  }
-  .hero-frame::before { top:-3px; left:-3px; border-right:none; border-bottom:none; }
-  .hero-frame::after { bottom:-3px; right:-3px; border-left:none; border-top:none; }
-  .wordmark { display:block; max-width:420px; width:60vw; margin:0 auto; filter: drop-shadow(0 0 26px rgba(253,84,0,0.7)); }
-
-  .countdown { display:flex; justify-content:center; gap:12px; margin-top:34px; flex-wrap:wrap; }
-  .cd-box { background:var(--orange); color:#000; padding:12px 16px; min-width:64px; transform:skewX(-6deg); }
-  .cd-box-inner { transform:skewX(6deg); }
-  .cd-num { font-family:'Orbitron',sans-serif; font-size:26px; font-weight:900; }
-  .cd-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; font-weight:700; }
-
-  /* ============ big diagonal phrase, Amnesia-style bold overlay copy ============ */
-  .phrase {
-    position:absolute; z-index:6; font-family:'Orbitron',sans-serif; font-weight:800; text-transform:uppercase;
-    color:var(--red); font-size:26px; line-height:1.15; transform:rotate(-7deg); text-shadow:2px 2px 0 #000;
-    max-width:340px; pointer-events:none;
-  }
-  .phrase-1 { top:10%; right:4%; text-align:right; }
-  .phrase-2 { bottom:8%; left:3%; color:var(--yellow); font-size:20px; max-width:260px; transform:rotate(5deg); }
-
-  /* ============ scattered sticker sheet ============ */
-  .sticker { position:absolute; z-index:6; }
-  .st-ring { width:96px; height:96px; border:3px solid var(--yellow); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; text-align:center; font-family:'Orbitron',sans-serif;
-    font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--yellow); background:#000;
-    animation:spin 16s linear infinite; }
-  .st-ribbon { background:var(--red); color:#fff; font-family:'Orbitron',sans-serif; font-weight:800; font-size:12px;
-    letter-spacing:1px; text-transform:uppercase; padding:8px 18px; transform:rotate(-8deg); box-shadow:4px 4px 0 #000; }
-  .st-triangle { width:0; height:0; border-left:28px solid transparent; border-right:28px solid transparent;
-    border-bottom:48px solid var(--red); }
-  .st-badge2 { width:70px; height:70px; border:2px solid var(--black); border-radius:50%; display:flex; align-items:center;
-    justify-content:center; text-align:center; font-family:'Orbitron',sans-serif; font-size:8px; font-weight:700;
-    letter-spacing:0.5px; text-transform:uppercase; color:#000; background:var(--yellow); animation:spin 20s linear infinite reverse; }
-  @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
-
-  .pos-1 { top:4%; left:4%; }
-  .pos-3 { bottom:4%; right:24%; }
-  .pos-4 { top:44%; right:3%; }
-
-  @media (max-width:640px) {
-    .wall-row span { font-size:20vw; -webkit-text-stroke:1.5px #000; }
-    .hero-frame { padding:30px 24px; }
-    .wordmark { width:64vw; }
-    .phrase { font-size:16px; max-width:180px; }
-    .phrase-2 { font-size:13px; max-width:140px; }
-    .sticker { transform:scale(0.55); }
-    .pos-1 { top:2%; left:1%; } .pos-3 { bottom:2%; right:16%; } .pos-4 { display:none; }
-  }
-
-  /* ============ diagonal stripe band ============ */
-  .stripe-band { position:relative; height:110px; overflow:hidden; background:#000;
-    display:flex; align-items:center; transform:skewY(-2deg); margin:-2px 0; z-index:4; }
-  .stripe-band-inner { transform:skewY(2deg); width:100%; }
-  .stripes { display:flex; width:200%; animation:stripeScroll 14s linear infinite; }
-  .stripe { flex:0 0 auto; width:70px; height:110px; }
-  .stripe:nth-child(4n+1) { background:var(--orange); }
-  .stripe:nth-child(4n+2) { background:var(--black); }
-  .stripe:nth-child(4n+3) { background:var(--yellow); }
-  .stripe:nth-child(4n+4) { background:var(--red); }
-  @keyframes stripeScroll { from { transform:translateX(0); } to { transform:translateX(-50%); } }
-
-  .footer-note { text-align:center; padding:26px 16px; font-size:11px; color:#999; letter-spacing:1px; background:#000; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; background:var(--bg); }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  a { color:var(--primary); text-decoration:none; }
+  a:hover { color:var(--primary-hover); }
+  input::placeholder { color:#55554f; }
+  ::selection { background:var(--primary); color:#0A0A0A; }
+  button { font-family:inherit; }
 
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
+  .pd-pad { padding-left:40px; padding-right:40px; }
+  @media (max-width:860px) {
+    .pd-split { grid-template-columns:1fr !important; }
+    .pd-hide-sm { display:none !important; }
+    .pd-row { flex-direction:column !important; align-items:flex-start !important; gap:20px !important; }
+    .pd-pad { padding-left:22px !important; padding-right:22px !important; }
+    .pd-cd { grid-template-columns:repeat(2,1fr) !important; }
+    .pd-form { grid-template-columns:1fr !important; }
+  }
+
+  /* ---- header ---- */
+  .pd-header {
+    position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between;
+    height:64px; background:transparent; border-bottom:1px solid transparent;
+    transition:background 300ms ease, border-color 300ms ease;
+  }
+  .pd-header.is-scrolled { background:rgba(9,9,9,0.95); backdrop-filter:blur(12px); border-bottom-color:var(--line); }
+  .pd-header .logo-link { display:block; flex:none; line-height:0; }
+  .pd-header .logo-link img { display:block; width:142px; height:28px; transition:filter 240ms ease; filter:invert(1); }
+  .pd-header.is-scrolled .logo-link img { filter:none; }
+  .pd-nav { display:flex; align-items:center; gap:30px; }
+  .pd-nav-link { font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:500; transition:color 240ms ease; color:rgba(0,0,0,0.62); }
+  .pd-header.is-scrolled .pd-nav-link { color:rgba(242,237,228,0.5); }
+  .pd-nav-cta { padding:11px 20px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; transition:background 240ms ease, color 240ms ease; background:#000; color:var(--ink); }
+  .pd-header.is-scrolled .pd-nav-cta { background:var(--primary); color:#0A0A0A; }
+
+  /* ---- hero ---- */
+  .pd-hero { position:relative; min-height:100vh; background:var(--primary); display:flex; flex-direction:column; overflow:hidden; }
+  .pd-hero-photo { position:absolute; inset:0; width:100%; height:110%; object-fit:cover; mix-blend-mode:multiply; opacity:0.5; }
+  .pd-hero-gradient { position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,40,0,0.28) 0%, rgba(255,40,0,0) 34%); }
+  .pd-hero-content { position:relative; z-index:10; flex:1; display:flex; flex-direction:column; justify-content:center; padding:140px 40px 54px; }
+  .pd-hero-title { font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(3.6rem, 17.5vw, 15rem); line-height:0.84; letter-spacing:-0.035em; text-transform:uppercase; color:#000; margin:0; user-select:none; }
+  .pd-hero-actions { display:flex; flex-direction:column; align-items:flex-start; gap:30px; margin-top:42px; }
+  .pd-btn-dark { display:inline-flex; align-items:center; gap:12px; padding:17px 32px; background:#000; color:var(--ink); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; flex:none; border:none; cursor:pointer; transition:background 180ms ease, color 180ms ease; }
+  .pd-btn-dark:hover { background:#141414; color:var(--primary-hover); }
+  .pd-marquee-wrap { position:relative; z-index:10; border-top:1px solid rgba(0,0,0,0.22); background:rgba(0,0,0,0.1); overflow:hidden; white-space:nowrap; padding:12px 0; }
+  .pd-marquee { display:inline-block; animation:pdmarquee 26s linear infinite; font-size:11px; letter-spacing:0.32em; text-transform:uppercase; font-weight:700; color:rgba(0,0,0,0.7); }
+  @keyframes pdmarquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+
+  /* ---- countdown ---- */
+  .pd-cd-section { border-bottom:1px solid var(--line); background:var(--bg); }
+  .pd-cd-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:26px 40px 22px; }
+  .pd-eyebrow { margin:0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+  .pd-cd-date { margin:0; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+  .pd-cd { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); }
+  .pd-cd-unit { padding:34px 40px; border-right:1px solid var(--line); }
+  .pd-cd-unit:last-child { border-right:none; }
+  .pd-cd-num { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(2.4rem, 6vw, 4.6rem); line-height:1; font-variant-numeric:tabular-nums; color:var(--ink); }
+  .pd-cd-unit.is-seconds .pd-cd-num { color:var(--primary-hover); }
+  .pd-cd-label { margin:12px 0 0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+
+  /* ---- la noche ---- */
+  .pd-noche { display:grid; grid-template-columns:1fr 1fr; min-height:70vh; border-bottom:1px solid var(--line); }
+  .pd-noche-text { display:flex; flex-direction:column; justify-content:center; padding:96px 64px; border-right:1px solid var(--line); }
+  .pd-noche-title { margin:0 0 14px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem, 3.4vw, 2.6rem); line-height:1.06; text-transform:uppercase; letter-spacing:-0.02em; color:var(--ink); }
+  .pd-noche-sub { margin:0 0 30px; font-family:'Unbounded',sans-serif; font-weight:400; font-size:13px; line-height:1.5; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); }
+  .pd-noche-copy { margin:0; max-width:400px; font-size:15px; line-height:1.7; color:var(--muted); }
+  .pd-badge18 { margin-top:44px; border-left:2px solid var(--primary); padding-left:16px; }
+  .pd-badge18 strong { margin:0; display:block; font-family:'Unbounded',sans-serif; font-weight:900; font-size:20px; color:var(--ink); }
+  .pd-badge18 span { display:block; margin-top:5px; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+  .pd-noche-photo-wrap { position:relative; overflow:hidden; min-height:460px; background:#141414; }
+  .pd-noche-photo { position:absolute; inset:0; width:100%; height:108%; object-fit:cover; }
+  .pd-noche-photo-shade { position:absolute; inset:0; background:linear-gradient(0deg, rgba(9,9,9,0.7) 0%, rgba(9,9,9,0) 55%); }
+  .pd-noche-caption { position:absolute; left:28px; bottom:24px; margin:0; font-size:10px; letter-spacing:0.32em; text-transform:uppercase; color:rgba(242,237,228,0.72); }
+
+  /* ---- entradas ---- */
+  .pd-entradas-head { background:var(--primary); padding:56px 48px; }
+  .pd-entradas-eyebrow { margin:0 0 12px; font-size:10px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(0,0,0,0.6); font-weight:500; }
+  .pd-entradas-title { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(2.5rem, 7vw, 4.6rem); line-height:0.95; text-transform:uppercase; letter-spacing:-0.03em; color:#000; }
+
+  .pd-tier { display:flex; align-items:center; justify-content:space-between; gap:24px; width:100%; padding:38px 48px; border:none; border-bottom:1px solid var(--line); background:transparent; cursor:pointer; transition:background 180ms; text-align:left; color:inherit; font-family:inherit; }
+  .pd-tier:hover, .pd-tier:focus-visible { background:#141414; }
+  .pd-tier-left { display:flex; align-items:center; gap:40px; }
+  .pd-tier-idx { font-size:10px; letter-spacing:0.3em; color:rgba(136,136,128,0.45); font-variant-numeric:tabular-nums; }
+  .pd-tier-price { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem, 4vw, 3.1rem); font-variant-numeric:tabular-nums; }
+  .pd-tier-price.is-free { color:var(--primary); }
+  .pd-tier-price.is-paid { color:var(--ink); }
+  .pd-tier-name { margin:0 0 4px; font-size:17px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink); }
+  .pd-tier-note { margin:0; font-size:13px; color:var(--muted); }
+  .pd-tier-select { flex:none; padding:13px 30px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; border:1px solid rgba(242,237,228,0.3); color:var(--ink); transition:all 180ms; }
+  .pd-tier:hover .pd-tier-select, .pd-tier:focus-visible .pd-tier-select { border-color:var(--primary); color:var(--primary); }
+  .pd-tier.is-selected .pd-tier-select { border-color:var(--primary); color:var(--primary); }
+
+  .pd-checkout { border-top:1px solid var(--primary); background:var(--card); padding:48px; }
+  .pd-checkout-inner { max-width:720px; }
+  .pd-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+  .pd-field { display:flex; flex-direction:column; gap:6px; }
+  .pd-field label.pd-microlabel { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); }
+  .pd-input {
+    background:var(--field); border:1px solid var(--line); padding:15px 16px; font-family:'DM Sans',sans-serif;
+    font-size:14px; color:var(--ink); outline:none; width:100%;
+  }
+  .pd-input:focus { border-color:var(--primary); }
+  .pd-declare { display:flex; align-items:flex-start; gap:10px; margin-bottom:22px; }
+  .pd-declare input { margin-top:3px; width:16px; height:16px; accent-color:var(--primary); flex-shrink:0; }
+  .pd-declare label { font-size:12.5px; color:var(--muted); line-height:1.5; }
+
+  .pd-qty-row { display:flex; align-items:center; gap:18px; margin-bottom:22px; }
+  .pd-qty-label { font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); }
+  .pd-qty-box { display:flex; align-items:center; border:1px solid var(--line); }
+  .pd-qty-box button { width:42px; height:42px; background:transparent; border:none; color:var(--ink); font-size:18px; cursor:pointer; transition:background 150ms, color 150ms; }
+  .pd-qty-box button:hover { background:var(--primary); color:#0A0A0A; }
+  .pd-qty-val { width:46px; text-align:center; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); }
+
+  .pd-order-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 0; border-top:1px solid var(--line); margin-bottom:22px; }
+  .pd-order-line { font-size:14px; color:var(--muted); }
+  .pd-order-total { font-family:'Unbounded',sans-serif; font-weight:900; font-size:24px; font-variant-numeric:tabular-nums; color:var(--ink); }
+
+  .pd-form-error { margin:0 0 16px; font-size:12px; letter-spacing:0.02em; color:var(--primary-hover); }
+  .pd-pay-btn { padding:17px 46px; background:var(--primary); border:none; color:#0A0A0A; font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:background 180ms; }
+  .pd-pay-btn:hover { background:var(--primary-hover); }
+  .pd-pay-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .pd-confirm { border-top:1px solid var(--primary); background:var(--primary); padding:48px; }
+  .pd-confirm-eyebrow { margin:0 0 10px; font-size:10px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(0,0,0,0.6); font-weight:500; }
+  .pd-confirm-headline { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.6rem, 4vw, 2.6rem); line-height:1; text-transform:uppercase; color:#000; }
+  .pd-confirm-line { margin:0 0 28px; font-size:15px; color:rgba(0,0,0,0.72); }
+  .pd-confirm-qrs { display:flex; flex-wrap:wrap; gap:20px; }
+  .pd-confirm-qr { background:#fff; padding:14px; display:inline-flex; flex-direction:column; align-items:center; gap:10px; }
+  .pd-confirm-qr img { width:150px; height:150px; display:block; }
+  .pd-confirm-qr span { font-family:monospace; font-size:12px; color:#000; letter-spacing:1px; }
+
+  .pd-legal { padding:24px 48px; border-top:1px solid var(--line); }
+  .pd-legal p { margin:0; font-size:12px; color:rgba(136,136,128,0.55); line-height:1.6; }
+
+  /* ---- footer ---- */
+  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; }
+  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
+  .pd-footer-brand { max-width:300px; }
+  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
+  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
+  .pd-footer-col p.pd-eyebrow { margin-bottom:16px; }
+  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); transition:color 180ms; }
+  .pd-footer-col a:hover { color:var(--ink); }
+  .pd-footer-col p.pd-addr { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
+
+  /* ---- scroll reveal ---- */
+  [data-reveal] { opacity:0; transform:translateY(20px); transition:opacity 600ms ease, transform 600ms cubic-bezier(.2,.7,.3,1); }
+  [data-reveal].is-visible { opacity:1; transform:none; }
+
   @media (prefers-reduced-motion: reduce) {
-    .ticker-track, .stripes, .st-ring, .st-badge2 { animation:none; }
+    html { scroll-behavior:auto; }
+    .pd-marquee { animation:none; }
+    [data-reveal] { transition:opacity 400ms ease; transform:none !important; }
+    .pd-hero-photo, .pd-noche-photo { transform:none !important; }
   }
 </style>
 </head>
 <body>
 
-<div class="ticker" aria-hidden="true">
-  <div class="ticker-track">
-    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
-    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
-    <span>PARADISIO</span><span>·</span><span>HOUSE</span><span>·</span><span>DISCO</span><span>·</span><span>TECHNO</span><span>·</span>
-  </div>
-</div>
+<header class="pd-header pd-pad" id="pd-header">
+  <a href="#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
+  <nav class="pd-nav">
+    <a href="#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
+    <a href="#entradas" class="pd-nav-cta">Comprar</a>
+  </nav>
+</header>
 
-<div class="wall">
-  <div class="wall-row fill-yellow"><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span></div>
-  <div class="wall-row fill-outline"><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span></div>
-  <div class="wall-row fill-red"><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span></div>
-  <div class="wall-row fill-outline"><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span></div>
-  <div class="wall-row fill-orange"><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span><span>PARADISIO&nbsp;</span></div>
+<section id="top" class="pd-hero">
+  <img class="pd-hero-photo" src="hero-photo.jpg" alt="" aria-hidden="true" data-parallax="0.22" />
+  <div class="pd-hero-gradient" aria-hidden="true"></div>
 
-  <div class="sticker st-ring pos-1">PRÓXIMAMENTE</div>
-  <div class="sticker pos-3"><div class="st-triangle"></div></div>
-  <div class="sticker st-badge2 pos-4">BARRANCO<br/>LIMA</div>
-
-  <div class="phrase phrase-1">ENTRA Y OLVÍDATE<br/>DEL AFUERA.</div>
-  <div class="phrase phrase-2">AQUÍ SOLO<br/>EXISTE LA PISTA.</div>
-
-  <div class="hero-center">
-    <div class="hero-frame">
-      <h1 class="sr-only">Paradisio — Apertura 28 de agosto, Espacio NHN Barranco</h1>
-      <img class="wordmark" src="logo-white.png" alt="Paradisio" />
-      <div class="countdown" id="countdown" aria-hidden="true"></div>
+  <div class="pd-hero-content pd-pad">
+    <h1 class="pd-hero-title">Para<br>disio</h1>
+    <div class="pd-hero-actions">
+      <a href="#entradas" class="pd-btn-dark">Comprar entradas<span aria-hidden="true" style="font-size:15px;line-height:1;">↓</span></a>
     </div>
   </div>
-</div>
 
-<div class="stripe-band">
-  <div class="stripe-band-inner">
-    <div class="stripes" id="stripes"></div>
+  <div class="pd-marquee-wrap" aria-hidden="true">
+    <div class="pd-marquee">PARADISIO · HOUSE · DISCO · TODA LA NOCHE · PARADISIO · BARRANCO · 28 AGO · PARADISIO · HOUSE · DISCO · TODA LA NOCHE · PARADISIO · BARRANCO · 28 AGO · PARADISIO · HOUSE · DISCO · TODA LA NOCHE · PARADISIO · BARRANCO · 28 AGO · PARADISIO · HOUSE · DISCO · TODA LA NOCHE · PARADISIO · BARRANCO · 28 AGO · </div>
   </div>
-</div>
+</section>
 
-<div class="footer-note">Paradisio © 2026</div>
+<section class="pd-cd-section">
+  <div class="pd-cd-head pd-pad">
+    <p class="pd-eyebrow">Faltan</p>
+    <p class="pd-cd-date pd-hide-sm">Viernes 28 de Agosto</p>
+  </div>
+  <div class="pd-cd pd-pad" aria-hidden="true">
+    <div class="pd-cd-unit pd-pad">
+      <p class="pd-cd-num" id="cd-days">00</p>
+      <p class="pd-cd-label">Días / Days</p>
+    </div>
+    <div class="pd-cd-unit pd-pad">
+      <p class="pd-cd-num" id="cd-hours">00</p>
+      <p class="pd-cd-label">Horas / Hours</p>
+    </div>
+    <div class="pd-cd-unit pd-pad">
+      <p class="pd-cd-num" id="cd-mins">00</p>
+      <p class="pd-cd-label">Minutos / Min</p>
+    </div>
+    <div class="pd-cd-unit is-seconds pd-pad">
+      <p class="pd-cd-num" id="cd-secs">00</p>
+      <p class="pd-cd-label">Segundos / Sec</p>
+    </div>
+  </div>
+</section>
+
+<section id="la-noche" class="pd-noche pd-split">
+  <div class="pd-noche-text pd-pad">
+    <p class="pd-eyebrow">La Noche / About the Night</p>
+    <h2 class="pd-noche-title">Una sala.<br>Un sentimiento.<br>Toda la noche.</h2>
+    <p class="pd-noche-sub">One room. One feeling. All night.</p>
+    <p class="pd-noche-copy" data-reveal>Paradisio trae la energía del disco y el house a Barranco en una sala hecha para bailar y dejarte llevar.</p>
+    <div class="pd-badge18" data-reveal>
+      <strong>18+</strong>
+      <span>Solo con DNI</span>
+    </div>
+  </div>
+  <div class="pd-noche-photo-wrap">
+    <img class="pd-noche-photo" src="dancefloor-photo.jpg" alt="Pista de baile en Paradisio" data-parallax="0.08" />
+    <div class="pd-noche-photo-shade" aria-hidden="true"></div>
+    <p class="pd-noche-caption">Espacio NHN · Barranco, Lima</p>
+  </div>
+</section>
+
+<section id="entradas">
+  <div class="pd-entradas-head pd-pad">
+    <p class="pd-entradas-eyebrow">Asegura tu lugar / Secure your spot</p>
+    <h2 class="pd-entradas-title">Entradas</h2>
+  </div>
+
+  <div>
+    <button type="button" class="pd-tier pd-pad pd-row" id="tier-free" data-tier="Cortesía Opening" data-price="0" aria-expanded="false">
+      <div class="pd-tier-left">
+        <span class="pd-tier-idx">01</span>
+        <p class="pd-tier-price is-free">FREE</p>
+        <div>
+          <p class="pd-tier-name">Cortesía Opening</p>
+          <p class="pd-tier-note">Acceso hasta las 12 am</p>
+        </div>
+      </div>
+      <span class="pd-tier-select">Seleccionar</span>
+    </button>
+
+    <button type="button" class="pd-tier pd-pad pd-row" id="tier-club" data-tier="Club" data-price="45" aria-expanded="false">
+      <div class="pd-tier-left">
+        <span class="pd-tier-idx">02</span>
+        <p class="pd-tier-price is-paid">S/ 45</p>
+        <div>
+          <p class="pd-tier-name">Club</p>
+          <p class="pd-tier-note">Acceso hasta las 3 am</p>
+        </div>
+      </div>
+      <span class="pd-tier-select">Seleccionar</span>
+    </button>
+  </div>
+
+  <div class="pd-checkout pd-pad" id="pd-checkout" hidden>
+    <div class="pd-checkout-inner">
+      <p class="pd-eyebrow" style="margin-bottom:26px;">Completa tu orden / Complete your order</p>
+
+      <div class="pd-form-grid pd-form">
+        <div class="pd-field">
+          <input class="pd-input" type="text" id="f-nombre" placeholder="Nombre" aria-label="Nombre" autocomplete="given-name" />
+        </div>
+        <div class="pd-field">
+          <input class="pd-input" type="text" id="f-apellido" placeholder="Apellido" aria-label="Apellido" autocomplete="family-name" />
+        </div>
+        <div class="pd-field">
+          <input class="pd-input" type="email" id="f-email" placeholder="Email" aria-label="Email" autocomplete="email" />
+        </div>
+        <div class="pd-field">
+          <input class="pd-input" type="text" id="f-dni" placeholder="DNI / Documento" aria-label="DNI o documento" inputmode="numeric" autocomplete="off" />
+        </div>
+        <div class="pd-field">
+          <input class="pd-input" type="text" id="f-phone" placeholder="Teléfono / WhatsApp" aria-label="Teléfono" inputmode="tel" autocomplete="tel" />
+        </div>
+        <div class="pd-field">
+          <label class="pd-microlabel" for="f-dob">Fecha de nacimiento</label>
+          <input class="pd-input" type="date" id="f-dob" aria-label="Fecha de nacimiento" autocomplete="bday" />
+        </div>
+      </div>
+
+      <div class="pd-declare">
+        <input type="checkbox" id="f-declare" />
+        <label for="f-declare">Declaro bajo mi responsabilidad que soy mayor de 18 años y que la información brindada es correcta. · I declare I am over 18 and this information is accurate.</label>
+      </div>
+
+      <div class="pd-qty-row">
+        <span class="pd-qty-label">Cantidad</span>
+        <div class="pd-qty-box">
+          <button type="button" id="qty-dec" aria-label="Disminuir cantidad">−</button>
+          <span class="pd-qty-val" id="qty-val">1</span>
+          <button type="button" id="qty-inc" aria-label="Aumentar cantidad">+</button>
+        </div>
+      </div>
+
+      <div class="pd-order-row">
+        <span class="pd-order-line" id="order-line"></span>
+        <span class="pd-order-total" id="order-total"></span>
+      </div>
+
+      <p class="pd-form-error" id="form-error" hidden></p>
+
+      <button type="button" class="pd-pay-btn" id="pay-btn">Confirmar y pagar</button>
+    </div>
+  </div>
+
+  <div class="pd-confirm pd-pad" id="pd-confirm" hidden>
+    <p class="pd-confirm-eyebrow">Orden confirmada / Order confirmed</p>
+    <p class="pd-confirm-headline">Nos vemos en la pista</p>
+    <p class="pd-confirm-line" id="confirm-line"></p>
+    <div class="pd-confirm-qrs" id="confirm-qrs"></div>
+  </div>
+
+  <div class="pd-legal pd-pad">
+    <p>Entradas no reembolsables. Reventa prohibida. Solo mayores de 18 con documento válido en puerta. · Non-refundable. Resale prohibited. 18+ only, valid ID required at the door.</p>
+  </div>
+</section>
+
+<footer class="pd-footer pd-pad">
+  <div class="pd-footer-top">
+    <div class="pd-footer-brand">
+      <img src="logo-white.png" alt="Paradisio" />
+      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
+    </div>
+    <div class="pd-footer-cols">
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Contacto</p>
+        <a href="mailto:hola@paradisio.club">hola@paradisio.club</a>
+        <a href="mailto:bookings@paradisio.club">bookings@paradisio.club</a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Síguenos</p>
+        <a href="#top">Instagram</a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Ubicación</p>
+        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
+      </div>
+    </div>
+  </div>
+  <div class="pd-footer-bottom">
+    <span>© 2026 Paradisio</span>
+    <span>Lima, Perú</span>
+  </div>
+</footer>
 
 <script>
-  const stripesEl = document.getElementById('stripes');
-  for (let i = 0; i < 40; i++) {
-    const d = document.createElement('div');
-    d.className = 'stripe';
-    d.style.transform = 'skewX(-20deg)';
-    stripesEl.appendChild(d);
-  }
+  const CULQI_PUBLIC_KEY = 'PON_AQUI_TU_LLAVE_PUBLICA_DE_CULQI';
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---- header scroll state ---- */
+  const headerEl = document.getElementById('pd-header');
+  function onScroll() {
+    const on = (window.scrollY || 0) > 60;
+    headerEl.classList.toggle('is-scrolled', on);
+    if (!reduceMotion) {
+      document.querySelectorAll('[data-parallax]').forEach((el) => {
+        const f = parseFloat(el.getAttribute('data-parallax')) || 0;
+        const r = el.parentElement.getBoundingClientRect();
+        el.style.transform = 'translateY(' + (r.top * -1 * f).toFixed(1) + 'px)';
+      });
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* ---- scroll reveal ---- */
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('is-visible'), reduceMotion ? 0 : i * 70);
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+  setTimeout(() => document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-visible')), 2500);
+
+  /* ---- countdown ---- */
   const EVENT_DATE = new Date('2026-08-28T22:00:00-05:00');
   function fmt2(n){ return String(n).padStart(2,'0'); }
   function renderCountdown(){
-    const now = new Date();
-    let diff = Math.max(0, EVENT_DATE - now);
-    const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000);
-    const m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-    document.getElementById('countdown').innerHTML = [[d,'días'],[h,'hrs'],[m,'min'],[s,'seg']]
-      .map(p => '<div class="cd-box"><div class="cd-box-inner"><div class="cd-num">'+fmt2(p[0])+'</div><div class="cd-label">'+p[1]+'</div></div></div>').join('');
+    const diff = Math.max(0, EVENT_DATE - new Date());
+    document.getElementById('cd-days').textContent = fmt2(Math.floor(diff/86400000));
+    document.getElementById('cd-hours').textContent = fmt2(Math.floor(diff/3600000) % 24);
+    document.getElementById('cd-mins').textContent = fmt2(Math.floor(diff/60000) % 60);
+    document.getElementById('cd-secs').textContent = fmt2(Math.floor(diff/1000) % 60);
   }
   renderCountdown();
   setInterval(renderCountdown, 1000);
+
+  /* ---- ticket tiers + checkout ---- */
+  const tierButtons = [document.getElementById('tier-free'), document.getElementById('tier-club')];
+  const checkoutEl = document.getElementById('pd-checkout');
+  const confirmEl = document.getElementById('pd-confirm');
+  const errorEl = document.getElementById('form-error');
+  let selectedTier = null; // { name, price }
+  let qty = 1;
+
+  function calcAge(dobStr){
+    const dob = new Date(dobStr + 'T00:00:00');
+    if (isNaN(dob.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age;
+  }
+
+  function showError(msg){
+    errorEl.textContent = msg;
+    errorEl.hidden = !msg;
+  }
+
+  function updateOrderSummary(){
+    const line = document.getElementById('order-line');
+    const total = document.getElementById('order-total');
+    if (!selectedTier) return;
+    line.textContent = selectedTier.name + ' × ' + qty;
+    const amount = selectedTier.price * qty;
+    total.textContent = amount === 0 ? 'Gratis' : 'S/ ' + amount;
+  }
+
+  document.getElementById('qty-inc').addEventListener('click', () => {
+    qty = Math.min(10, qty + 1);
+    document.getElementById('qty-val').textContent = qty;
+    updateOrderSummary();
+  });
+  document.getElementById('qty-dec').addEventListener('click', () => {
+    qty = Math.max(1, qty - 1);
+    document.getElementById('qty-val').textContent = qty;
+    updateOrderSummary();
+  });
+
+  function selectTier(btn){
+    const tier = btn.getAttribute('data-tier');
+    const price = parseInt(btn.getAttribute('data-price'), 10);
+    const alreadySelected = selectedTier && selectedTier.name === tier;
+    tierButtons.forEach((b) => { b.classList.remove('is-selected'); b.setAttribute('aria-expanded','false'); b.querySelector('.pd-tier-select').textContent = 'Seleccionar'; });
+    confirmEl.hidden = true;
+    showError('');
+    if (alreadySelected) {
+      selectedTier = null;
+      checkoutEl.hidden = true;
+      return;
+    }
+    selectedTier = { name: tier, price };
+    btn.classList.add('is-selected');
+    btn.setAttribute('aria-expanded','true');
+    btn.querySelector('.pd-tier-select').textContent = 'Seleccionado ✓';
+    checkoutEl.hidden = false;
+    updateOrderSummary();
+    checkoutEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }
+  tierButtons.forEach((btn) => btn.addEventListener('click', () => selectTier(btn)));
+
+  function readForm(){
+    return {
+      name: (document.getElementById('f-nombre').value.trim() + ' ' + document.getElementById('f-apellido').value.trim()).trim(),
+      email: document.getElementById('f-email').value.trim(),
+      dni: document.getElementById('f-dni').value.trim(),
+      phone: document.getElementById('f-phone').value.trim(),
+      dob: document.getElementById('f-dob').value,
+      declared: document.getElementById('f-declare').checked,
+    };
+  }
+
+  function validate(data){
+    if (!document.getElementById('f-nombre').value.trim() || !document.getElementById('f-apellido').value.trim()) {
+      return 'Completa nombre y apellido. · Please enter your full name.';
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
+      return 'Ingresa un email válido. · Please enter a valid email.';
+    }
+    if (data.dni.length < 6) {
+      return 'Ingresa un documento válido. · Please enter a valid ID number.';
+    }
+    if (!data.phone) {
+      return 'Ingresa tu número de teléfono. · Please enter your phone number.';
+    }
+    const age = calcAge(data.dob);
+    if (age === null) {
+      return 'Ingresa tu fecha de nacimiento. · Please enter your date of birth.';
+    }
+    if (age < 18) {
+      return 'Evento solo para mayores de 18 años. · This event is 18+ only.';
+    }
+    if (!data.declared) {
+      return 'Debes marcar la declaración de mayoría de edad para continuar. · Please confirm the 18+ declaration.';
+    }
+    return null;
+  }
+
+  function renderConfirmation(tickets, qrs, email){
+    checkoutEl.hidden = true;
+    confirmEl.hidden = false;
+    const plural = tickets.length > 1 ? 'entradas' : 'entrada';
+    document.getElementById('confirm-line').textContent =
+      'Enviamos ' + tickets.length + ' ' + plural + ' ' + selectedTier.name + ' a ' + email + '. Preséntalas con tu documento en puerta. · Tickets sent, see you on the floor.';
+    const qrsWrap = document.getElementById('confirm-qrs');
+    qrsWrap.innerHTML = '';
+    tickets.forEach((t, i) => {
+      const box = document.createElement('div');
+      box.className = 'pd-confirm-qr';
+      const img = document.createElement('img');
+      img.src = qrs[i];
+      img.alt = 'Código QR de la entrada ' + t.id;
+      const span = document.createElement('span');
+      span.textContent = t.id;
+      box.appendChild(img);
+      box.appendChild(span);
+      qrsWrap.appendChild(box);
+    });
+    confirmEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }
+
+  function handleApiError(err, data){
+    if (err === 'underage') return showError('Evento solo para mayores de 18 años. · This event is 18+ only.');
+    if (err === 'sold_out') return showError(selectedTier.price === 0
+      ? 'La cortesía Opening se agotó. Prueba con Club. · Free tier sold out, try Club.'
+      : 'Las entradas Club se agotaron. · Club tickets sold out.');
+    if (err === 'payment_failed') return showError((data && data.detail) || 'El pago no pudo procesarse. · Payment could not be processed.');
+    return showError('Ocurrió un error. Intenta de nuevo. · Something went wrong, please try again.');
+  }
+
+  const payBtn = document.getElementById('pay-btn');
+
+  async function submitFree(form){
+    payBtn.disabled = true;
+    try {
+      const r = await fetch('/api/register-free', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, qty }),
+      });
+      const d = await r.json();
+      if (!r.ok) { handleApiError(d.error, d); return; }
+      renderConfirmation(d.tickets || [d.ticket], d.qrs || [d.qr], form.email);
+    } catch (e) {
+      showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
+    } finally {
+      payBtn.disabled = false;
+    }
+  }
+
+  function payWithCulqi(form){
+    Culqi.publicKey = CULQI_PUBLIC_KEY;
+    Culqi.settings({
+      title: 'Paradisio',
+      currency: 'PEN',
+      amount: selectedTier.price * qty * 100,
+      description: 'Paradisio - Entrada Club',
+    });
+    Culqi.options({ lang: 'es', installments: false, paymentMethods: { tarjeta: true, yape: true } });
+    window.__paradisioPendingForm = form;
+    Culqi.open();
+  }
+
+  window.culqi = async function(){
+    if (!Culqi.token) { showError('El pago no pudo procesarse. · Payment could not be processed.'); return; }
+    const form = window.__paradisioPendingForm;
+    payBtn.disabled = true;
+    try {
+      const r = await fetch('/api/charge', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: Culqi.token.id, ...form, qty }),
+      });
+      const d = await r.json();
+      if (!r.ok) { handleApiError(d.error, d); return; }
+      renderConfirmation(d.tickets || [d.ticket], d.qrs || [d.qr], form.email);
+    } catch (e) {
+      showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
+    } finally {
+      payBtn.disabled = false;
+    }
+  };
+
+  payBtn.addEventListener('click', () => {
+    const form = readForm();
+    const err = validate(form);
+    if (err) { showError(err); return; }
+    showError('');
+    if (selectedTier.price === 0) {
+      submitFree(form);
+    } else {
+      payWithCulqi(form);
+    }
+  });
 </script>
 </body>
 </html>

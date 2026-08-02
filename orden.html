@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tu orden — Paradisio</title>
+<meta name="description" content="Tu orden de Paradisio: todas tus entradas, códigos QR y datos de cada asistente." />
+<meta name="robots" content="noindex" />
+<style>
+  @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
+  @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
+
+  :root {
+    --bg:#090909; --ink:#F2EDE4; --primary:#FF2800; --primary-hover:#FF9A00;
+    --muted:#888880; --line:rgba(255,40,0,0.18); --card:#141414; --field:#1A1A1A;
+  }
+  * { box-sizing:border-box; }
+  html { background:var(--bg); }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; min-height:100vh; display:flex; flex-direction:column; }
+  a { color:var(--primary); text-decoration:none; }
+  a:hover { color:var(--primary-hover); }
+  button { font-family:inherit; }
+  ::selection { background:var(--primary); color:#0A0A0A; }
+
+  .pd-pad { padding-left:40px; padding-right:40px; }
+  @media (max-width:860px) { .pd-pad { padding-left:22px !important; padding-right:22px !important; } .pd-hide-sm { display:none !important; } }
+
+  /* ---- header (static dark state) ---- */
+  .pd-header { position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between; height:64px; background:rgba(9,9,9,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+  .pd-header .logo-link { display:block; flex:none; line-height:0; }
+  .pd-header .logo-link img { display:block; width:142px; height:28px; }
+  .pd-nav { display:flex; align-items:center; gap:30px; }
+  .pd-nav-link { font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:500; color:rgba(242,237,228,0.5); transition:color 240ms ease; }
+  .pd-nav-link:hover { color:var(--ink); }
+  .pd-nav-cta { padding:11px 20px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; background:var(--primary); color:#0A0A0A; transition:background 240ms ease; }
+  .pd-nav-cta:hover { background:var(--primary-hover); color:#0A0A0A; }
+
+  .pd-eyebrow { margin:0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+
+  main { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:120px 0 60px; }
+
+  .or-state { display:none; width:100%; }
+  .or-state.is-active { display:flex; flex-direction:column; align-items:center; }
+  .or-loading { text-align:center; font-size:13px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); }
+
+  .or-head { text-align:center; margin-bottom:24px; padding:0 22px; }
+  .or-head p.or-count { margin:0; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+
+  .or-carousel { position:relative; width:100%; max-width:480px; }
+  .or-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; cursor:grab; }
+  .or-track::-webkit-scrollbar { display:none; }
+  .or-track.is-dragging { cursor:grabbing; scroll-snap-type:none; }
+  .or-slide { flex:0 0 100%; scroll-snap-align:center; display:flex; justify-content:center; padding:0 22px; }
+
+  .or-ticket { background:var(--card); border:1px solid var(--line); padding:32px 26px; text-align:center; width:100%; max-width:400px; }
+  .or-ticket-tier { margin:0 0 8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary); font-weight:700; }
+  .or-ticket-name { margin:0 0 4px; font-size:20px; font-weight:800; color:var(--ink); }
+  .or-ticket-dni { margin:0 0 20px; font-size:13px; color:var(--muted); }
+
+  .or-qr-wrap { background:#fff; display:inline-block; padding:16px; margin-bottom:16px; }
+  .or-qr-wrap img { display:block; width:180px; height:180px; }
+
+  .or-code { margin:0 0 6px; font-family:monospace; font-size:14px; letter-spacing:1px; color:var(--ink); }
+  .or-note { margin:0 0 22px; font-size:12px; color:var(--muted); }
+
+  .or-details { border-top:1px solid var(--line); padding-top:18px; margin-bottom:22px; text-align:left; }
+  .or-details p { margin:0 0 6px; font-size:13px; color:var(--muted); line-height:1.5; }
+  .or-details p.or-event-name { font-size:14px; font-weight:700; color:var(--ink); }
+
+  .or-share-btn { display:inline-flex; align-items:center; gap:10px; padding:13px 26px; background:#000; color:var(--ink); font-size:11px; letter-spacing:0.25em; text-transform:uppercase; font-weight:700; border:none; cursor:pointer; }
+  .or-share-btn:hover { background:#1a1a1a; color:var(--primary-hover); }
+  .or-share-btn.is-copied { background:var(--primary); color:#0A0A0A; }
+
+  .or-arrows { display:flex; align-items:center; justify-content:center; gap:20px; margin-top:20px; }
+  .or-arrow { width:42px; height:42px; background:#000; border:1px solid var(--line); color:var(--ink); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color 180ms, color 180ms; }
+  .or-arrow:hover { border-color:var(--primary); color:var(--primary); }
+  .or-arrow:disabled { opacity:0.3; cursor:default; }
+  .or-arrow:disabled:hover { border-color:var(--line); color:var(--ink); }
+  @media (max-width:600px) { .or-arrows { display:none; } }
+
+  .or-error { background:var(--card); border:1px solid var(--line); padding:48px 32px; text-align:center; max-width:420px; margin:0 22px; }
+  .or-error h1 { margin:0 0 12px; font-family:'Unbounded',sans-serif; font-weight:800; font-size:20px; color:var(--ink); }
+  .or-error p { margin:0; font-size:14px; line-height:1.6; color:var(--muted); }
+  .or-error a { font-weight:700; }
+
+  /* ---- footer (shared across every page) ---- */
+  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; }
+  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
+  .pd-footer-brand { max-width:300px; }
+  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
+  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
+  .pd-footer-col p.pd-eyebrow { margin-bottom:16px; }
+  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); transition:color 180ms; }
+  .pd-footer-col a:hover { color:var(--ink); }
+  .pd-footer-col p.pd-addr { margin:8px 0 0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-social { display:inline-flex; align-items:center; gap:8px; }
+  .pd-libro-notice { border-top:1px solid var(--primary); padding-top:28px; margin-bottom:28px; }
+  .pd-libro-title { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); }
+  .pd-libro-text { margin:0 0 12px; max-width:520px; font-size:13px; line-height:1.6; color:var(--muted); }
+  .pd-libro-link { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary); }
+  .pd-libro-link:hover { color:var(--primary-hover); }
+  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
+  .pd-footer-bottom a { color:inherit; }
+  .pd-footer-bottom a:hover { color:var(--primary); }
+</style>
+</head>
+<body>
+
+<header class="pd-header pd-pad">
+  <a href="index.html#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
+  <nav class="pd-nav">
+    <a href="index.html#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
+    <a href="index.html#entradas" class="pd-nav-cta">Comprar</a>
+  </nav>
+</header>
+
+<main>
+  <div class="or-state is-active" id="or-loading">
+    <p class="or-loading">Cargando tu orden…</p>
+  </div>
+
+  <div class="or-state" id="or-carousel-state">
+    <div class="or-head">
+      <p class="pd-eyebrow" style="margin-bottom:8px;">Tu orden</p>
+      <p class="or-count" id="or-count">1 de 1</p>
+    </div>
+
+    <div class="or-carousel">
+      <div class="or-track" id="or-track"></div>
+      <div class="or-arrows">
+        <button class="or-arrow" id="or-prev" aria-label="Entrada anterior">←</button>
+        <button class="or-arrow" id="or-next" aria-label="Siguiente entrada">→</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="or-state" id="or-error-state">
+    <div class="or-error">
+      <h1>No pudimos encontrar esta orden</h1>
+      <p>El enlace no es válido o ya expiró. Si crees que esto es un error, escríbenos a <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a> con tu nombre y el correo con el que compraste.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="pd-footer pd-pad">
+  <div class="pd-footer-top">
+    <div class="pd-footer-brand">
+      <img src="logo-white.png" alt="Paradisio" />
+      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
+    </div>
+    <div class="pd-footer-cols">
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Contacto</p>
+        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="tel:+51970457825">970 457 825</a>
+        <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Síguenos</p>
+        <a class="pd-social" href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          Instagram
+        </a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Ubicación del evento</p>
+        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Legal</p>
+        <a href="terminos.html">Términos y condiciones</a>
+        <a href="devoluciones.html">Cambios y devoluciones</a>
+        <a href="privacidad.html">Privacidad</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="pd-libro-notice">
+    <p class="pd-libro-title">Libro de Reclamaciones</p>
+    <p class="pd-libro-text">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de Reclamaciones a tu disposición.</p>
+    <a class="pd-libro-link" href="libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a>
+  </div>
+
+  <div class="pd-footer-bottom">
+    <span>© 2026 Paradisio</span>
+    <span>Lima, Perú</span>
+  </div>
+</footer>
+
+<script>
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function showState(id){
+    document.querySelectorAll('.or-state').forEach(el => el.classList.remove('is-active'));
+    document.getElementById(id).classList.add('is-active');
+  }
+
+  (async function(){
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('t');
+    if (!token) { showState('or-error-state'); return; }
+
+    let data;
+    try {
+      const r = await fetch('/api/orden?t=' + encodeURIComponent(token));
+      if (!r.ok) { showState('or-error-state'); return; }
+      data = await r.json();
+    } catch (e) {
+      showState('or-error-state'); return;
+    }
+
+    const entries = data.entries || [];
+    if (entries.length === 0) { showState('or-error-state'); return; }
+
+    const track = document.getElementById('or-track');
+    track.innerHTML = entries.map((e, i) => `
+      <div class="or-slide" data-index="${i}">
+        <div class="or-ticket">
+          <p class="or-ticket-tier">${escapeHtml(e.tierLabel)}</p>
+          <p class="or-ticket-name">${escapeHtml(e.name)}</p>
+          <p class="or-ticket-dni">Documento: ${escapeHtml(e.dni || '—')}</p>
+          <div class="or-qr-wrap"><img src="${e.qr}" alt="Código QR de la entrada de ${escapeHtml(e.name)}" /></div>
+          <p class="or-code">${escapeHtml(e.code)}</p>
+          <p class="or-note">Este código QR es válido para un solo ingreso.</p>
+          <div class="or-details">
+            <p class="or-event-name">${escapeHtml(e.eventName)}</p>
+            <p>${escapeHtml(e.eventDateLabel)}</p>
+            <p>Válida ${escapeHtml(e.validityLabel)}</p>
+          </div>
+          <button class="or-share-btn" data-token="${e.entradaToken}">Compartir esta entrada</button>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('or-count').textContent = '1 de ' + entries.length;
+    showState('or-carousel-state');
+
+    const prevBtn = document.getElementById('or-prev');
+    const nextBtn = document.getElementById('or-next');
+
+    function currentIndex(){
+      return Math.round(track.scrollLeft / track.clientWidth);
+    }
+    function goTo(i){
+      const clamped = Math.max(0, Math.min(entries.length - 1, i));
+      track.scrollTo({ left: clamped * track.clientWidth, behavior: 'smooth' });
+    }
+    function updateUi(){
+      const idx = currentIndex();
+      document.getElementById('or-count').textContent = (idx + 1) + ' de ' + entries.length;
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = idx === entries.length - 1;
+    }
+
+    prevBtn.onclick = () => goTo(currentIndex() - 1);
+    nextBtn.onclick = () => goTo(currentIndex() + 1);
+    track.addEventListener('scroll', () => { window.requestAnimationFrame(updateUi); });
+    updateUi();
+
+    // Desktop click-and-drag scrolling.
+    let isDown = false, startX = 0, startScroll = 0, dragged = false;
+    track.addEventListener('mousedown', (e) => {
+      isDown = true; dragged = false;
+      track.classList.add('is-dragging');
+      startX = e.pageX;
+      startScroll = track.scrollLeft;
+    });
+    window.addEventListener('mouseup', () => {
+      if (!isDown) return;
+      isDown = false;
+      track.classList.remove('is-dragging');
+      if (dragged) goTo(currentIndex());
+    });
+    track.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const dx = e.pageX - startX;
+      if (Math.abs(dx) > 4) dragged = true;
+      track.scrollLeft = startScroll - dx;
+    });
+
+    // Share button: copy the individual /entrada link for that assistant.
+    track.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.or-share-btn');
+      if (!btn) return;
+      const url = window.location.origin + '/entrada?t=' + btn.dataset.token;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      const original = btn.textContent;
+      btn.textContent = 'Enlace copiado ✓';
+      btn.classList.add('is-copied');
+      setTimeout(() => { btn.textContent = original; btn.classList.remove('is-copied'); }, 2000);
+    });
+  })();
+</script>
+</body>
+</html>

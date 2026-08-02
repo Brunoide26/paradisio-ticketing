@@ -1,11 +1,12 @@
-const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP } = require('../lib/tickets');
+const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket } = require('../lib/tickets');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   try {
     const { name, phone, email, dni, dob } = req.body || {};
-    const qty = Math.min(10, Math.max(1, parseInt(req.body?.qty, 10) || 1));
+    // Cortesía is one per person — fixed at qty 1, regardless of what the client sends.
+    const qty = 1;
     if (!name || !phone || !email || !dni || !dob) {
       return res.status(400).json({ error: 'missing_fields' });
     }
@@ -13,6 +14,14 @@ module.exports = async (req, res) => {
     const age = calcAge(dob);
     if (age === null || age < 18) {
       return res.status(403).json({ error: 'underage' });
+    }
+
+    // Email and document must be unique among active Cortesía tickets — this uniqueness
+    // never crosses into paid tickets, which are a separate product.
+    const conflict = await findConflictingFreeTicket(email, dni);
+    if (conflict) {
+      const field = conflict.email.trim().toLowerCase() === email.trim().toLowerCase() ? 'email' : 'dni';
+      return res.status(409).json({ error: 'free_already_claimed', field });
     }
 
     const counters = await getCounters();

@@ -122,6 +122,11 @@
   .pd-declare input { margin-top:3px; width:16px; height:16px; accent-color:var(--primary); flex-shrink:0; }
   .pd-declare label { font-size:12.5px; color:var(--muted); line-height:1.5; }
 
+  .pd-assistant { padding:22px 0; border-bottom:1px solid var(--line); }
+  .pd-assistant:first-of-type { padding-top:0; }
+  .pd-assistant:last-of-type { border-bottom:none; }
+  .pd-assistant-label { margin:0 0 14px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary); font-weight:700; }
+
   .pd-qty-row { display:flex; align-items:center; gap:18px; margin-bottom:22px; }
   .pd-qty-label { font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); }
   .pd-qty-box { display:flex; align-items:center; border:1px solid var(--line); }
@@ -291,39 +296,50 @@
     <div class="pd-checkout-inner">
       <p class="pd-eyebrow" style="margin-bottom:26px;">Completa tu orden / Complete your order</p>
 
-      <div class="pd-form-grid pd-form">
-        <div class="pd-field">
-          <input class="pd-input" type="text" id="f-nombre" placeholder="Nombre" aria-label="Nombre" autocomplete="given-name" />
+      <div id="free-fields">
+        <div class="pd-form-grid pd-form">
+          <div class="pd-field">
+            <input class="pd-input" type="text" id="f-nombre" placeholder="Nombre" aria-label="Nombre" autocomplete="given-name" />
+          </div>
+          <div class="pd-field">
+            <input class="pd-input" type="text" id="f-apellido" placeholder="Apellido" aria-label="Apellido" autocomplete="family-name" />
+          </div>
+          <div class="pd-field">
+            <input class="pd-input" type="email" id="f-email" placeholder="Email" aria-label="Email" autocomplete="email" />
+          </div>
+          <div class="pd-field">
+            <input class="pd-input" type="text" id="f-dni" placeholder="DNI / Documento" aria-label="DNI o documento" inputmode="numeric" autocomplete="off" />
+          </div>
+          <div class="pd-field">
+            <input class="pd-input" type="text" id="f-phone" placeholder="Teléfono / WhatsApp" aria-label="Teléfono" inputmode="tel" autocomplete="tel" />
+          </div>
+          <div class="pd-field">
+            <label class="pd-microlabel" for="f-dob">Fecha de nacimiento</label>
+            <input class="pd-input" type="date" id="f-dob" aria-label="Fecha de nacimiento" autocomplete="bday" />
+          </div>
         </div>
-        <div class="pd-field">
-          <input class="pd-input" type="text" id="f-apellido" placeholder="Apellido" aria-label="Apellido" autocomplete="family-name" />
-        </div>
-        <div class="pd-field">
-          <input class="pd-input" type="email" id="f-email" placeholder="Email" aria-label="Email" autocomplete="email" />
-        </div>
-        <div class="pd-field">
-          <input class="pd-input" type="text" id="f-dni" placeholder="DNI / Documento" aria-label="DNI o documento" inputmode="numeric" autocomplete="off" />
-        </div>
-        <div class="pd-field">
-          <input class="pd-input" type="text" id="f-phone" placeholder="Teléfono / WhatsApp" aria-label="Teléfono" inputmode="tel" autocomplete="tel" />
-        </div>
-        <div class="pd-field">
-          <label class="pd-microlabel" for="f-dob">Fecha de nacimiento</label>
-          <input class="pd-input" type="date" id="f-dob" aria-label="Fecha de nacimiento" autocomplete="bday" />
+
+        <div class="pd-declare">
+          <input type="checkbox" id="f-declare" />
+          <label for="f-declare">Declaro bajo mi responsabilidad que soy mayor de 18 años y que la información brindada es correcta. · I declare I am over 18 and this information is accurate.</label>
         </div>
       </div>
 
-      <div class="pd-declare">
-        <input type="checkbox" id="f-declare" />
-        <label for="f-declare">Declaro bajo mi responsabilidad que soy mayor de 18 años y que la información brindada es correcta. · I declare I am over 18 and this information is accurate.</label>
-      </div>
+      <div id="paid-fields" hidden>
+        <div class="pd-qty-row">
+          <span class="pd-qty-label">Cantidad</span>
+          <div class="pd-qty-box">
+            <button type="button" id="qty-dec" aria-label="Disminuir cantidad">−</button>
+            <span class="pd-qty-val" id="qty-val">1</span>
+            <button type="button" id="qty-inc" aria-label="Aumentar cantidad">+</button>
+          </div>
+        </div>
 
-      <div class="pd-qty-row">
-        <span class="pd-qty-label">Cantidad</span>
-        <div class="pd-qty-box">
-          <button type="button" id="qty-dec" aria-label="Disminuir cantidad">−</button>
-          <span class="pd-qty-val" id="qty-val">1</span>
-          <button type="button" id="qty-inc" aria-label="Aumentar cantidad">+</button>
+        <div id="assistants-wrap"></div>
+
+        <div class="pd-declare">
+          <input type="checkbox" id="f-declare-paid" />
+          <label for="f-declare-paid">Declaro bajo mi responsabilidad que todos los asistentes son mayores de 18 años y que la información brindada es correcta. · I declare all attendees are over 18 and this information is accurate.</label>
         </div>
       </div>
 
@@ -451,6 +467,9 @@
   const checkoutEl = document.getElementById('pd-checkout');
   const confirmEl = document.getElementById('pd-confirm');
   const errorEl = document.getElementById('form-error');
+  const freeFieldsEl = document.getElementById('free-fields');
+  const paidFieldsEl = document.getElementById('paid-fields');
+  const assistantsWrap = document.getElementById('assistants-wrap');
   let selectedTier = null; // { name, price }
   let qty = 1;
 
@@ -469,6 +488,10 @@
     errorEl.hidden = !msg;
   }
 
+  function escapeHtmlIndex(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
   function updateOrderSummary(){
     const line = document.getElementById('order-line');
     const total = document.getElementById('order-total');
@@ -478,14 +501,47 @@
     total.textContent = amount === 0 ? 'Gratis' : 'S/ ' + amount;
   }
 
+  function renderAssistantBlock(index){
+    const isBuyer = index === 0;
+    const label = isBuyer ? 'Tú (comprador)' : 'Asistente ' + (index + 1);
+    const emailPlaceholder = isBuyer ? 'Email' : 'Email (opcional)';
+    const div = document.createElement('div');
+    div.className = 'pd-assistant';
+    div.dataset.index = index;
+    div.innerHTML =
+      '<p class="pd-assistant-label">' + label + '</p>' +
+      '<div class="pd-form-grid pd-form">' +
+        '<div class="pd-field"><input class="pd-input" data-field="nombre" placeholder="Nombre" aria-label="Nombre — ' + label + '" autocomplete="given-name" /></div>' +
+        '<div class="pd-field"><input class="pd-input" data-field="apellido" placeholder="Apellido" aria-label="Apellido — ' + label + '" autocomplete="family-name" /></div>' +
+        '<div class="pd-field"><select class="pd-input" data-field="tipoDocumento" aria-label="Tipo de documento — ' + label + '">' +
+          '<option value="DNI">DNI</option><option value="CE">Carné de Extranjería</option><option value="Pasaporte">Pasaporte</option>' +
+        '</select></div>' +
+        '<div class="pd-field"><input class="pd-input" data-field="numeroDocumento" placeholder="Número de documento" aria-label="Número de documento — ' + label + '" autocomplete="off" /></div>' +
+        '<div class="pd-field"><label class="pd-microlabel">Fecha de nacimiento</label><input class="pd-input" type="date" data-field="dob" aria-label="Fecha de nacimiento — ' + label + '" autocomplete="bday" /></div>' +
+        '<div class="pd-field"><input class="pd-input" type="email" data-field="email" placeholder="' + emailPlaceholder + '" aria-label="Email — ' + label + '" autocomplete="email" /></div>' +
+      '</div>';
+    return div;
+  }
+
+  function syncAssistantBlocks(){
+    const current = assistantsWrap.children.length;
+    if (qty > current) {
+      for (let i = current; i < qty; i++) assistantsWrap.appendChild(renderAssistantBlock(i));
+    } else if (qty < current) {
+      for (let i = current - 1; i >= qty; i--) assistantsWrap.removeChild(assistantsWrap.children[i]);
+    }
+  }
+
   document.getElementById('qty-inc').addEventListener('click', () => {
     qty = Math.min(10, qty + 1);
     document.getElementById('qty-val').textContent = qty;
+    syncAssistantBlocks();
     updateOrderSummary();
   });
   document.getElementById('qty-dec').addEventListener('click', () => {
     qty = Math.max(1, qty - 1);
     document.getElementById('qty-val').textContent = qty;
+    syncAssistantBlocks();
     updateOrderSummary();
   });
 
@@ -505,13 +561,24 @@
     btn.classList.add('is-selected');
     btn.setAttribute('aria-expanded','true');
     btn.querySelector('.pd-tier-select').textContent = 'Seleccionado ✓';
+
+    qty = 1;
+    document.getElementById('qty-val').textContent = qty;
+    const isFree = price === 0;
+    freeFieldsEl.hidden = !isFree;
+    paidFieldsEl.hidden = isFree;
+    if (!isFree) {
+      assistantsWrap.innerHTML = '';
+      syncAssistantBlocks();
+    }
+
     checkoutEl.hidden = false;
     updateOrderSummary();
     checkoutEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
   tierButtons.forEach((btn) => btn.addEventListener('click', () => selectTier(btn)));
 
-  function readForm(){
+  function readFreeForm(){
     return {
       name: (document.getElementById('f-nombre').value.trim() + ' ' + document.getElementById('f-apellido').value.trim()).trim(),
       email: document.getElementById('f-email').value.trim(),
@@ -523,7 +590,7 @@
     };
   }
 
-  function validate(data){
+  function validateFree(data){
     if (!document.getElementById('f-nombre').value.trim() || !document.getElementById('f-apellido').value.trim()) {
       return 'Completa nombre y apellido. · Please enter your full name.';
     }
@@ -552,12 +619,47 @@
     return null;
   }
 
-  function renderConfirmation(tickets, email){
+  function readAssistants(){
+    return [...assistantsWrap.querySelectorAll('.pd-assistant')].map((block) => ({
+      nombre: block.querySelector('[data-field="nombre"]').value.trim(),
+      apellido: block.querySelector('[data-field="apellido"]').value.trim(),
+      tipoDocumento: block.querySelector('[data-field="tipoDocumento"]').value,
+      numeroDocumento: block.querySelector('[data-field="numeroDocumento"]').value.trim(),
+      dob: block.querySelector('[data-field="dob"]').value,
+      email: block.querySelector('[data-field="email"]').value.trim(),
+    }));
+  }
+
+  function validatePaid(assistants){
+    for (let i = 0; i < assistants.length; i++) {
+      const a = assistants[i];
+      const label = i === 0 ? 'Tú (comprador)' : 'Asistente ' + (i + 1);
+      if (!a.nombre || !a.apellido) return 'Completa nombre y apellido de ' + label + '. · Please enter the full name.';
+      if (!a.numeroDocumento || a.numeroDocumento.length < 6) return 'Ingresa un documento válido para ' + label + '. · Please enter a valid ID number.';
+      if (i === 0 && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) return 'Ingresa un email válido para el comprador. · Please enter a valid email.';
+      if (a.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) return 'Ingresa un email válido para ' + label + ' o déjalo vacío. · Please enter a valid email or leave it blank.';
+      const age = calcAge(a.dob);
+      if (age === null) return 'Ingresa la fecha de nacimiento de ' + label + '. · Please enter the date of birth.';
+      if (age < 18) return 'Todos los asistentes deben ser mayores de 18 años (' + label + '). · All attendees must be 18+.';
+    }
+    const docs = assistants.map((a) => a.numeroDocumento.trim().toLowerCase());
+    if (new Set(docs).size !== docs.length) {
+      return 'Cada asistente debe tener un documento distinto. · Each attendee needs a different ID number.';
+    }
+    if (!document.getElementById('f-declare-paid').checked) {
+      return 'Debes marcar la declaración de mayoría de edad para continuar. · Please confirm the 18+ declaration.';
+    }
+    if (!document.getElementById('f-legal').checked) {
+      return 'Debes aceptar los Términos, Devoluciones y Privacidad para continuar. · You must accept the Terms, Returns and Privacy policies.';
+    }
+    return null;
+  }
+
+  function renderConfirmationFree(tickets, email){
     checkoutEl.hidden = true;
     confirmEl.hidden = false;
-    const plural = tickets.length > 1 ? 'entradas' : 'entrada';
     document.getElementById('confirm-line').textContent =
-      'Enviamos ' + tickets.length + ' ' + plural + ' ' + selectedTier.name + ' a ' + email + '. Preséntalas con tu documento en puerta. · Tickets sent, see you on the floor.';
+      'Enviamos tu entrada ' + selectedTier.name + ' a ' + email + '. Preséntala con tu documento en puerta. · Ticket sent, see you on the floor.';
     const qrsWrap = document.getElementById('confirm-qrs');
     qrsWrap.innerHTML = '';
     tickets.forEach((t) => {
@@ -579,31 +681,56 @@
     confirmEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
 
-  function escapeHtmlIndex(s){
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function renderConfirmationOrder(order){
+    checkoutEl.hidden = true;
+    confirmEl.hidden = false;
+    const plural = order.qty > 1 ? 'entradas' : 'entrada';
+    document.getElementById('confirm-line').textContent =
+      'Compramos ' + order.qty + ' ' + plural + ' Club. Cada asistente que dio su correo recibió su propio QR. · Order confirmed, see you on the floor.';
+    const qrsWrap = document.getElementById('confirm-qrs');
+    qrsWrap.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'pd-confirm-ticket';
+    const span = document.createElement('span');
+    span.textContent = order.qty + (order.qty > 1 ? ' entradas' : ' entrada');
+    const link = document.createElement('a');
+    link.href = '/orden?t=' + encodeURIComponent(order.token);
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'Ver mi orden';
+    box.appendChild(span);
+    box.appendChild(link);
+    qrsWrap.appendChild(box);
+    document.getElementById('confirm-spam').innerHTML =
+      'Tu compra llegó a <strong>' + escapeHtmlIndex(order.buyerEmail) + '</strong>. Si no la ves en unos minutos, revisa spam y promociones, y márcala como "No es spam".';
+    confirmEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
 
   function handleApiError(err, data){
-    if (err === 'underage') return showError('Evento solo para mayores de 18 años. · This event is 18+ only.');
+    if (err === 'underage') return showError('Todos los asistentes deben ser mayores de 18 años. · This event is 18+ only.');
     if (err === 'sold_out') return showError(selectedTier.price === 0
       ? 'La cortesía Opening se agotó. Prueba con Club. · Free tier sold out, try Club.'
       : 'Las entradas Club se agotaron. · Club tickets sold out.');
     if (err === 'payment_failed') return showError((data && data.detail) || 'El pago no pudo procesarse. · Payment could not be processed.');
-    return showError('Ocurrió un error. Intenta de nuevo. · Something went wrong, please try again.');
+    if (err === 'duplicate_document') return showError('Cada asistente debe tener un documento distinto. · Each attendee needs a different ID number.');
+    if (err === 'free_already_claimed') return showError(data && data.field === 'email'
+      ? 'Ya existe una cortesía registrada con este correo. · A free ticket was already claimed with this email.'
+      : 'Ya existe una cortesía registrada con este documento. · A free ticket was already claimed with this ID.');
+    return showError('Ocurrió un error. Revisa los datos ingresados e intenta de nuevo. · Please check your details and try again.');
   }
 
   const payBtn = document.getElementById('pay-btn');
 
-  async function submitFree(form){
+  async function submitFree(data){
     payBtn.disabled = true;
     try {
       const r = await fetch('/api/register-free', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, qty }),
+        body: JSON.stringify({ name: data.name, email: data.email, dni: data.dni, phone: data.phone, dob: data.dob }),
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }
-      renderConfirmation(d.tickets || [d.ticket], form.email);
+      renderConfirmationFree(d.tickets || [d.ticket], data.email);
     } catch (e) {
       showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
     } finally {
@@ -611,7 +738,7 @@
     }
   }
 
-  function payWithCulqi(form){
+  function payWithCulqi(assistants){
     Culqi.publicKey = CULQI_PUBLIC_KEY;
     Culqi.settings({
       title: 'Paradisio',
@@ -620,22 +747,22 @@
       description: 'Paradisio - Entrada Club',
     });
     Culqi.options({ lang: 'es', installments: false, paymentMethods: { tarjeta: true, yape: true } });
-    window.__paradisioPendingForm = form;
+    window.__paradisioPendingAssistants = assistants;
     Culqi.open();
   }
 
   window.culqi = async function(){
     if (!Culqi.token) { showError('El pago no pudo procesarse. · Payment could not be processed.'); return; }
-    const form = window.__paradisioPendingForm;
+    const assistants = window.__paradisioPendingAssistants;
     payBtn.disabled = true;
     try {
       const r = await fetch('/api/charge', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: Culqi.token.id, ...form, qty }),
+        body: JSON.stringify({ token: Culqi.token.id, qty, assistants }),
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }
-      renderConfirmation(d.tickets || [d.ticket], form.email);
+      renderConfirmationOrder(d.order);
     } catch (e) {
       showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
     } finally {
@@ -644,14 +771,19 @@
   };
 
   payBtn.addEventListener('click', () => {
-    const form = readForm();
-    const err = validate(form);
-    if (err) { showError(err); return; }
-    showError('');
+    if (!selectedTier) return;
     if (selectedTier.price === 0) {
-      submitFree(form);
+      const data = readFreeForm();
+      const err = validateFree(data);
+      if (err) { showError(err); return; }
+      showError('');
+      submitFree(data);
     } else {
-      payWithCulqi(form);
+      const assistants = readAssistants();
+      const err = validatePaid(assistants);
+      if (err) { showError(err); return; }
+      showError('');
+      payWithCulqi(assistants);
     }
   });
 </script>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tu entrada — Paradisio</title>
+<meta name="description" content="Tu entrada de Paradisio: código QR, datos del asistente y detalles del evento." />
+<meta name="robots" content="noindex" />
+<style>
+  @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
+  @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
+
+  :root {
+    --bg:#090909; --ink:#F2EDE4; --primary:#FF2800; --primary-hover:#FF9A00;
+    --muted:#888880; --line:rgba(255,40,0,0.18); --card:#141414; --field:#1A1A1A;
+  }
+  * { box-sizing:border-box; }
+  html { background:var(--bg); }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; min-height:100vh; display:flex; flex-direction:column; }
+  a { color:var(--primary); text-decoration:none; }
+  a:hover { color:var(--primary-hover); }
+  ::selection { background:var(--primary); color:#0A0A0A; }
+
+  .pd-pad { padding-left:40px; padding-right:40px; }
+  @media (max-width:860px) { .pd-pad { padding-left:22px !important; padding-right:22px !important; } .pd-hide-sm { display:none !important; } }
+
+  /* ---- header (static dark state) ---- */
+  .pd-header { position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between; height:64px; background:rgba(9,9,9,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+  .pd-header .logo-link { display:block; flex:none; line-height:0; }
+  .pd-header .logo-link img { display:block; width:142px; height:28px; }
+  .pd-nav { display:flex; align-items:center; gap:30px; }
+  .pd-nav-link { font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:500; color:rgba(242,237,228,0.5); transition:color 240ms ease; }
+  .pd-nav-link:hover { color:var(--ink); }
+  .pd-nav-cta { padding:11px 20px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; background:var(--primary); color:#0A0A0A; transition:background 240ms ease; }
+  .pd-nav-cta:hover { background:var(--primary-hover); color:#0A0A0A; }
+
+  .pd-eyebrow { margin:0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+
+  /* ---- entrada card ---- */
+  main { flex:1; display:flex; align-items:center; justify-content:center; padding:120px 22px 60px; }
+  .lr-card { width:100%; max-width:420px; }
+
+  .en-state { display:none; }
+  .en-state.is-active { display:block; }
+
+  .en-ticket { background:var(--card); border:1px solid var(--line); padding:36px 28px; text-align:center; }
+  .en-ticket-tier { margin:0 0 8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary); font-weight:700; }
+  .en-ticket-name { margin:0 0 4px; font-size:22px; font-weight:800; color:var(--ink); }
+  .en-ticket-dni { margin:0 0 24px; font-size:13px; color:var(--muted); }
+
+  .en-qr-wrap { background:#fff; display:inline-block; padding:18px; margin-bottom:18px; }
+  .en-qr-wrap img { display:block; width:220px; height:220px; }
+
+  .en-code { margin:0 0 6px; font-family:monospace; font-size:15px; letter-spacing:1px; color:var(--ink); }
+  .en-note { margin:0 0 28px; font-size:12px; color:var(--muted); }
+
+  .en-details { border-top:1px solid var(--line); padding-top:22px; text-align:left; }
+  .en-details p { margin:0 0 8px; font-size:13.5px; color:var(--muted); line-height:1.6; }
+  .en-details p.en-event-name { font-size:15px; font-weight:700; color:var(--ink); }
+  .en-details strong { color:var(--ink); }
+
+  .en-print-btn { display:inline-flex; align-items:center; gap:10px; margin-top:24px; padding:14px 30px; background:#000; color:var(--ink); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; border:none; cursor:pointer; }
+  .en-print-btn:hover { background:#1a1a1a; color:var(--primary-hover); }
+
+  .en-error { background:var(--card); border:1px solid var(--line); padding:48px 32px; text-align:center; }
+  .en-error h1 { margin:0 0 12px; font-family:'Unbounded',sans-serif; font-weight:800; font-size:20px; color:var(--ink); }
+  .en-error p { margin:0; font-size:14px; line-height:1.6; color:var(--muted); }
+  .en-error a { font-weight:700; }
+
+  .en-loading { text-align:center; font-size:13px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); }
+
+  /* ---- footer (shared across every page) ---- */
+  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; }
+  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
+  .pd-footer-brand { max-width:300px; }
+  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
+  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
+  .pd-footer-col p.pd-eyebrow { margin-bottom:16px; }
+  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); transition:color 180ms; }
+  .pd-footer-col a:hover { color:var(--ink); }
+  .pd-footer-col p.pd-addr { margin:8px 0 0; font-size:14px; line-height:1.7; color:var(--muted); }
+  .pd-social { display:inline-flex; align-items:center; gap:8px; }
+  .pd-libro-notice { border-top:1px solid var(--primary); padding-top:28px; margin-bottom:28px; }
+  .pd-libro-title { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); }
+  .pd-libro-text { margin:0 0 12px; max-width:520px; font-size:13px; line-height:1.6; color:var(--muted); }
+  .pd-libro-link { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary); }
+  .pd-libro-link:hover { color:var(--primary-hover); }
+  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
+  .pd-footer-bottom a { color:inherit; }
+  .pd-footer-bottom a:hover { color:var(--primary); }
+
+  /* ---- print ---- */
+  @media print {
+    .pd-header, .pd-footer, .en-print-btn { display:none !important; }
+    body, html { background:#fff !important; color:#000 !important; display:block !important; }
+    main { padding:0 !important; }
+    .en-ticket, .en-error { background:#fff !important; border:1px solid #000 !important; }
+    .en-ticket-name, .en-code, .en-details p, .en-details strong, .en-event-name { color:#000 !important; }
+    .en-ticket-tier { color:#000 !important; }
+    .en-qr-wrap { border:1px solid #000; }
+  }
+</style>
+</head>
+<body>
+
+<header class="pd-header pd-pad">
+  <a href="index.html#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
+  <nav class="pd-nav">
+    <a href="index.html#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
+    <a href="index.html#entradas" class="pd-nav-cta">Comprar</a>
+  </nav>
+</header>
+
+<main class="pd-pad">
+  <div class="lr-card">
+
+    <div class="en-state is-active" id="en-loading">
+      <p class="en-loading">Cargando tu entrada…</p>
+    </div>
+
+    <div class="en-state" id="en-ticket">
+      <div class="en-ticket">
+        <p class="en-ticket-tier" id="en-tier"></p>
+        <p class="en-ticket-name" id="en-name"></p>
+        <p class="en-ticket-dni" id="en-dni"></p>
+
+        <div class="en-qr-wrap">
+          <img id="en-qr-img" alt="Código QR de tu entrada" />
+        </div>
+        <p class="en-code" id="en-code"></p>
+        <p class="en-note">Este código QR es válido para un solo ingreso.</p>
+
+        <div class="en-details">
+          <p class="en-event-name" id="en-event-name"></p>
+          <p id="en-event-date"></p>
+          <p id="en-validity"></p>
+          <p>Presenta este QR junto con tu <strong>documento de identidad físico y original</strong> en la puerta. Evento exclusivo para <strong>mayores de 18 años</strong>.</p>
+        </div>
+
+        <button class="en-print-btn" id="en-print-btn">Imprimir entrada</button>
+      </div>
+    </div>
+
+    <div class="en-state" id="en-error">
+      <div class="en-error">
+        <h1>No pudimos encontrar esta entrada</h1>
+        <p>El enlace no es válido o ya expiró. Si crees que esto es un error, escríbenos a <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a> con tu nombre y el correo con el que compraste tu entrada.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="pd-footer pd-pad">
+  <div class="pd-footer-top">
+    <div class="pd-footer-brand">
+      <img src="logo-white.png" alt="Paradisio" />
+      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
+    </div>
+    <div class="pd-footer-cols">
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Contacto</p>
+        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="tel:+51970457825">970 457 825</a>
+        <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Síguenos</p>
+        <a class="pd-social" href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          Instagram
+        </a>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Ubicación del evento</p>
+        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
+      </div>
+      <div class="pd-footer-col">
+        <p class="pd-eyebrow">Legal</p>
+        <a href="terminos.html">Términos y condiciones</a>
+        <a href="devoluciones.html">Cambios y devoluciones</a>
+        <a href="privacidad.html">Privacidad</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="pd-libro-notice">
+    <p class="pd-libro-title">Libro de Reclamaciones</p>
+    <p class="pd-libro-text">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de Reclamaciones a tu disposición.</p>
+    <a class="pd-libro-link" href="libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a>
+  </div>
+
+  <div class="pd-footer-bottom">
+    <span>© 2026 Paradisio</span>
+    <span>Lima, Perú</span>
+  </div>
+</footer>
+
+<script>
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function showState(id){
+    document.querySelectorAll('.en-state').forEach(el => el.classList.remove('is-active'));
+    document.getElementById(id).classList.add('is-active');
+  }
+
+  (async function(){
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('t');
+    if (!token) { showState('en-error'); return; }
+
+    try {
+      const r = await fetch('/api/entrada?t=' + encodeURIComponent(token));
+      if (!r.ok) { showState('en-error'); return; }
+      const d = await r.json();
+
+      document.getElementById('en-tier').textContent = d.tierLabel;
+      document.getElementById('en-name').textContent = d.name;
+      document.getElementById('en-dni').textContent = 'Documento: ' + (d.dni || '—');
+      document.getElementById('en-qr-img').src = d.qr;
+      document.getElementById('en-code').textContent = d.code;
+      document.getElementById('en-event-name').textContent = d.eventName;
+      document.getElementById('en-event-date').textContent = d.eventDateLabel;
+      document.getElementById('en-validity').textContent = 'Válida ' + d.validityLabel;
+      document.title = 'Tu entrada — ' + d.name;
+
+      showState('en-ticket');
+    } catch (e) {
+      showState('en-error');
+    }
+  })();
+
+  document.getElementById('en-print-btn').onclick = function(){ window.print(); };
+</script>
+</body>
+</html>

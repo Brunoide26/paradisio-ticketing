@@ -142,10 +142,11 @@
   .pd-confirm-eyebrow { margin:0 0 10px; font-size:10px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(0,0,0,0.6); font-weight:500; }
   .pd-confirm-headline { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.6rem, 4vw, 2.6rem); line-height:1; text-transform:uppercase; color:#000; }
   .pd-confirm-line { margin:0 0 28px; font-size:15px; color:rgba(0,0,0,0.72); }
-  .pd-confirm-qrs { display:flex; flex-wrap:wrap; gap:20px; }
-  .pd-confirm-qr { background:#fff; padding:14px; display:inline-flex; flex-direction:column; align-items:center; gap:10px; }
-  .pd-confirm-qr img { width:150px; height:150px; display:block; }
-  .pd-confirm-qr span { font-family:monospace; font-size:12px; color:#000; letter-spacing:1px; }
+  .pd-confirm-qrs { display:flex; flex-wrap:wrap; gap:16px; }
+  .pd-confirm-ticket { background:#000; padding:20px 22px; display:inline-flex; flex-direction:column; align-items:flex-start; gap:10px; }
+  .pd-confirm-ticket span { font-family:monospace; font-size:12px; color:var(--ink); letter-spacing:1px; }
+  .pd-confirm-ticket a { display:inline-flex; align-items:center; gap:10px; padding:12px 23px; background:var(--ink); color:#000; font-size:10px; letter-spacing:0.25em; text-transform:uppercase; font-weight:700; border:1px solid var(--ink); transition:background 180ms ease, color 180ms ease; }
+  .pd-confirm-ticket a:hover { background:#000; color:var(--ink); }
   .pd-confirm-spam { margin:24px 0 0; font-size:13px; line-height:1.6; color:rgba(0,0,0,0.6); max-width:60ch; }
   .pd-confirm-spam strong { color:#000; }
 
@@ -551,7 +552,7 @@
     return null;
   }
 
-  function renderConfirmation(tickets, qrs, email){
+  function renderConfirmation(tickets, email){
     checkoutEl.hidden = true;
     confirmEl.hidden = false;
     const plural = tickets.length > 1 ? 'entradas' : 'entrada';
@@ -559,16 +560,18 @@
       'Enviamos ' + tickets.length + ' ' + plural + ' ' + selectedTier.name + ' a ' + email + '. Preséntalas con tu documento en puerta. · Tickets sent, see you on the floor.';
     const qrsWrap = document.getElementById('confirm-qrs');
     qrsWrap.innerHTML = '';
-    tickets.forEach((t, i) => {
+    tickets.forEach((t) => {
       const box = document.createElement('div');
-      box.className = 'pd-confirm-qr';
-      const img = document.createElement('img');
-      img.src = qrs[i];
-      img.alt = 'Código QR de la entrada ' + t.id;
+      box.className = 'pd-confirm-ticket';
       const span = document.createElement('span');
       span.textContent = t.id;
-      box.appendChild(img);
+      const link = document.createElement('a');
+      link.href = '/entrada?t=' + encodeURIComponent(t.token);
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = 'Ver mi entrada';
       box.appendChild(span);
+      box.appendChild(link);
       qrsWrap.appendChild(box);
     });
     document.getElementById('confirm-spam').innerHTML =
@@ -600,7 +603,7 @@
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }
-      renderConfirmation(d.tickets || [d.ticket], d.qrs || [d.qr], form.email);
+      renderConfirmation(d.tickets || [d.ticket], form.email);
     } catch (e) {
       showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
     } finally {
@@ -632,7 +635,7 @@
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }
-      renderConfirmation(d.tickets || [d.ticket], d.qrs || [d.qr], form.email);
+      renderConfirmation(d.tickets || [d.ticket], form.email);
     } catch (e) {
       showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
     } finally {

@@ -1,10 +1,12 @@
 const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP } = require('../lib/tickets');
+const { PAYMENTS_ENABLED } = require('../lib/config');
 
 const TICKET_PRICE_SOLES = 45;
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+  if (!PAYMENTS_ENABLED) return res.status(403).json({ error: 'payments_disabled' });
 
   try {
     const { token, assistants } = req.body || {};

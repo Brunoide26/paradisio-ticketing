@@ -105,7 +105,7 @@ Usar un contador atómico en Redis (`INCR reclamos:counter`) para evitar colisio
 Se dispara al registrar, con dos destinatarios:
 
 1. **Al consumidor**, a la dirección que ingresó: asunto `Hoja de Reclamación PDS-LR-000001 — Paradisio Club`. Cuerpo con la hoja completa reproducida, la fecha de presentación, el plazo de respuesta de 15 días hábiles y la nota legal.
-2. **A ritmo@paradisioclub.com**: alerta interna con el detalle y la fecha límite de respuesta ya calculada.
+2. **A info@paradisioclub.com**: alerta interna con el detalle y la fecha límite de respuesta ya calculada.
 
 Reutilizar la configuración de Resend que ya usa `register-free.js`.
 

@@ -116,7 +116,7 @@
   <a href="index.html#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
   <nav class="pd-nav">
     <a href="index.html#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
-    <a href="index.html#entradas" class="pd-nav-cta">Comprar</a>
+    <a href="index.html#entradas" class="pd-nav-cta js-copy" data-off="Generar" data-on="Comprar">Generar</a>
   </nav>
 </header>
 
@@ -206,6 +206,14 @@
 </footer>
 
 <script>
+  // Same purchase-language flag as index.html: while Culqi isn't approved, the
+  // header CTA reads "Generar" instead of "Comprar". Flips back automatically
+  // once PAYMENTS_ENABLED is true in lib/config.js — nothing else to edit.
+  fetch('/api/config').then((r) => r.json()).then((d) => {
+    if (!d || !d.paymentsEnabled) return;
+    document.querySelectorAll('.js-copy').forEach((el) => { el.textContent = el.dataset.on; });
+  }).catch(() => {});
+
   function escapeHtml(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }

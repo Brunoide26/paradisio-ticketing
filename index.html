@@ -218,7 +218,7 @@
   <a href="#top" class="logo-link"><img src="logo-white.png" alt="Paradisio" /></a>
   <nav class="pd-nav">
     <a href="#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
-    <a href="#entradas" class="pd-nav-cta">Comprar</a>
+    <a href="#entradas" class="pd-nav-cta js-copy" data-off="Generar" data-on="Comprar">Generar</a>
   </nav>
 </header>
 
@@ -229,7 +229,7 @@
   <div class="pd-hero-content pd-pad">
     <h1 class="pd-hero-title">Para<br>disio</h1>
     <div class="pd-hero-actions">
-      <a href="#entradas" class="pd-btn-dark">Comprar entradas<span aria-hidden="true" style="font-size:15px;line-height:1;">↓</span></a>
+      <a href="#entradas" class="pd-btn-dark"><span class="js-copy" data-off="Generar entrada" data-on="Comprar entradas">Generar entrada</span><span aria-hidden="true" style="font-size:15px;line-height:1;">↓</span></a>
     </div>
   </div>
 
@@ -315,7 +315,7 @@
 
   <div class="pd-checkout pd-pad" id="pd-checkout" hidden>
     <div class="pd-checkout-inner">
-      <p class="pd-eyebrow" style="margin-bottom:26px;">Completa tu orden / Complete your order</p>
+      <p class="pd-eyebrow js-copy" style="margin-bottom:26px;" data-off="Completa tu registro / Complete your registration" data-on="Completa tu orden / Complete your order">Completa tu registro / Complete your registration</p>
 
       <div id="free-fields">
         <div class="pd-form-grid pd-form">
@@ -376,12 +376,12 @@
 
       <p class="pd-form-error" id="form-error" hidden></p>
 
-      <button type="button" class="pd-pay-btn" id="pay-btn">Confirmar y pagar</button>
+      <button type="button" class="pd-pay-btn js-copy" id="pay-btn" data-off="Generar mi entrada" data-on="Confirmar y pagar">Generar mi entrada</button>
     </div>
   </div>
 
   <div class="pd-confirm pd-pad" id="pd-confirm" hidden>
-    <p class="pd-confirm-eyebrow">Orden confirmada / Order confirmed</p>
+    <p class="pd-confirm-eyebrow js-copy" data-off="Entrada generada / Ticket generated" data-on="Orden confirmada / Order confirmed">Entrada generada / Ticket generated</p>
     <p class="pd-confirm-headline">Nos vemos en la pista</p>
     <p class="pd-confirm-line" id="confirm-line"></p>
     <div class="pd-confirm-qrs" id="confirm-qrs"></div>
@@ -486,12 +486,16 @@
   /* ---- ticket tiers + checkout ---- */
   const tierButtons = [document.getElementById('tier-free'), document.getElementById('tier-club')];
 
-  // The Club (paid) tier stays hidden — server-rendered as `hidden` — until this
-  // confirms payments are enabled. Culqi hasn't approved the merchant account yet;
-  // flip PAYMENTS_ENABLED in lib/config.js when it does. Fails closed: if this
-  // request errors, the tier simply stays hidden.
+  // The Club (paid) tier stays hidden — server-rendered as `hidden` — and every
+  // ".js-copy" element shows its "generación" wording until this confirms payments
+  // are enabled. Culqi hasn't approved the merchant account yet; flip
+  // PAYMENTS_ENABLED in lib/config.js when it does — both the tier and all the
+  // purchase-language copy switch back automatically, nothing else to edit.
+  // Fails closed: if this request errors, everything stays in "generar" mode.
   fetch('/api/config').then((r) => r.json()).then((d) => {
-    if (d && d.paymentsEnabled) document.getElementById('tier-club').hidden = false;
+    if (!d || !d.paymentsEnabled) return;
+    document.getElementById('tier-club').hidden = false;
+    document.querySelectorAll('.js-copy').forEach((el) => { el.textContent = el.dataset.on; });
   }).catch(() => {});
 
   const checkoutEl = document.getElementById('pd-checkout');

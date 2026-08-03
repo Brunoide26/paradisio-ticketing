@@ -10,7 +10,7 @@
 - **RUC:** 10720126589
 - **Nombre comercial:** Paradisio Club
 - **Domicilio:** Jr. 28 de Julio 277, Barranco, Lima, Perú
-- **Correo para asuntos de datos personales:** ritmo@paradisioclub.com
+- **Correo para asuntos de datos personales:** info@paradisioclub.com
 - **Teléfono:** 970 457 825
 
 El tratamiento se realiza conforme a la **Ley N.º 29733, Ley de Protección de Datos Personales**, y su Reglamento aprobado por D.S. N.º 016-2024-JUS.
@@ -95,7 +95,7 @@ Paradisio aplica medidas técnicas y organizativas razonables para proteger los 
 
 El titular de los datos puede ejercer en cualquier momento sus derechos de **acceso, rectificación, cancelación y oposición**, así como los derechos de información, tratamiento objetivo y revocación del consentimiento.
 
-**Cómo ejercerlos:** enviando una solicitud a **ritmo@paradisioclub.com** con el asunto "Derechos ARCO", indicando nombre completo, número de documento de identidad y el derecho que desea ejercer.
+**Cómo ejercerlos:** enviando una solicitud a **info@paradisioclub.com** con el asunto "Derechos ARCO", indicando nombre completo, número de documento de identidad y el derecho que desea ejercer.
 
 Paradisio responderá dentro de los plazos establecidos por la Ley N.º 29733 y su reglamento.
 
@@ -107,7 +107,7 @@ Si el titular considera que su solicitud no fue atendida adecuadamente, puede pr
 
 El servicio está dirigido **exclusivamente a mayores de 18 años**. Paradisio no recolecta intencionalmente datos de menores de edad y rechaza automáticamente todo registro cuya fecha de nacimiento indique minoría de edad.
 
-Si se detecta que se han recolectado datos de un menor, serán eliminados de inmediato. Los padres o tutores que adviertan esta situación pueden comunicarlo a ritmo@paradisioclub.com.
+Si se detecta que se han recolectado datos de un menor, serán eliminados de inmediato. Los padres o tutores que adviertan esta situación pueden comunicarlo a info@paradisioclub.com.
 
 ---
 

@@ -30,7 +30,7 @@ Tampoco procede devolución en los siguientes casos, todos atribuibles al compra
 
 ## 3. Corrección de datos
 
-Aunque no proceda la devolución, **el comprador puede solicitar la corrección de errores en el nombre o número de documento** de un asistente, escribiendo a **ritmo@paradisioclub.com** con el código de su entrada.
+Aunque no proceda la devolución, **el comprador puede solicitar la corrección de errores en el nombre o número de documento** de un asistente, escribiendo a **info@paradisioclub.com** con el código de su entrada.
 
 - Plazo para solicitarlo: hasta **24 horas antes** del inicio del evento.
 - Paradisio confirmará la corrección por el mismo medio y reemitirá la entrada si corresponde.
@@ -61,7 +61,7 @@ Si el evento se reprograma a una nueva fecha:
 **Procedimiento:**
 
 1. Paradisio comunicará la reprogramación por correo electrónico y sus canales oficiales.
-2. El comprador cuenta con **siete (7) días calendario** desde dicha comunicación para solicitar la devolución escribiendo a **ritmo@paradisioclub.com**, indicando el código de su entrada.
+2. El comprador cuenta con **siete (7) días calendario** desde dicha comunicación para solicitar la devolución escribiendo a **info@paradisioclub.com**, indicando el código de su entrada.
 3. La devolución se ejecutará dentro de los **diez (10) días hábiles** siguientes a la solicitud, al mismo medio de pago utilizado.
 4. Vencido el plazo de siete días sin solicitud, se entenderá que el comprador acepta la nueva fecha.
 
@@ -81,7 +81,7 @@ Si el evento se suspende una vez iniciado por causas de fuerza mayor, disposici�
 
 - Si la suspensión ocurre **antes de transcurrida la mitad de la duración anunciada**, el comprador tiene derecho a la devolución del **50 %** del importe pagado.
 - Si ocurre **después**, no procede devolución, por haberse prestado sustancialmente el servicio.
-- La solicitud se presenta dentro de los **siete (7) días calendario** siguientes al evento, a ritmo@paradisioclub.com, y se atiende en un plazo de **diez (10) días hábiles**.
+- La solicitud se presenta dentro de los **siete (7) días calendario** siguientes al evento, a info@paradisioclub.com, y se atiende en un plazo de **diez (10) días hábiles**.
 
 ---
 
@@ -103,7 +103,7 @@ Paradisio entregará al comprador la constancia de la devolución ejecutada.
 
 Todas las solicitudes relacionadas con esta política se atienden por:
 
-- **Correo:** ritmo@paradisioclub.com
+- **Correo:** info@paradisioclub.com
 - **Teléfono / WhatsApp:** 970 457 825
 - **Libro de Reclamaciones virtual:** disponible en paradisioclub.com
 

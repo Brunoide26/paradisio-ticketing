@@ -116,6 +116,7 @@
   .pd-entradas-title { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(2.5rem, 7vw, 4.6rem); line-height:0.95; text-transform:uppercase; letter-spacing:-0.03em; color:#000; }
 
   .pd-tier { display:flex; align-items:center; justify-content:space-between; gap:24px; width:100%; padding:38px 48px; border:none; border-bottom:1px solid var(--line); background:transparent; cursor:pointer; transition:background 180ms; text-align:left; color:inherit; font-family:inherit; }
+  .pd-tier[hidden] { display:none; }
   .pd-tier:hover, .pd-tier:focus-visible { background:#141414; }
   .pd-tier-left { display:flex; align-items:center; gap:40px; }
   .pd-tier-idx { font-size:10px; letter-spacing:0.3em; color:rgba(136,136,128,0.45); font-variant-numeric:tabular-nums; }
@@ -299,7 +300,7 @@
       <span class="pd-tier-select">Seleccionar</span>
     </button>
 
-    <button type="button" class="pd-tier pd-pad pd-row" id="tier-club" data-tier="Club" data-price="45" aria-expanded="false">
+    <button type="button" class="pd-tier pd-pad pd-row" id="tier-club" data-tier="Club" data-price="45" aria-expanded="false" hidden>
       <div class="pd-tier-left">
         <span class="pd-tier-idx">02</span>
         <p class="pd-tier-price is-paid">S/ 45</p>
@@ -401,7 +402,7 @@
     <div class="pd-footer-cols">
       <div class="pd-footer-col">
         <p class="pd-eyebrow">Contacto</p>
-        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="mailto:info@paradisioclub.com">info@paradisioclub.com</a>
         <a href="tel:+51970457825">970 457 825</a>
         <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
       </div>
@@ -484,6 +485,15 @@
 
   /* ---- ticket tiers + checkout ---- */
   const tierButtons = [document.getElementById('tier-free'), document.getElementById('tier-club')];
+
+  // The Club (paid) tier stays hidden — server-rendered as `hidden` — until this
+  // confirms payments are enabled. Culqi hasn't approved the merchant account yet;
+  // flip PAYMENTS_ENABLED in lib/config.js when it does. Fails closed: if this
+  // request errors, the tier simply stays hidden.
+  fetch('/api/config').then((r) => r.json()).then((d) => {
+    if (d && d.paymentsEnabled) document.getElementById('tier-club').hidden = false;
+  }).catch(() => {});
+
   const checkoutEl = document.getElementById('pd-checkout');
   const confirmEl = document.getElementById('pd-confirm');
   const errorEl = document.getElementById('form-error');

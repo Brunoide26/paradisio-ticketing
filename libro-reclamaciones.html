@@ -361,7 +361,7 @@
     <div class="pd-footer-cols">
       <div class="pd-footer-col">
         <p class="pd-eyebrow">Contacto</p>
-        <a href="mailto:ritmo@paradisioclub.com">ritmo@paradisioclub.com</a>
+        <a href="mailto:info@paradisioclub.com">info@paradisioclub.com</a>
         <a href="tel:+51970457825">970 457 825</a>
         <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
       </div>
@@ -523,11 +523,11 @@
       });
       const d = await r.json();
       if (r.status === 429) {
-        showError('Has alcanzado el límite de envíos por hora. Intenta de nuevo más tarde o escríbenos a ritmo@paradisioclub.com.');
+        showError('Has alcanzado el límite de envíos por hora. Intenta de nuevo más tarde o escríbenos a info@paradisioclub.com.');
         return;
       }
       if (!r.ok) {
-        showError('Ocurrió un error al enviar tu reclamación. Revisa los datos ingresados o escríbenos a ritmo@paradisioclub.com.');
+        showError('Ocurrió un error al enviar tu reclamación. Revisa los datos ingresados o escríbenos a info@paradisioclub.com.');
         return;
       }
       document.getElementById('lr-form-wrap').hidden = true;
@@ -541,7 +541,7 @@
       }
       document.getElementById('lr-confirm-wrap').scrollIntoView({ behavior:'smooth', block:'start' });
     } catch (e2) {
-      showError('Error de conexión. Intenta de nuevo o escríbenos a ritmo@paradisioclub.com.');
+      showError('Error de conexión. Intenta de nuevo o escríbenos a info@paradisioclub.com.');
     } finally {
       submitBtn.disabled = false;
     }

@@ -12,7 +12,7 @@ Tres bloques. Se implementan en orden: A → B → C. Cada uno se muestra y apru
 
 ## A.1 Remitente
 
-- **From:** `Paradisio <ritmo@paradisioclub.com>`
+- **From:** `Paradisio <info@paradisioclub.com>`
 - Si hoy sale desde `noreply@`, eliminarlo. Los filtros penalizan direcciones que no aceptan respuesta, y una respuesta con un problema real se perdería.
 - **Reply-to:** la misma dirección.
 

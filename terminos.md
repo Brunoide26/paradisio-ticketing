@@ -12,7 +12,7 @@ El presente sitio web (paradisioclub.com) y la venta de entradas realizada a tra
 - **RUC:** 10720126589
 - **Nombre comercial:** Paradisio Club
 - **Domicilio:** Jr. 28 de Julio 277, Barranco, Lima, Perú
-- **Correo de atención al cliente:** ritmo@paradisioclub.com
+- **Correo de atención al cliente:** info@paradisioclub.com
 - **Teléfono / WhatsApp:** 970 457 825
 
 En adelante, "Paradisio".
@@ -108,7 +108,7 @@ Antes de confirmar el pago, el comprador debe verificar cuidadosamente:
 
 **Toda compra es definitiva** una vez procesado el pago, salvo en los supuestos previstos en la Política de Cambios y Devoluciones o cuando la legislación peruana lo exija.
 
-Paradisio no será responsable por errores cometidos por el comprador durante el proceso, incluyendo compra duplicada, cantidad equivocada, tipo de entrada incorrecto, error en el nombre o documento del asistente, o error en el correo electrónico registrado. Estos errores no generan derecho a devolución, sin perjuicio de que el comprador pueda solicitar la corrección de datos escribiendo a ritmo@paradisioclub.com, la cual será atendida en la medida de lo posible y antes del inicio del evento.
+Paradisio no será responsable por errores cometidos por el comprador durante el proceso, incluyendo compra duplicada, cantidad equivocada, tipo de entrada incorrecto, error en el nombre o documento del asistente, o error en el correo electrónico registrado. Estos errores no generan derecho a devolución, sin perjuicio de que el comprador pueda solicitar la corrección de datos escribiendo a info@paradisioclub.com, la cual será atendida en la medida de lo posible y antes del inicio del evento.
 
 ---
 
@@ -126,7 +126,7 @@ La entrada, con su código QR, se envía automáticamente al correo electrónico
 
 Es responsabilidad exclusiva del comprador ingresar correctamente su dirección de correo electrónico y verificar sus bandejas de entrada, spam y promociones.
 
-Si transcurridos **treinta (30) minutos** de completada la operación no ha recibido su entrada, el comprador debe comunicarse a **ritmo@paradisioclub.com** o al **970 457 825** para solicitar el reenvío. Paradisio atenderá la solicitud a la brevedad y, en todo caso, antes del inicio del evento.
+Si transcurridos **treinta (30) minutos** de completada la operación no ha recibido su entrada, el comprador debe comunicarse a **info@paradisioclub.com** o al **970 457 825** para solicitar el reenvío. Paradisio atenderá la solicitud a la brevedad y, en todo caso, antes del inicio del evento.
 
 ---
 
@@ -205,7 +205,7 @@ Durante el evento se realizarán fotografías y grabaciones audiovisuales con fi
 
 **El ingreso al recinto implica la autorización del asistente para que su imagen pueda ser captada y utilizada con dichos fines, sin contraprestación económica.** Esta condición se encuentra además señalizada de manera visible en el ingreso al recinto.
 
-El asistente que no desee que su imagen sea utilizada puede comunicarlo en el momento de la captación al personal de producción, o solicitar posteriormente la retirada de material que lo identifique de forma reconocible escribiendo a ritmo@paradisioclub.com. Paradisio atenderá dicha solicitud dentro de un plazo razonable.
+El asistente que no desee que su imagen sea utilizada puede comunicarlo en el momento de la captación al personal de producción, o solicitar posteriormente la retirada de material que lo identifique de forma reconocible escribiendo a info@paradisioclub.com. Paradisio atenderá dicha solicitud dentro de un plazo razonable.
 
 ---
 
@@ -259,7 +259,7 @@ Los presentes términos se rigen por las leyes de la República del Perú. Cualq
 
 Para cualquier consulta sobre estos términos:
 
-- **Correo:** ritmo@paradisioclub.com
+- **Correo:** info@paradisioclub.com
 - **Teléfono / WhatsApp:** 970 457 825
 - **Instagram:** [@paradisioclub___](https://instagram.com/paradisioclub___)
 - **Dirección:** Jr. 28 de Julio 277, Barranco, Lima

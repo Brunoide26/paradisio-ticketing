@@ -29,10 +29,13 @@
   .btn-pink { background:var(--pink); color:#fff; }
   .btn-ghost { background:transparent; border:1px solid var(--line); color:#ccc; }
   .btn-sm { padding:6px 12px; font-size:12px; }
-  .stat-row { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+  .stat-row { display:flex; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
   .stat { flex:1; min-width:100px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px; text-align:center; }
   .stat-num { font-family:'Unbounded',sans-serif; font-size:24px; }
   .stat-label { font-size:10px; color:#777; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+  .stat-featured { background:rgba(255,40,0,0.12); border-color:var(--pink); }
+  .stat-featured .stat-num { color:var(--pink); }
+  .stat-subline { font-size:12px; color:#888; margin-bottom:20px; }
   .toolbar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
   .toolbar input { flex:1; min-width:180px; background:var(--card); border:1px solid var(--line); color:#fff; padding:10px 12px; border-radius:7px; font-size:14px; }
   table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:13px; }
@@ -110,6 +113,7 @@
 
     <div id="tickets-panel">
       <div class="stat-row" id="stats"></div>
+      <div class="stat-subline" id="stats-subline"></div>
       <div class="toolbar">
         <input type="text" id="search" placeholder="Buscar por nombre, email, teléfono o código..." />
         <button class="btn btn-ghost" id="view-toggle-btn">Vista: por orden</button>
@@ -227,22 +231,32 @@
       allTickets = d.tickets;
       document.getElementById('login-area').style.display = 'none';
       document.getElementById('dashboard-area').style.display = 'block';
-      renderStats(d.counters);
+      renderStats(d.counters, allTickets);
       renderCurrentView(allTickets);
     } catch(e){
       alert('Error de conexión');
     }
   }
 
-  function renderStats(c){
+  function renderStats(c, tickets){
     const el = document.getElementById('stats');
-    const items = [
-      [c.free||0, 'Lista gratis'],
-      [c.paid||0, 'Pagadas'],
-      [c.checkedin||0, 'En puerta'],
-      [(c.free||0)+(c.paid||0), 'Total'],
+    const generados = (c.free||0) + (c.paid||0);
+    const anulados = tickets.filter(t => t.voided).length;
+    const vigentes = generados - anulados;
+    const ingresados = c.checkedin || 0;
+
+    const cards = [
+      [generados, 'QRs generados', false],
+      [anulados, 'QRs anulados', false],
+      [vigentes, 'QRs vigentes', true],
+      [ingresados, 'Ingresados', false],
     ];
-    el.innerHTML = items.map(i => `<div class="stat"><div class="stat-num">${i[0]}</div><div class="stat-label">${i[1]}</div></div>`).join('');
+    el.innerHTML = cards.map(([num, label, featured]) =>
+      `<div class="stat${featured ? ' stat-featured' : ''}"><div class="stat-num">${num}</div><div class="stat-label">${label}</div></div>`
+    ).join('');
+
+    document.getElementById('stats-subline').textContent =
+      `Gratis: ${c.free||0} · Pagadas: ${c.paid||0} · En puerta: ${ingresados}`;
   }
 
   let viewMode = 'grouped'; // 'flat' | 'grouped'

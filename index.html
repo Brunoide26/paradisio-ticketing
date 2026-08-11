@@ -25,7 +25,12 @@
 <link rel="manifest" href="site.webmanifest" />
 <meta name="theme-color" content="#FF2800" />
 
-<script src="https://checkout.culqi.com/js/v4"></script>
+<!-- defer: without it, this render-blocking third-party script hangs page
+     parsing (and every click handler with it) whenever checkout.culqi.com is
+     slow, blocked, or unreachable — which is exactly what broke the "Seleccionar"
+     button on Cortesía in production. Payments are hidden behind PAYMENTS_ENABLED
+     right now, so Culqi is never even invoked, but the tag still loaded eagerly. -->
+<script src="https://checkout.culqi.com/js/v4" defer></script>
 <style>
   @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
   @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }

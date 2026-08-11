@@ -1,6 +1,7 @@
 const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
 const { validateEmail } = require('../lib/email-validation');
+const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 
 const TICKET_PRICE_SOLES = 45;
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
@@ -30,6 +31,12 @@ module.exports = async (req, res) => {
       const a = cleaned[i];
       if (!a.nombre || !a.apellido || !TIPO_DOCUMENTO.includes(a.tipoDocumento) || !a.numeroDocumento || !a.dob) {
         return res.status(400).json({ error: 'missing_fields', index: i });
+      }
+      if (!isValidNamePart(a.nombre) || !isValidNamePart(a.apellido)) {
+        return res.status(400).json({ error: 'invalid_name', index: i });
+      }
+      if (!isValidDocument(a.numeroDocumento, a.tipoDocumento)) {
+        return res.status(400).json({ error: 'invalid_document', index: i });
       }
       if (i === 0 && !a.email) {
         return res.status(400).json({ error: 'missing_buyer_email' });

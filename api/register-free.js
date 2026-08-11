@@ -1,4 +1,5 @@
 const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket } = require('../lib/tickets');
+const { validateEmail } = require('../lib/email-validation');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -9,6 +10,11 @@ module.exports = async (req, res) => {
     const qty = 1;
     if (!name || !phone || !email || !dni || !dob) {
       return res.status(400).json({ error: 'missing_fields' });
+    }
+
+    const emailCheck = await validateEmail(email);
+    if (!emailCheck.ok) {
+      return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason });
     }
 
     const age = calcAge(dob);

@@ -747,6 +747,11 @@
       : 'Las entradas Club se agotaron. · Club tickets sold out.');
     if (err === 'payment_failed') return showError((data && data.detail) || 'El pago no pudo procesarse. · Payment could not be processed.');
     if (err === 'duplicate_document') return showError('Cada asistente debe tener un documento distinto. · Each attendee needs a different ID number.');
+    if (err === 'invalid_email') {
+      if (data && data.reason === 'disposable') return showError('Usa un correo real, no uno temporal. · Please use a real email, not a disposable one.');
+      if (data && data.reason === 'no_mx') return showError('Ese correo no parece válido, revísalo. · That email doesn\'t look valid, please check it.');
+      return showError('Ingresa un email válido. · Please enter a valid email.');
+    }
     if (err === 'free_already_claimed') return showError(data && data.field === 'email'
       ? 'Ya existe una cortesía registrada con este correo. · A free ticket was already claimed with this email.'
       : 'Ya existe una cortesía registrada con este documento. · A free ticket was already claimed with this ID.');

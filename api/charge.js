@@ -1,5 +1,6 @@
 const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
+const { validateEmail } = require('../lib/email-validation');
 
 const TICKET_PRICE_SOLES = 45;
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
@@ -33,8 +34,11 @@ module.exports = async (req, res) => {
       if (i === 0 && !a.email) {
         return res.status(400).json({ error: 'missing_buyer_email' });
       }
-      if (a.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) {
-        return res.status(400).json({ error: 'invalid_email', index: i });
+      if (a.email) {
+        const emailCheck = await validateEmail(a.email);
+        if (!emailCheck.ok) {
+          return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason, index: i });
+        }
       }
       const age = calcAge(a.dob);
       if (age === null || age < 18) {

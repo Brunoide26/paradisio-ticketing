@@ -51,6 +51,7 @@
   .badge-mail-bounced { background:#2a0a0a; color:#e07f7f; }
   .badge-mail-pending { background:#2a2a2a; color:#999; }
   .badge-suspicious { background:#2a2200; color:#e0c87f; cursor:help; }
+  .badge-age-watch { background:#2a2200; color:#e0c87f; cursor:help; }
   tr.row-flag { background:#1a1600; }
   tr.row-flag:hover { background:#241d00; }
   .badge-void { background:#2a0a0a; color:#e07f7f; }
@@ -382,6 +383,26 @@
     return '<span class="badge badge-mail-pending">Pendiente</span>';
   }
 
+  // The 18+ gate checks age as of event day (2026-08-28), so someone under 18
+  // today can register if they'll turn 18 by then. Door staff need a heads-up
+  // to look closely at that ID rather than assume a registration mistake.
+  const EVENT_DATE_ISO = '2026-08-28';
+  function ageAsOf(dobStr, asOf){
+    const dob = new Date(dobStr + 'T00:00:00');
+    if (isNaN(dob.getTime())) return null;
+    let age = asOf.getFullYear() - dob.getFullYear();
+    const m = asOf.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && asOf.getDate() < dob.getDate())) age--;
+    return age;
+  }
+  function turns18BeforeEvent(dobStr){
+    if (!dobStr) return false;
+    const ageToday = ageAsOf(dobStr, new Date());
+    const ageAtEvent = ageAsOf(dobStr, new Date(EVENT_DATE_ISO + 'T00:00:00'));
+    if (ageToday === null || ageAtEvent === null) return false;
+    return ageToday < 18 && ageAtEvent >= 18;
+  }
+
   function ticketRowHtml(t){
     const typeBadge = t.type==='paid' ? '<span class="badge badge-paid">Pagada</span>' : '<span class="badge badge-free">Gratis</span>';
     let statusBadge = t.checkedIn ? '<span class="badge badge-in">En puerta</span>' : '<span class="badge badge-out">Pendiente</span>';
@@ -395,11 +416,14 @@
     const suspiciousBadge = reasons
       ? ` <span class="badge badge-suspicious" title="${escapeHtml([...reasons].join(' · '))}">⚠ Revisar</span>`
       : '';
+    const ageWatchBadge = turns18BeforeEvent(t.dob)
+      ? ` <span class="badge badge-age-watch" title="Cumple 18 años entre hoy y el evento — verificar el documento con atención en puerta">🎂 Cumple 18 pronto</span>`
+      : '';
     return `<tr${rowClass}>
       <td style="font-family:monospace;">${t.id}</td>
       <td>${escapeHtml(t.name)}${suspiciousBadge}</td>
       <td>${escapeHtml(t.dni||'')}</td>
-      <td>${escapeHtml(t.dob||'')}</td>
+      <td>${escapeHtml(t.dob||'')}${ageWatchBadge}</td>
       <td>${escapeHtml(t.phone||'')}</td>
       <td>${escapeHtml(t.email||'')}</td>
       <td>${typeBadge}</td>

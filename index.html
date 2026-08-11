@@ -354,7 +354,7 @@
 
         <div class="pd-declare">
           <input type="checkbox" id="f-declare" />
-          <label for="f-declare">Declaro bajo mi responsabilidad que soy mayor de 18 años y que la información brindada es correcta. · I declare I am over 18 and this information is accurate.</label>
+          <label for="f-declare">Declaro bajo mi responsabilidad que seré mayor de 18 años el día del evento (28 de agosto de 2026) y que la información brindada es correcta. · I declare I will be 18 or older on the day of the event (August 28, 2026) and that this information is accurate.</label>
         </div>
       </div>
 
@@ -372,7 +372,7 @@
 
         <div class="pd-declare">
           <input type="checkbox" id="f-declare-paid" />
-          <label for="f-declare-paid">Declaro bajo mi responsabilidad que todos los asistentes son mayores de 18 años y que la información brindada es correcta. · I declare all attendees are over 18 and this information is accurate.</label>
+          <label for="f-declare-paid">Declaro bajo mi responsabilidad que todos los asistentes serán mayores de 18 años el día del evento (28 de agosto de 2026) y que la información brindada es correcta. · I declare all attendees will be 18 or older on the day of the event (August 28, 2026) and that this information is accurate.</label>
         </div>
       </div>
 
@@ -505,7 +505,9 @@
   // purchase-language copy switch back automatically, nothing else to edit.
   // Fails closed: if this request errors, everything stays in "generar" mode.
   fetch('/api/config').then((r) => r.json()).then((d) => {
-    if (!d || !d.paymentsEnabled) return;
+    if (!d) return;
+    if (d.eventDateIso) eventDateIso = d.eventDateIso;
+    if (!d.paymentsEnabled) return;
     document.getElementById('tier-club').hidden = false;
     document.querySelectorAll('.js-copy').forEach((el) => { el.textContent = el.dataset.on; });
   }).catch(() => {});
@@ -519,13 +521,18 @@
   let selectedTier = null; // { name, price }
   let qty = 1;
 
+  // Mirrors lib/tickets.js's calcAge: the 18+ gate checks age as of the event
+  // date, not today — someone who's 17 now but turns 18 before the event can
+  // still register. Falls back to the hardcoded date if /api/config hasn't
+  // resolved yet; the server is the authoritative check either way.
+  let eventDateIso = '2026-08-28';
   function calcAge(dobStr){
     const dob = new Date(dobStr + 'T00:00:00');
     if (isNaN(dob.getTime())) return null;
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    const asOf = new Date(eventDateIso + 'T00:00:00');
+    let age = asOf.getFullYear() - dob.getFullYear();
+    const m = asOf.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && asOf.getDate() < dob.getDate())) age--;
     return age;
   }
 
@@ -676,7 +683,7 @@
       return 'Ingresa tu fecha de nacimiento. · Please enter your date of birth.';
     }
     if (age < 18) {
-      return 'Evento solo para mayores de 18 años. · This event is 18+ only.';
+      return 'Debes tener 18 años cumplidos para el 28 de agosto de 2026. · You must turn 18 by August 28, 2026.';
     }
     if (!data.declared) {
       return 'Debes marcar la declaración de mayoría de edad para continuar. · Please confirm the 18+ declaration.';
@@ -708,7 +715,7 @@
       if (a.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) return 'Ingresa un email válido para ' + label + ' o déjalo vacío. · Please enter a valid email or leave it blank.';
       const age = calcAge(a.dob);
       if (age === null) return 'Ingresa la fecha de nacimiento de ' + label + '. · Please enter the date of birth.';
-      if (age < 18) return 'Todos los asistentes deben ser mayores de 18 años (' + label + '). · All attendees must be 18+.';
+      if (age < 18) return label + ' debe tener 18 años cumplidos para el 28 de agosto de 2026. · ' + label + ' must turn 18 by August 28, 2026.';
     }
     const docs = assistants.map((a) => a.numeroDocumento.trim().toLowerCase());
     if (new Set(docs).size !== docs.length) {
@@ -775,7 +782,7 @@
   }
 
   function handleApiError(err, data){
-    if (err === 'underage') return showError('Todos los asistentes deben ser mayores de 18 años. · This event is 18+ only.');
+    if (err === 'underage') return showError('Todos los asistentes deben tener 18 años cumplidos para el 28 de agosto de 2026. · All attendees must turn 18 by August 28, 2026.');
     if (err === 'sold_out') return showError(selectedTier.price === 0
       ? 'La cortesía Opening se agotó. Prueba con Club. · Free tier sold out, try Club.'
       : 'Las entradas Club se agotaron. · Club tickets sold out.');

@@ -334,7 +334,14 @@
             <input class="pd-input" type="email" id="f-email" placeholder="Email" aria-label="Email" autocomplete="email" />
           </div>
           <div class="pd-field">
-            <input class="pd-input" type="text" id="f-dni" placeholder="DNI / Documento" aria-label="DNI o documento" inputmode="numeric" autocomplete="off" />
+            <select class="pd-input" id="f-tipo-documento" aria-label="Tipo de documento">
+              <option value="DNI">DNI</option>
+              <option value="CE">Carné de Extranjería</option>
+              <option value="Pasaporte">Pasaporte</option>
+            </select>
+          </div>
+          <div class="pd-field">
+            <input class="pd-input" type="text" id="f-dni" placeholder="Número de documento" aria-label="Número de documento" autocomplete="off" />
           </div>
           <div class="pd-field">
             <input class="pd-input" type="text" id="f-phone" placeholder="Teléfono / WhatsApp" aria-label="Teléfono" inputmode="tel" autocomplete="tel" />
@@ -619,8 +626,10 @@
 
   function readFreeForm(){
     return {
-      name: (document.getElementById('f-nombre').value.trim() + ' ' + document.getElementById('f-apellido').value.trim()).trim(),
+      nombre: document.getElementById('f-nombre').value.trim(),
+      apellido: document.getElementById('f-apellido').value.trim(),
       email: document.getElementById('f-email').value.trim(),
+      tipoDocumento: document.getElementById('f-tipo-documento').value,
       dni: document.getElementById('f-dni').value.trim(),
       phone: document.getElementById('f-phone').value.trim(),
       dob: document.getElementById('f-dob').value,
@@ -629,15 +638,35 @@
     };
   }
 
+  // Mirrors lib/identity-validation.js — quick client-side feedback; the server
+  // re-validates everything and is the real gate.
+  const NAME_CHARS_RE = /^[a-zA-ZñÑüÜáéíóúÁÉÍÓÚ' -]+$/;
+  const VOWEL_RE = /[aeiouáéíóúAEIOUÁÉÍÓÚ]/;
+  const REPEATED_CHAR_RE = /(.)\1{2,}/;
+  function isValidNamePart(v){
+    v = (v || '').trim();
+    return v.length >= 2 && NAME_CHARS_RE.test(v) && VOWEL_RE.test(v) && !REPEATED_CHAR_RE.test(v);
+  }
+  function isValidDocumentGeneric(v){
+    v = (v || '').trim();
+    return /^\d{8}$/.test(v) || /^[a-zA-Z0-9]{8,12}$/.test(v);
+  }
+  function isValidDocumentTyped(v, tipo){
+    v = (v || '').trim();
+    if (tipo === 'DNI') return /^\d{8}$/.test(v);
+    if (tipo === 'CE' || tipo === 'Pasaporte') return /^[a-zA-Z0-9]{8,12}$/.test(v);
+    return isValidDocumentGeneric(v);
+  }
+
   function validateFree(data){
-    if (!document.getElementById('f-nombre').value.trim() || !document.getElementById('f-apellido').value.trim()) {
-      return 'Completa nombre y apellido. · Please enter your full name.';
+    if (!isValidNamePart(data.nombre) || !isValidNamePart(data.apellido)) {
+      return 'Ingresa un nombre y apellido válidos. · Please enter a valid first and last name.';
     }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
       return 'Ingresa un email válido. · Please enter a valid email.';
     }
-    if (data.dni.length < 6) {
-      return 'Ingresa un documento válido. · Please enter a valid ID number.';
+    if (!isValidDocumentTyped(data.dni, data.tipoDocumento)) {
+      return 'Ingresa un documento válido para el tipo seleccionado. · Please enter a valid ID number for the selected document type.';
     }
     if (!data.phone) {
       return 'Ingresa tu número de teléfono. · Please enter your phone number.';
@@ -673,8 +702,8 @@
     for (let i = 0; i < assistants.length; i++) {
       const a = assistants[i];
       const label = i === 0 ? 'Tú (comprador)' : 'Asistente ' + (i + 1);
-      if (!a.nombre || !a.apellido) return 'Completa nombre y apellido de ' + label + '. · Please enter the full name.';
-      if (!a.numeroDocumento || a.numeroDocumento.length < 6) return 'Ingresa un documento válido para ' + label + '. · Please enter a valid ID number.';
+      if (!isValidNamePart(a.nombre) || !isValidNamePart(a.apellido)) return 'Ingresa un nombre y apellido válidos para ' + label + '. · Please enter a valid first and last name.';
+      if (!isValidDocumentTyped(a.numeroDocumento, a.tipoDocumento)) return 'Ingresa un documento válido para ' + label + '. · Please enter a valid ID number.';
       if (i === 0 && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) return 'Ingresa un email válido para el comprador. · Please enter a valid email.';
       if (a.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) return 'Ingresa un email válido para ' + label + ' o déjalo vacío. · Please enter a valid email or leave it blank.';
       const age = calcAge(a.dob);
@@ -752,6 +781,13 @@
       : 'Las entradas Club se agotaron. · Club tickets sold out.');
     if (err === 'payment_failed') return showError((data && data.detail) || 'El pago no pudo procesarse. · Payment could not be processed.');
     if (err === 'duplicate_document') return showError('Cada asistente debe tener un documento distinto. · Each attendee needs a different ID number.');
+    if (err === 'invalid_name') return showError('Ingresa un nombre y apellido válidos. · Please enter a valid first and last name.');
+    if (err === 'invalid_document') return showError('Ingresa un documento válido (DNI de 8 dígitos, o CE/pasaporte de 8 a 12 caracteres). · Please enter a valid ID number.');
+    if (err === 'invalid_email') {
+      if (data && data.reason === 'disposable') return showError('Usa un correo real, no uno temporal. · Please use a real email, not a disposable one.');
+      if (data && data.reason === 'no_mx') return showError('Ese correo no parece válido, revísalo. · That email doesn\'t look valid, please check it.');
+      return showError('Ingresa un email válido. · Please enter a valid email.');
+    }
     if (err === 'free_already_claimed') return showError(data && data.field === 'email'
       ? 'Ya existe una cortesía registrada con este correo. · A free ticket was already claimed with this email.'
       : 'Ya existe una cortesía registrada con este documento. · A free ticket was already claimed with this ID.');
@@ -765,7 +801,7 @@
     try {
       const r = await fetch('/api/register-free', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: data.name, email: data.email, dni: data.dni, phone: data.phone, dob: data.dob }),
+        body: JSON.stringify({ nombre: data.nombre, apellido: data.apellido, email: data.email, tipoDocumento: data.tipoDocumento, dni: data.dni, phone: data.phone, dob: data.dob }),
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }

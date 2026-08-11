@@ -1,20 +1,39 @@
-const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket } = require('../lib/tickets');
+const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket, getClientIp } = require('../lib/tickets');
+const { validateEmail } = require('../lib/email-validation');
+const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   try {
-    const { name, phone, email, dni, dob } = req.body || {};
+    const { nombre, apellido, phone, email, tipoDocumento, dni, dob } = req.body || {};
     // Cortesía is one per person — fixed at qty 1, regardless of what the client sends.
     const qty = 1;
-    if (!name || !phone || !email || !dni || !dob) {
+    if (!nombre || !apellido || !phone || !email || !tipoDocumento || !dni || !dob) {
       return res.status(400).json({ error: 'missing_fields' });
+    }
+
+    if (!['DNI', 'CE', 'Pasaporte'].includes(tipoDocumento)) {
+      return res.status(400).json({ error: 'invalid_document' });
+    }
+    if (!isValidNamePart(nombre) || !isValidNamePart(apellido)) {
+      return res.status(400).json({ error: 'invalid_name' });
+    }
+    if (!isValidDocument(dni, tipoDocumento)) {
+      return res.status(400).json({ error: 'invalid_document' });
+    }
+
+    const emailCheck = await validateEmail(email);
+    if (!emailCheck.ok) {
+      return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason });
     }
 
     const age = calcAge(dob);
     if (age === null || age < 18) {
       return res.status(403).json({ error: 'underage' });
     }
+
+    const name = `${nombre.trim()} ${apellido.trim()}`.trim();
 
     // Email and document must be unique among active Cortesía tickets — this uniqueness
     // never crosses into paid tickets, which are a separate product.
@@ -27,9 +46,10 @@ module.exports = async (req, res) => {
     const counters = await getCounters();
     if ((counters.free || 0) + qty > FREE_CAP) return res.status(409).json({ error: 'sold_out' });
 
+    const ip = getClientIp(req);
     const tickets = [];
     for (let i = 0; i < qty; i++) {
-      tickets.push(await createTicket({ name, phone, email, dni, dob, type: 'free', amount: 0 }));
+      tickets.push(await createTicket({ name, phone, email, dni, docType: tipoDocumento, dob, type: 'free', amount: 0, ip }));
     }
 
     // Send email(s), but don't fail the request if email delivery has an issue —

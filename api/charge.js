@@ -1,5 +1,7 @@
-const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP } = require('../lib/tickets');
+const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP, getClientIp } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
+const { validateEmail } = require('../lib/email-validation');
+const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 
 const TICKET_PRICE_SOLES = 45;
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
@@ -30,11 +32,20 @@ module.exports = async (req, res) => {
       if (!a.nombre || !a.apellido || !TIPO_DOCUMENTO.includes(a.tipoDocumento) || !a.numeroDocumento || !a.dob) {
         return res.status(400).json({ error: 'missing_fields', index: i });
       }
+      if (!isValidNamePart(a.nombre) || !isValidNamePart(a.apellido)) {
+        return res.status(400).json({ error: 'invalid_name', index: i });
+      }
+      if (!isValidDocument(a.numeroDocumento, a.tipoDocumento)) {
+        return res.status(400).json({ error: 'invalid_document', index: i });
+      }
       if (i === 0 && !a.email) {
         return res.status(400).json({ error: 'missing_buyer_email' });
       }
-      if (a.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) {
-        return res.status(400).json({ error: 'invalid_email', index: i });
+      if (a.email) {
+        const emailCheck = await validateEmail(a.email);
+        if (!emailCheck.ok) {
+          return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason, index: i });
+        }
       }
       const age = calcAge(a.dob);
       if (age === null || age < 18) {
@@ -80,6 +91,7 @@ module.exports = async (req, res) => {
 
     // Payment succeeded -> issue one nominal ticket per assistant, grouped under one order.
     const { id: orderId, token: orderToken } = reserveOrderIdentity();
+    const ip = getClientIp(req);
     const tickets = [];
     for (const a of cleaned) {
       const t = await createTicket({
@@ -91,6 +103,7 @@ module.exports = async (req, res) => {
         type: 'paid',
         amount: TICKET_PRICE_SOLES,
         orderId,
+        ip,
       });
       t.culqiChargeId = culqiData.id;
       tickets.push(t);

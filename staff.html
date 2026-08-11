@@ -141,18 +141,22 @@
       // passcode was accepted -> remember it on this device so staff don't retype it
       localStorage.setItem('paradisio_staff_passcode', passcode);
 
+      function docLabel(ticket){
+        return (ticket.docType || 'DNI') + ' ' + (ticket.dni || '—');
+      }
+
       if(!d.ok){
         if(d.reason === 'not_found'){
           resultEl.innerHTML = '<div class="result bad">✗ INVÁLIDO — ticket no encontrado: '+ticketId+'</div>';
         } else if(d.reason === 'already_used'){
-          resultEl.innerHTML = '<div class="result used">⚠ YA INGRESÓ — '+d.ticket.name+' (DNI '+(d.ticket.dni||'—')+') a las '+new Date(d.ticket.checkedInAt).toLocaleTimeString()+'</div>';
+          resultEl.innerHTML = '<div class="result used">⚠ YA INGRESÓ — '+d.ticket.name+' ('+docLabel(d.ticket)+') a las '+new Date(d.ticket.checkedInAt).toLocaleTimeString()+'</div>';
         } else if(d.reason === 'voided'){
-          resultEl.innerHTML = '<div class="result bad">✗ ANULADO — '+d.ticket.name+' (DNI '+(d.ticket.dni||'—')+') — NO debe ingresar</div>';
+          resultEl.innerHTML = '<div class="result bad">✗ ANULADO — '+d.ticket.name+' ('+docLabel(d.ticket)+') — NO debe ingresar</div>';
         }
         resultEl.scrollIntoView({behavior:'smooth', block:'center'});
         return;
       }
-      resultEl.innerHTML = '<div class="result ok">✓ VÁLIDO — '+d.ticket.name+'<br/>DNI '+(d.ticket.dni||'—')+' · '+(d.ticket.type==='paid'?'Entrada pagada':'Lista gratis')+'</div>';
+      resultEl.innerHTML = '<div class="result ok">✓ VÁLIDO — '+d.ticket.name+'<br/>'+docLabel(d.ticket)+' · '+(d.ticket.type==='paid'?'Entrada pagada':'Lista gratis')+'</div>';
       resultEl.scrollIntoView({behavior:'smooth', block:'center'});
       document.getElementById('ticket-id').value = '';
       refreshStats();

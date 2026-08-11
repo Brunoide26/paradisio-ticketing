@@ -7,7 +7,9 @@
   },
   "dependencies": {
     "@upstash/redis": "^1.31.0",
+    "disposable-email-domains": "^1.0.62",
+    "qrcode": "^1.5.3",
     "resend": "^3.4.0",
-    "qrcode": "^1.5.3"
+    "svix": "^1.99.1"
   }
 }

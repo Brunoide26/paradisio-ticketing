@@ -1,4 +1,4 @@
-const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket } = require('../lib/tickets');
+const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket, getClientIp } = require('../lib/tickets');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 
@@ -46,9 +46,10 @@ module.exports = async (req, res) => {
     const counters = await getCounters();
     if ((counters.free || 0) + qty > FREE_CAP) return res.status(409).json({ error: 'sold_out' });
 
+    const ip = getClientIp(req);
     const tickets = [];
     for (let i = 0; i < qty; i++) {
-      tickets.push(await createTicket({ name, phone, email, dni, docType: tipoDocumento, dob, type: 'free', amount: 0 }));
+      tickets.push(await createTicket({ name, phone, email, dni, docType: tipoDocumento, dob, type: 'free', amount: 0, ip }));
     }
 
     // Send email(s), but don't fail the request if email delivery has an issue —

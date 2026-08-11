@@ -50,6 +50,9 @@
   .badge-mail-delivered { background:#0a2a12; color:#7fe0a0; }
   .badge-mail-bounced { background:#2a0a0a; color:#e07f7f; }
   .badge-mail-pending { background:#2a2a2a; color:#999; }
+  .badge-suspicious { background:#2a2200; color:#e0c87f; cursor:help; }
+  tr.row-flag { background:#1a1600; }
+  tr.row-flag:hover { background:#241d00; }
   .badge-void { background:#2a0a0a; color:#e07f7f; }
   .table-scroll { overflow-x:auto; }
   .hint { color:#666; font-size:12px; margin-top:8px; }
@@ -125,6 +128,9 @@
           <option value="bounced">Correo: rebotado</option>
           <option value="pending">Correo: pendiente</option>
         </select>
+        <label class="btn btn-ghost" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="suspicious-filter" style="margin:0;" /> Solo sospechosos
+        </label>
         <button class="btn btn-ghost" id="view-toggle-btn">Vista: por orden</button>
         <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
         <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
@@ -238,6 +244,7 @@
       }
       const d = await r.json();
       allTickets = d.tickets;
+      suspiciousFlags = computeSuspiciousFlags(allTickets);
       document.getElementById('login-area').style.display = 'none';
       document.getElementById('dashboard-area').style.display = 'block';
       renderStats(d.counters, allTickets);
@@ -271,6 +278,102 @@
       `Gratis: ${c.free||0} · Pagadas: ${c.paid||0} · En puerta: ${ingresados} · Correo rebotado: ${bounced}`;
   }
 
+  // --- Block 5: suspicious-duplicate detection. Flags only, never auto-blocks —
+  // it's for a human to review and decide. ---
+
+  function levenshtein(a, b){
+    const m = a.length, n = b.length;
+    const dp = Array.from({length: m + 1}, () => new Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = a[i-1] === b[j-1]
+          ? dp[i-1][j-1]
+          : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      }
+    }
+    return dp[m][n];
+  }
+
+  function computeSuspiciousFlags(tickets){
+    const flags = new Map(); // ticketId -> Set<string reason>
+    function addFlag(id, reason){
+      if (!flags.has(id)) flags.set(id, new Set());
+      flags.get(id).add(reason);
+    }
+
+    // 1. Same phone across different registrations.
+    const byPhone = new Map();
+    tickets.forEach(t => {
+      const p = (t.phone || '').trim();
+      if (!p) return;
+      if (!byPhone.has(p)) byPhone.set(p, []);
+      byPhone.get(p).push(t);
+    });
+    byPhone.forEach(group => {
+      if (group.length > 1) group.forEach(t => addFlag(t.id, 'Mismo teléfono en ' + group.length + ' registros'));
+    });
+
+    // 2. Very similar emails: same domain, near-identical local part (small edit
+    // distance relative to length) — catches evasion via "name1@x.com" / "name2@x.com".
+    const byDomain = new Map();
+    tickets.forEach(t => {
+      const email = (t.email || '').trim().toLowerCase();
+      const at = email.indexOf('@');
+      if (at < 1) return;
+      const domain = email.slice(at + 1);
+      const local = email.slice(0, at);
+      if (!byDomain.has(domain)) byDomain.set(domain, []);
+      byDomain.get(domain).push({ t, local });
+    });
+    byDomain.forEach(group => {
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          if (group[i].t.id === group[j].t.id) continue;
+          const dist = levenshtein(group[i].local, group[j].local);
+          const maxLen = Math.max(group[i].local.length, group[j].local.length);
+          if (maxLen > 0 && dist <= 2 && dist / maxLen <= 0.3) {
+            addFlag(group[i].t.id, 'Correo parecido a ' + group[j].t.email);
+            addFlag(group[j].t.id, 'Correo parecido a ' + group[i].t.email);
+          }
+        }
+      }
+    });
+
+    // 3. Multiple registrations from the same IP within 5 minutes. Grouped by
+    // "registration event" (orderId, or the ticket itself for Cortesía) so a
+    // single multi-assistant checkout never flags itself.
+    const FIVE_MIN_MS = 5 * 60 * 1000;
+    const byIp = new Map();
+    tickets.forEach(t => {
+      if (!t.ip) return;
+      if (!byIp.has(t.ip)) byIp.set(t.ip, new Map());
+      const eventKey = t.orderId || t.id;
+      const events = byIp.get(t.ip);
+      if (!events.has(eventKey)) events.set(eventKey, []);
+      events.get(eventKey).push(t);
+    });
+    byIp.forEach(events => {
+      const eventList = [...events.values()].map(evTickets => ({
+        tickets: evTickets,
+        time: Math.min(...evTickets.map(t => new Date(t.createdAt).getTime())),
+      }));
+      for (let i = 0; i < eventList.length; i++) {
+        for (let j = i + 1; j < eventList.length; j++) {
+          if (Math.abs(eventList[i].time - eventList[j].time) <= FIVE_MIN_MS) {
+            eventList[i].tickets.forEach(t => addFlag(t.id, 'Misma IP que otro registro en menos de 5 min'));
+            eventList[j].tickets.forEach(t => addFlag(t.id, 'Misma IP que otro registro en menos de 5 min'));
+          }
+        }
+      }
+    });
+
+    return flags;
+  }
+
+  let suspiciousFlags = new Map();
+
   let viewMode = 'grouped'; // 'flat' | 'grouped'
 
   function emailStatusBadge(t){
@@ -287,9 +390,14 @@
     const voidBtn = t.voided
       ? `<button class="btn btn-ghost btn-sm" onclick="toggleVoid('${t.id}','unvoid')">Reactivar</button>`
       : `<button class="btn btn-ghost btn-sm" onclick="toggleVoid('${t.id}','void')">Anular</button>`;
-    return `<tr>
+    const reasons = suspiciousFlags.get(t.id);
+    const rowClass = reasons ? ' class="row-flag"' : '';
+    const suspiciousBadge = reasons
+      ? ` <span class="badge badge-suspicious" title="${escapeHtml([...reasons].join(' · '))}">⚠ Revisar</span>`
+      : '';
+    return `<tr${rowClass}>
       <td style="font-family:monospace;">${t.id}</td>
-      <td>${escapeHtml(t.name)}</td>
+      <td>${escapeHtml(t.name)}${suspiciousBadge}</td>
       <td>${escapeHtml(t.dni||'')}</td>
       <td>${escapeHtml(t.dob||'')}</td>
       <td>${escapeHtml(t.phone||'')}</td>
@@ -310,8 +418,13 @@
     return tickets.filter(t => (t.emailStatus || 'pending') === f);
   }
 
+  function applySuspiciousFilter(tickets){
+    if (!document.getElementById('suspicious-filter').checked) return tickets;
+    return tickets.filter(t => suspiciousFlags.has(t.id));
+  }
+
   function renderTable(tickets){
-    tickets = applyEmailFilter(tickets);
+    tickets = applySuspiciousFilter(applyEmailFilter(tickets));
     const body = document.getElementById('table-body');
     if(tickets.length === 0){
       body.innerHTML = '<tr><td colspan="13" style="text-align:center;color:#666;">Sin resultados</td></tr>';
@@ -321,7 +434,7 @@
   }
 
   function renderTableGrouped(tickets){
-    tickets = applyEmailFilter(tickets);
+    tickets = applySuspiciousFilter(applyEmailFilter(tickets));
     const body = document.getElementById('table-body');
     if(tickets.length === 0){
       body.innerHTML = '<tr><td colspan="13" style="text-align:center;color:#666;">Sin resultados</td></tr>';
@@ -397,13 +510,18 @@
     renderCurrentView(getSearchFilteredTickets());
   });
 
+  document.getElementById('suspicious-filter').addEventListener('change', function(){
+    renderCurrentView(getSearchFilteredTickets());
+  });
+
   document.getElementById('refresh-btn').onclick = loadData;
 
   document.getElementById('export-btn').onclick = function(){
-    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','Anulado','EstadoCorreo'];
+    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','Anulado','EstadoCorreo','Sospechoso'];
     const rows = allTickets.map(t => [
       t.id, t.name, t.dni, t.dob, t.phone, t.email, t.type, t.amount, t.orderId || '',
-      t.createdAt, t.checkedIn ? 'si' : 'no', t.voided ? 'si' : 'no', t.emailStatus || 'pending'
+      t.createdAt, t.checkedIn ? 'si' : 'no', t.voided ? 'si' : 'no', t.emailStatus || 'pending',
+      suspiciousFlags.has(t.id) ? [...suspiciousFlags.get(t.id)].join('; ') : ''
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

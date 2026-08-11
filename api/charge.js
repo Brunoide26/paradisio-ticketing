@@ -1,4 +1,4 @@
-const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP } = require('../lib/tickets');
+const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP, getClientIp } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
@@ -91,6 +91,7 @@ module.exports = async (req, res) => {
 
     // Payment succeeded -> issue one nominal ticket per assistant, grouped under one order.
     const { id: orderId, token: orderToken } = reserveOrderIdentity();
+    const ip = getClientIp(req);
     const tickets = [];
     for (const a of cleaned) {
       const t = await createTicket({
@@ -102,6 +103,7 @@ module.exports = async (req, res) => {
         type: 'paid',
         amount: TICKET_PRICE_SOLES,
         orderId,
+        ip,
       });
       t.culqiChargeId = culqiData.id;
       tickets.push(t);

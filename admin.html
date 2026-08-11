@@ -47,6 +47,9 @@
   .badge-paid { background:#2a1a3a; color:#c07fe0; }
   .badge-in { background:#0a2a12; color:#7fe0a0; }
   .badge-out { background:#2a2a2a; color:#999; }
+  .badge-mail-delivered { background:#0a2a12; color:#7fe0a0; }
+  .badge-mail-bounced { background:#2a0a0a; color:#e07f7f; }
+  .badge-mail-pending { background:#2a2a2a; color:#999; }
   .badge-void { background:#2a0a0a; color:#e07f7f; }
   .table-scroll { overflow-x:auto; }
   .hint { color:#666; font-size:12px; margin-top:8px; }
@@ -116,6 +119,12 @@
       <div class="stat-subline" id="stats-subline"></div>
       <div class="toolbar">
         <input type="text" id="search" placeholder="Buscar por nombre, email, teléfono o código..." />
+        <select id="email-filter" class="btn btn-ghost">
+          <option value="all">Correo: todos</option>
+          <option value="delivered">Correo: entregado</option>
+          <option value="bounced">Correo: rebotado</option>
+          <option value="pending">Correo: pendiente</option>
+        </select>
         <button class="btn btn-ghost" id="view-toggle-btn">Vista: por orden</button>
         <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
         <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
@@ -125,7 +134,7 @@
           <thead>
             <tr>
               <th>Código</th><th>Nombre</th><th>DNI</th><th>F. Nac.</th><th>Teléfono</th><th>Email</th>
-              <th>Tipo</th><th>Monto</th><th>ID de orden</th><th>Registrado</th><th>Estado</th><th>Acciones</th>
+              <th>Tipo</th><th>Monto</th><th>ID de orden</th><th>Registrado</th><th>Estado</th><th>Correo</th><th>Acciones</th>
             </tr>
           </thead>
           <tbody id="table-body"></tbody>
@@ -242,7 +251,10 @@
     const el = document.getElementById('stats');
     const generados = (c.free||0) + (c.paid||0);
     const anulados = tickets.filter(t => t.voided).length;
-    const vigentes = generados - anulados;
+    // A bounced QR never reached anyone, so it's not a real expected attendee either —
+    // same treatment as an anulada, without double-counting a ticket that's both.
+    const bounced = tickets.filter(t => !t.voided && t.emailStatus === 'bounced').length;
+    const vigentes = generados - anulados - bounced;
     const ingresados = c.checkedin || 0;
 
     const cards = [
@@ -256,10 +268,16 @@
     ).join('');
 
     document.getElementById('stats-subline').textContent =
-      `Gratis: ${c.free||0} · Pagadas: ${c.paid||0} · En puerta: ${ingresados}`;
+      `Gratis: ${c.free||0} · Pagadas: ${c.paid||0} · En puerta: ${ingresados} · Correo rebotado: ${bounced}`;
   }
 
   let viewMode = 'grouped'; // 'flat' | 'grouped'
+
+  function emailStatusBadge(t){
+    if (t.emailStatus === 'delivered') return '<span class="badge badge-mail-delivered">Entregado</span>';
+    if (t.emailStatus === 'bounced') return '<span class="badge badge-mail-bounced">Rebotado</span>';
+    return '<span class="badge badge-mail-pending">Pendiente</span>';
+  }
 
   function ticketRowHtml(t){
     const typeBadge = t.type==='paid' ? '<span class="badge badge-paid">Pagada</span>' : '<span class="badge badge-free">Gratis</span>';
@@ -281,23 +299,32 @@
       <td style="font-family:monospace;">${escapeHtml(t.orderId||'—')}</td>
       <td>${date}</td>
       <td>${statusBadge}</td>
+      <td>${emailStatusBadge(t)}</td>
       <td>${voidBtn}</td>
     </tr>`;
   }
 
+  function applyEmailFilter(tickets){
+    const f = document.getElementById('email-filter').value;
+    if (f === 'all') return tickets;
+    return tickets.filter(t => (t.emailStatus || 'pending') === f);
+  }
+
   function renderTable(tickets){
+    tickets = applyEmailFilter(tickets);
     const body = document.getElementById('table-body');
     if(tickets.length === 0){
-      body.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#666;">Sin resultados</td></tr>';
+      body.innerHTML = '<tr><td colspan="13" style="text-align:center;color:#666;">Sin resultados</td></tr>';
       return;
     }
     body.innerHTML = tickets.map(ticketRowHtml).join('');
   }
 
   function renderTableGrouped(tickets){
+    tickets = applyEmailFilter(tickets);
     const body = document.getElementById('table-body');
     if(tickets.length === 0){
-      body.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#666;">Sin resultados</td></tr>';
+      body.innerHTML = '<tr><td colspan="13" style="text-align:center;color:#666;">Sin resultados</td></tr>';
       return;
     }
     const groups = new Map(); // orderId (or null) -> tickets[]
@@ -311,11 +338,11 @@
     const ungrouped = groups.get(null) || [];
     groups.forEach((groupTickets, orderId) => {
       if (orderId === null) return;
-      html += `<tr><td colspan="12" style="background:#000;font-family:monospace;font-size:11px;color:#888;letter-spacing:0.5px;">ORDEN ${escapeHtml(orderId)} · ${groupTickets.length} entrada${groupTickets.length>1?'s':''}</td></tr>`;
+      html += `<tr><td colspan="13" style="background:#000;font-family:monospace;font-size:11px;color:#888;letter-spacing:0.5px;">ORDEN ${escapeHtml(orderId)} · ${groupTickets.length} entrada${groupTickets.length>1?'s':''}</td></tr>`;
       html += groupTickets.map(ticketRowHtml).join('');
     });
     if (ungrouped.length) {
-      html += `<tr><td colspan="12" style="background:#000;font-family:monospace;font-size:11px;color:#888;letter-spacing:0.5px;">SIN ORDEN (cortesías / individuales)</td></tr>`;
+      html += `<tr><td colspan="13" style="background:#000;font-family:monospace;font-size:11px;color:#888;letter-spacing:0.5px;">SIN ORDEN (cortesías / individuales)</td></tr>`;
       html += ungrouped.map(ticketRowHtml).join('');
     }
     body.innerHTML = html;
@@ -329,7 +356,7 @@
   document.getElementById('view-toggle-btn').onclick = function(){
     viewMode = viewMode === 'grouped' ? 'flat' : 'grouped';
     this.textContent = viewMode === 'grouped' ? 'Vista: por orden' : 'Vista: plana';
-    renderCurrentView(allTickets);
+    renderCurrentView(getSearchFilteredTickets());
   };
 
   function escapeHtml(s){
@@ -349,9 +376,10 @@
     }
   };
 
-  document.getElementById('search').addEventListener('input', function(e){
-    const q = e.target.value.toLowerCase();
-    const filtered = allTickets.filter(t =>
+  function getSearchFilteredTickets(){
+    const q = document.getElementById('search').value.toLowerCase();
+    if (!q) return allTickets;
+    return allTickets.filter(t =>
       (t.name||'').toLowerCase().includes(q) ||
       (t.email||'').toLowerCase().includes(q) ||
       (t.phone||'').toLowerCase().includes(q) ||
@@ -359,16 +387,23 @@
       (t.id||'').toLowerCase().includes(q) ||
       (t.orderId||'').toLowerCase().includes(q)
     );
-    renderCurrentView(filtered);
+  }
+
+  document.getElementById('search').addEventListener('input', function(){
+    renderCurrentView(getSearchFilteredTickets());
+  });
+
+  document.getElementById('email-filter').addEventListener('change', function(){
+    renderCurrentView(getSearchFilteredTickets());
   });
 
   document.getElementById('refresh-btn').onclick = loadData;
 
   document.getElementById('export-btn').onclick = function(){
-    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','Anulado'];
+    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','Anulado','EstadoCorreo'];
     const rows = allTickets.map(t => [
       t.id, t.name, t.dni, t.dob, t.phone, t.email, t.type, t.amount, t.orderId || '',
-      t.createdAt, t.checkedIn ? 'si' : 'no', t.voided ? 'si' : 'no'
+      t.createdAt, t.checkedIn ? 'si' : 'no', t.voided ? 'si' : 'no', t.emailStatus || 'pending'
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

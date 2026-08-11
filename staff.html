@@ -16,7 +16,10 @@
   @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:400 900; font-display:swap; }
   @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 900; font-display:swap; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<!-- defer: same render-blocking hazard as index.html's Culqi tag — if cdnjs is
+     slow or unreachable, this would freeze the whole check-in page instead of
+     just the camera button. Html5Qrcode is only constructed on click. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
 <style>
   #qr-reader { width:100%; border-radius:10px; overflow:hidden; margin-bottom:14px; }
   #qr-reader video { border-radius:10px; }

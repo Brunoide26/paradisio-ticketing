@@ -133,6 +133,9 @@
   .pd-tier-select { flex:none; padding:13px 30px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; border:1px solid rgba(242,237,228,0.3); color:var(--ink); transition:all 180ms; }
   .pd-tier:hover .pd-tier-select, .pd-tier:focus-visible .pd-tier-select { border-color:var(--primary); color:var(--primary); }
   .pd-tier.is-selected .pd-tier-select { border-color:var(--primary); color:var(--primary); }
+  .pd-tier[disabled] { cursor:default; opacity:0.55; }
+  .pd-tier[disabled]:hover { background:transparent; }
+  .pd-sales-closed { padding-top:38px; padding-bottom:38px; margin:0; font-size:15px; font-weight:700; color:var(--ink); border-bottom:1px solid var(--line); }
 
   .pd-checkout { border-top:1px solid var(--primary); background:var(--card); padding:48px; }
   .pd-checkout-inner { max-width:720px; }
@@ -152,13 +155,6 @@
   .pd-assistant:first-of-type { padding-top:0; }
   .pd-assistant:last-of-type { border-bottom:none; }
   .pd-assistant-label { margin:0 0 14px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary); font-weight:700; }
-
-  .pd-qty-row { display:flex; align-items:center; gap:18px; margin-bottom:22px; }
-  .pd-qty-label { font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); }
-  .pd-qty-box { display:flex; align-items:center; border:1px solid var(--line); }
-  .pd-qty-box button { width:42px; height:42px; background:transparent; border:none; color:var(--ink); font-size:18px; cursor:pointer; transition:background 150ms, color 150ms; }
-  .pd-qty-box button:hover { background:var(--primary); color:#0A0A0A; }
-  .pd-qty-val { width:46px; text-align:center; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); }
 
   .pd-order-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 0; border-top:1px solid var(--line); margin-bottom:22px; }
   .pd-order-line { font-size:14px; color:var(--muted); }
@@ -292,31 +288,8 @@
     <h2 class="pd-entradas-title">Entradas</h2>
   </div>
 
-  <div>
-    <button type="button" class="pd-tier pd-pad pd-row" id="tier-free" data-tier="Cortesía Opening" data-price="0" aria-expanded="false">
-      <div class="pd-tier-left">
-        <span class="pd-tier-idx">01</span>
-        <p class="pd-tier-price is-free">FREE</p>
-        <div>
-          <p class="pd-tier-name">Cortesía Opening</p>
-          <p class="pd-tier-note">Acceso hasta la medianoche</p>
-        </div>
-      </div>
-      <span class="pd-tier-select">Seleccionar</span>
-    </button>
-
-    <button type="button" class="pd-tier pd-pad pd-row" id="tier-club" data-tier="Club" data-price="45" aria-expanded="false" hidden>
-      <div class="pd-tier-left">
-        <span class="pd-tier-idx">02</span>
-        <p class="pd-tier-price is-paid">S/ 45</p>
-        <div>
-          <p class="pd-tier-name">Club</p>
-          <p class="pd-tier-note">Acceso hasta las 3 am</p>
-        </div>
-      </div>
-      <span class="pd-tier-select">Seleccionar</span>
-    </button>
-  </div>
+  <div id="tiers-list" aria-live="polite"></div>
+  <p class="pd-sales-closed pd-pad" id="sales-closed-notice" hidden></p>
 
   <div class="pd-checkout pd-pad" id="pd-checkout" hidden>
     <div class="pd-checkout-inner">
@@ -359,15 +332,6 @@
       </div>
 
       <div id="paid-fields" hidden>
-        <div class="pd-qty-row">
-          <span class="pd-qty-label">Cantidad</span>
-          <div class="pd-qty-box">
-            <button type="button" id="qty-dec" aria-label="Disminuir cantidad">−</button>
-            <span class="pd-qty-val" id="qty-val">1</span>
-            <button type="button" id="qty-inc" aria-label="Aumentar cantidad">+</button>
-          </div>
-        </div>
-
         <div id="assistants-wrap"></div>
 
         <div class="pd-declare">
@@ -451,7 +415,7 @@
 </footer>
 
 <script>
-  const CULQI_PUBLIC_KEY = 'PON_AQUI_TU_LLAVE_PUBLICA_DE_CULQI';
+  let culqiPublicKey = '';
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---- header scroll state ---- */
@@ -496,21 +460,9 @@
   setInterval(renderCountdown, 1000);
 
   /* ---- ticket tiers + checkout ---- */
-  const tierButtons = [document.getElementById('tier-free'), document.getElementById('tier-club')];
-
-  // The Club (paid) tier stays hidden — server-rendered as `hidden` — and every
-  // ".js-copy" element shows its "generación" wording until this confirms payments
-  // are enabled. Culqi hasn't approved the merchant account yet; flip
-  // PAYMENTS_ENABLED in lib/config.js when it does — both the tier and all the
-  // purchase-language copy switch back automatically, nothing else to edit.
-  // Fails closed: if this request errors, everything stays in "generar" mode.
-  fetch('/api/config').then((r) => r.json()).then((d) => {
-    if (!d) return;
-    if (d.eventDateIso) eventDateIso = d.eventDateIso;
-    if (!d.paymentsEnabled) return;
-    document.getElementById('tier-club').hidden = false;
-    document.querySelectorAll('.js-copy').forEach((el) => { el.textContent = el.dataset.on; });
-  }).catch(() => {});
+  const tiersListEl = document.getElementById('tiers-list');
+  const closedNoticeEl = document.getElementById('sales-closed-notice');
+  let tierButtons = [];
 
   const checkoutEl = document.getElementById('pd-checkout');
   const confirmEl = document.getElementById('pd-confirm');
@@ -518,8 +470,109 @@
   const freeFieldsEl = document.getElementById('free-fields');
   const paidFieldsEl = document.getElementById('paid-fields');
   const assistantsWrap = document.getElementById('assistants-wrap');
-  let selectedTier = null; // { name, price }
-  let qty = 1;
+  let selectedTier = null; // { name, price, qty, sku }
+
+  // The catalog (which SKUs are on sale, Cortesía open/soldout/closed, prices) is
+  // entirely time-windowed server-side — lib/catalog.js is the single source of
+  // truth. This just renders whatever /api/config returns; nothing here decides
+  // prices or availability. Fails closed: if this request errors, no tier renders
+  // and a visible retry notice shows instead of silently offering nothing.
+  //
+  // ?qa=1 asks the server for the hidden S/1 test SKU (see lib/catalog.js) —
+  // it's only ever included in the response when that param AND the server's
+  // TEST_SKU_ENABLED flag are both on, so a plain page load never triggers or
+  // reveals it, in the page or in the network tab.
+  const qaRequested = new URLSearchParams(location.search).get('qa') === '1';
+  fetch('/api/config' + (qaRequested ? '?qa=1' : '')).then((r) => r.json()).then((d) => {
+    if (!d) return;
+    if (d.eventDateIso) eventDateIso = d.eventDateIso;
+    culqiPublicKey = d.culqiPublicKey || '';
+    if (d.paymentsEnabled) {
+      document.querySelectorAll('.js-copy').forEach((el) => { el.textContent = el.dataset.on; });
+    }
+    renderCatalog(d);
+  }).catch(() => {
+    closedNoticeEl.textContent = 'No pudimos cargar las entradas. Actualiza la página. · We couldn\'t load tickets, please refresh.';
+    closedNoticeEl.hidden = false;
+  });
+
+  function renderTierButton(idx, opts){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pd-tier pd-pad pd-row';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.dataset.tier = opts.tierId;
+    btn.dataset.price = opts.price;
+    btn.dataset.qty = opts.qty;
+    btn.dataset.sku = opts.sku;
+    if (opts.disabled) btn.disabled = true;
+    btn.innerHTML =
+      '<div class="pd-tier-left">' +
+        '<span class="pd-tier-idx">' + String(idx + 1).padStart(2, '0') + '</span>' +
+        '<p class="pd-tier-price ' + (opts.price === 0 ? 'is-free' : 'is-paid') + '">' + (opts.price === 0 ? 'FREE' : 'S/ ' + opts.price) + '</p>' +
+        '<div><p class="pd-tier-name">' + escapeHtmlIndex(opts.name) + '</p><p class="pd-tier-note">' + escapeHtmlIndex(opts.note) + '</p></div>' +
+      '</div>' +
+      '<span class="pd-tier-select">' + (opts.disabled ? escapeHtmlIndex(opts.selectLabel) : 'Seleccionar') + '</span>';
+    return btn;
+  }
+
+  function renderCatalog(cfg){
+    tiersListEl.innerHTML = '';
+    tierButtons = [];
+    selectedTier = null;
+    checkoutEl.hidden = true;
+
+    if (cfg.salesWindow === 'closed') {
+      closedNoticeEl.textContent = 'Venta cerrada. Entrada en puerta S/50';
+      closedNoticeEl.hidden = false;
+      appendTestTier(cfg);
+      return;
+    }
+    closedNoticeEl.hidden = true;
+
+    let idx = 0;
+    if (cfg.cortesiaState === 'open') {
+      const btn = renderTierButton(idx++, {
+        tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening',
+        note: 'Ingreso libre hasta las 12:00 a.m. presentando tu QR. Sujeto a aforo.',
+      });
+      btn.addEventListener('click', () => selectTier(btn));
+      tiersListEl.appendChild(btn);
+      tierButtons.push(btn);
+    } else if (cfg.cortesiaState === 'soldout') {
+      tiersListEl.appendChild(renderTierButton(idx++, {
+        tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening',
+        note: 'Ingreso libre hasta las 12:00 a.m. presentando tu QR. Sujeto a aforo.',
+        disabled: true, selectLabel: 'Cortesías agotadas',
+      }));
+    }
+
+    (cfg.paidSkus || []).forEach((sku) => {
+      const btn = renderTierButton(idx++, {
+        tierId: sku.tier + ' ' + sku.name, price: sku.price, qty: sku.qty, sku: sku.sku,
+        name: sku.tier + ' ' + sku.name,
+        note: 'Todas las entradas pagadas son válidas a cualquier hora de la noche.',
+      });
+      btn.addEventListener('click', () => selectTier(btn));
+      tiersListEl.appendChild(btn);
+      tierButtons.push(btn);
+    });
+
+    appendTestTier(cfg);
+  }
+
+  function appendTestTier(cfg){
+    if (!cfg.testSku) return;
+    const sku = cfg.testSku;
+    const btn = renderTierButton(tierButtons.length, {
+      tierId: sku.tier + ' ' + sku.name, price: sku.price, qty: sku.qty, sku: sku.sku,
+      name: sku.tier + ' ' + sku.name,
+      note: 'Solo pruebas internas — no válido para el evento.',
+    });
+    btn.addEventListener('click', () => selectTier(btn));
+    tiersListEl.appendChild(btn);
+    tierButtons.push(btn);
+  }
 
   // Mirrors lib/tickets.js's calcAge: the 18+ gate checks age as of the event
   // date, not today — someone who's 17 now but turns 18 before the event can
@@ -549,9 +602,8 @@
     const line = document.getElementById('order-line');
     const total = document.getElementById('order-total');
     if (!selectedTier) return;
-    line.textContent = selectedTier.name + ' × ' + qty;
-    const amount = selectedTier.price * qty;
-    total.textContent = amount === 0 ? 'Gratis' : 'S/ ' + amount;
+    line.textContent = selectedTier.name + (selectedTier.qty > 1 ? ' × ' + selectedTier.qty : '');
+    total.textContent = selectedTier.price === 0 ? 'Gratis' : 'S/ ' + selectedTier.price;
   }
 
   function renderAssistantBlock(index){
@@ -576,32 +628,12 @@
     return div;
   }
 
-  function syncAssistantBlocks(){
-    const current = assistantsWrap.children.length;
-    if (qty > current) {
-      for (let i = current; i < qty; i++) assistantsWrap.appendChild(renderAssistantBlock(i));
-    } else if (qty < current) {
-      for (let i = current - 1; i >= qty; i--) assistantsWrap.removeChild(assistantsWrap.children[i]);
-    }
-  }
-
-  document.getElementById('qty-inc').addEventListener('click', () => {
-    qty = Math.min(10, qty + 1);
-    document.getElementById('qty-val').textContent = qty;
-    syncAssistantBlocks();
-    updateOrderSummary();
-  });
-  document.getElementById('qty-dec').addEventListener('click', () => {
-    qty = Math.max(1, qty - 1);
-    document.getElementById('qty-val').textContent = qty;
-    syncAssistantBlocks();
-    updateOrderSummary();
-  });
-
   function selectTier(btn){
     const tier = btn.getAttribute('data-tier');
     const price = parseInt(btn.getAttribute('data-price'), 10);
-    const alreadySelected = selectedTier && selectedTier.name === tier;
+    const qty = parseInt(btn.getAttribute('data-qty'), 10);
+    const sku = btn.getAttribute('data-sku');
+    const alreadySelected = selectedTier && selectedTier.sku === sku;
     tierButtons.forEach((b) => { b.classList.remove('is-selected'); b.setAttribute('aria-expanded','false'); b.querySelector('.pd-tier-select').textContent = 'Seleccionar'; });
     confirmEl.hidden = true;
     showError('');
@@ -610,26 +642,23 @@
       checkoutEl.hidden = true;
       return;
     }
-    selectedTier = { name: tier, price };
+    selectedTier = { name: tier, price, qty, sku };
     btn.classList.add('is-selected');
     btn.setAttribute('aria-expanded','true');
     btn.querySelector('.pd-tier-select').textContent = 'Seleccionado ✓';
 
-    qty = 1;
-    document.getElementById('qty-val').textContent = qty;
     const isFree = price === 0;
     freeFieldsEl.hidden = !isFree;
     paidFieldsEl.hidden = isFree;
     if (!isFree) {
       assistantsWrap.innerHTML = '';
-      syncAssistantBlocks();
+      for (let i = 0; i < qty; i++) assistantsWrap.appendChild(renderAssistantBlock(i));
     }
 
     checkoutEl.hidden = false;
     updateOrderSummary();
     checkoutEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
-  tierButtons.forEach((btn) => btn.addEventListener('click', () => selectTier(btn)));
 
   function readFreeForm(){
     return {
@@ -760,8 +789,9 @@
     checkoutEl.hidden = true;
     confirmEl.hidden = false;
     const plural = order.qty > 1 ? 'entradas' : 'entrada';
+    const label = (selectedTier && selectedTier.name) || 'Club';
     document.getElementById('confirm-line').textContent =
-      'Compramos ' + order.qty + ' ' + plural + ' Club. Cada asistente que dio su correo recibió su propio QR. · Order confirmed, see you on the floor.';
+      'Compramos ' + order.qty + ' ' + plural + ' ' + label + '. Cada asistente que dio su correo recibió su propio QR. · Order confirmed, see you on the floor.';
     const qrsWrap = document.getElementById('confirm-qrs');
     qrsWrap.innerHTML = '';
     const box = document.createElement('div');
@@ -783,9 +813,11 @@
 
   function handleApiError(err, data){
     if (err === 'underage') return showError('Todos los asistentes deben tener 18 años cumplidos para el 28 de agosto de 2026. · All attendees must turn 18 by August 28, 2026.');
-    if (err === 'sold_out') return showError(selectedTier.price === 0
-      ? 'La cortesía Opening se agotó. Prueba con Club. · Free tier sold out, try Club.'
-      : 'Las entradas Club se agotaron. · Club tickets sold out.');
+    if (err === 'sold_out') return showError(selectedTier && selectedTier.price === 0
+      ? 'Cortesías agotadas. · Free tickets sold out.'
+      : 'Esas entradas se agotaron. · Those tickets sold out.');
+    if (err === 'cortesia_closed') return showError('El registro de Cortesía ya cerró. · Free registration is now closed.');
+    if (err === 'sales_closed') return showError('Venta cerrada. Entrada en puerta S/50 · Online sales are closed. S/50 at the door.');
     if (err === 'payment_failed') return showError((data && data.detail) || 'El pago no pudo procesarse. · Payment could not be processed.');
     if (err === 'duplicate_document') return showError('Cada asistente debe tener un documento distinto. · Each attendee needs a different ID number.');
     if (err === 'invalid_name') return showError('Ingresa un nombre y apellido válidos. · Please enter a valid first and last name.');
@@ -821,12 +853,12 @@
   }
 
   function payWithCulqi(assistants){
-    Culqi.publicKey = CULQI_PUBLIC_KEY;
+    Culqi.publicKey = culqiPublicKey;
     Culqi.settings({
       title: 'Paradisio',
       currency: 'PEN',
-      amount: selectedTier.price * qty * 100,
-      description: 'Paradisio - Entrada Club',
+      amount: selectedTier.price * 100,
+      description: 'Paradisio - Entrada ' + selectedTier.name,
     });
     Culqi.options({ lang: 'es', installments: false, paymentMethods: { tarjeta: true, yape: true } });
     window.__paradisioPendingAssistants = assistants;
@@ -840,7 +872,7 @@
     try {
       const r = await fetch('/api/charge', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: Culqi.token.id, qty, assistants }),
+        body: JSON.stringify({ token: Culqi.token.id, sku: selectedTier.sku, assistants }),
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }

@@ -1,9 +1,11 @@
 const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket, getClientIp } = require('../lib/tickets');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
+const { isCortesiaDateOpen } = require('../lib/catalog');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+  if (!isCortesiaDateOpen()) return res.status(403).json({ error: 'cortesia_closed' });
 
   try {
     const { nombre, apellido, phone, email, tipoDocumento, dni, dob } = req.body || {};

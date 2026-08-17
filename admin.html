@@ -150,6 +150,7 @@
         </label>
         <button class="btn btn-ghost" id="view-toggle-btn">Vista: por orden</button>
         <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
+        <button class="btn btn-pink" id="export-emails-btn">Exportar lista de correos</button>
         <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
       </div>
       <div class="table-scroll">
@@ -302,12 +303,18 @@
     // same treatment as an anulada, without double-counting a ticket that's both.
     const bounced = tickets.filter(t => !t.voided && t.emailStatus === 'bounced').length;
     const vigentes = generados - anulados - bounced;
+    // Same "vigente" definition (not voided, not bounced), split by ticket type so
+    // cortesía capacity and paid sales can be watched independently.
+    const cortesiasVigentes = tickets.filter(t => t.type === 'free' && !t.voided && t.emailStatus !== 'bounced').length;
+    const pagadasVigentes = tickets.filter(t => t.type === 'paid' && !t.voided && t.emailStatus !== 'bounced').length;
     const ingresados = c.checkedin || 0;
 
     const cards = [
       [generados, 'QRs generados', false],
       [anulados, 'QRs anulados', false],
       [vigentes, 'QRs vigentes', true],
+      [cortesiasVigentes, 'Cortesías vigentes', false],
+      [pagadasVigentes, 'Pagadas vigentes', false],
       [ingresados, 'Ingresados', false],
     ];
     el.innerHTML = cards.map(([num, label, featured]) =>
@@ -591,6 +598,39 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'paradisio-tickets.csv';
+    a.click();
+  };
+
+  // Block 8: the real asset for a follow-up "fecha 2" campaign — only people who
+  // (a) actually got the email (delivered, not bounced), (b) hold a vigente
+  // ticket (not voided), and (c) actually showed up (checkedIn). A bounced or
+  // no-show contact isn't a real attendee and would just pollute the list.
+  document.getElementById('export-emails-btn').onclick = function(){
+    const eligible = allTickets.filter(t =>
+      t.emailStatus === 'delivered' && !t.voided && t.checkedIn && (t.email || '').trim()
+    );
+
+    const seen = new Set();
+    const deduped = [];
+    eligible.forEach(t => {
+      const key = t.email.trim().toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      deduped.push(t);
+    });
+
+    if (deduped.length === 0) {
+      alert('Todavía no hay correos que cumplan los tres filtros (entregado, vigente, ingresó).');
+      return;
+    }
+
+    const headers = ['Nombre', 'Email'];
+    const rows = deduped.map(t => [t.name, t.email]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'paradisio-lista-correos-fecha2.csv';
     a.click();
   };
 

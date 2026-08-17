@@ -1,9 +1,9 @@
 const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP, getClientIp } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
+const { findPaidSku } = require('../lib/catalog');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 
-const TICKET_PRICE_SOLES = 45;
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
 
 module.exports = async (req, res) => {
@@ -11,8 +11,14 @@ module.exports = async (req, res) => {
   if (!PAYMENTS_ENABLED) return res.status(403).json({ error: 'payments_disabled' });
 
   try {
-    const { token, assistants } = req.body || {};
-    const qty = Math.min(10, Math.max(1, parseInt(req.body?.qty, 10) || 1));
+    const { token, sku: skuId, assistants } = req.body || {};
+
+    // Price and headcount are always read from the current window's catalog,
+    // never from the client — a stale/forged sku id (wrong window, wrong price)
+    // simply fails to resolve here.
+    const sku = findPaidSku(skuId);
+    if (!sku) return res.status(403).json({ error: 'sales_closed' });
+    const qty = sku.qty;
 
     if (!token || !Array.isArray(assistants) || assistants.length !== qty) {
       return res.status(400).json({ error: 'missing_fields' });
@@ -64,9 +70,11 @@ module.exports = async (req, res) => {
     const counters = await getCounters();
     if ((counters.paid || 0) + qty > PAID_CAP) return res.status(409).json({ error: 'sold_out' });
 
-    // Charge the card server-side ONCE for the full amount, using the Culqi secret key —
-    // a Culqi token is single-use, so multi-ticket orders must be one charge, not one per ticket.
-    // Culqi amounts are in cents ("céntimos"): S/45.00 -> 4500
+    const skuLabel = `${sku.tier} ${sku.name}`;
+
+    // Charge the card server-side ONCE for the full bundle amount, using the Culqi
+    // secret key — a Culqi token is single-use, so multi-ticket orders must be one
+    // charge, not one per ticket. Culqi amounts are in cents ("céntimos").
     const culqiRes = await fetch('https://api.culqi.com/v2/charges', {
       method: 'POST',
       headers: {
@@ -74,11 +82,11 @@ module.exports = async (req, res) => {
         Authorization: `Bearer ${process.env.CULQI_SECRET_KEY}`,
       },
       body: JSON.stringify({
-        amount: TICKET_PRICE_SOLES * qty * 100,
+        amount: sku.price * 100,
         currency_code: 'PEN',
         email: buyer.email,
         source_id: token,
-        description: 'Paradisio - Entrada Apertura 28 Ago' + (qty > 1 ? ` x${qty}` : ''),
+        description: `Paradisio - Entrada ${skuLabel}`,
       }),
     });
 
@@ -101,7 +109,8 @@ module.exports = async (req, res) => {
         docType: a.tipoDocumento,
         dob: a.dob,
         type: 'paid',
-        amount: TICKET_PRICE_SOLES,
+        amount: sku.price,
+        skuLabel,
         orderId,
         ip,
       });
@@ -115,8 +124,9 @@ module.exports = async (req, res) => {
       buyerName: `${buyer.nombre} ${buyer.apellido}`.trim(),
       buyerEmail: buyer.email,
       ticketIds: tickets.map((t) => t.id),
-      amount: TICKET_PRICE_SOLES * qty,
+      amount: sku.price,
       qty,
+      skuLabel,
     });
 
     try {

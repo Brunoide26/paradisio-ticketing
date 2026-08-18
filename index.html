@@ -72,6 +72,7 @@
 
   /* ---- hero ---- */
   .pd-hero { position:relative; min-height:100vh; background:var(--primary); display:flex; flex-direction:column; overflow:hidden; }
+  .pd-hero[hidden] { display:none; }
   .pd-hero-photo { position:absolute; inset:0; width:100%; height:110%; object-fit:cover; mix-blend-mode:multiply; opacity:0.5; }
   .pd-hero-gradient { position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,40,0,0.28) 0%, rgba(255,40,0,0) 34%); }
   .pd-hero-content { position:relative; z-index:10; flex:1; display:flex; flex-direction:column; justify-content:center; padding:140px 40px 54px; }
@@ -97,6 +98,7 @@
 
   /* ---- la noche ---- */
   .pd-noche { display:grid; grid-template-columns:1fr 1fr; min-height:70vh; border-bottom:1px solid var(--line); }
+  .pd-noche[hidden] { display:none; }
   .pd-noche-text { display:flex; flex-direction:column; justify-content:center; padding:96px 64px; border-right:1px solid var(--line); }
   .pd-noche-title { margin:0 0 14px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem, 3.4vw, 2.6rem); line-height:1.06; text-transform:uppercase; letter-spacing:-0.02em; color:var(--ink); }
   .pd-noche-sub { margin:0 0 30px; font-family:'Unbounded',sans-serif; font-weight:400; font-size:13px; line-height:1.5; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); }
@@ -108,6 +110,13 @@
   .pd-noche-photo { position:absolute; inset:0; width:100%; height:108%; object-fit:cover; }
   .pd-noche-photo-shade { position:absolute; inset:0; background:linear-gradient(0deg, rgba(9,9,9,0.7) 0%, rgba(9,9,9,0) 55%); }
   .pd-noche-caption { position:absolute; left:28px; bottom:24px; margin:0; font-size:10px; letter-spacing:0.32em; text-transform:uppercase; color:rgba(242,237,228,0.72); }
+
+  /* ---- /p/{codigo} promoter landing: shown instead of the hero/countdown/
+     noche sections, so a promoter's link gets straight to the point. ---- */
+  .pd-promo-banner { padding-top:56px; padding-bottom:36px; text-align:center; }
+  .pd-promo-eyebrow { margin:0 0 10px; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--muted); }
+  .pd-promo-name { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.4rem, 4vw, 2rem); text-transform:uppercase; color:var(--primary); }
+  .pd-promo-meta { margin:0; font-size:13px; color:var(--muted); }
 
   /* ---- entradas ---- */
   .pd-entradas-head { background:var(--primary); padding:56px 48px; }
@@ -167,6 +176,10 @@
   .pd-input:focus { border-color:var(--primary); }
   .pd-input.has-error { border-color:var(--primary-hover); }
   .pd-field-error { margin:2px 0 0; font-size:11px; color:var(--primary-hover); }
+  .pd-field-promo { margin-bottom:18px; }
+  .pd-promo-msg { margin:6px 0 0; font-size:11px; }
+  .pd-promo-msg.is-ok { color:var(--primary); }
+  .pd-promo-msg.is-bad { color:var(--muted); }
   .pd-declare { display:flex; align-items:flex-start; gap:10px; margin-bottom:22px; }
   .pd-declare input { margin-top:3px; width:16px; height:16px; accent-color:var(--primary); flex-shrink:0; }
   .pd-declare label { font-size:12.5px; color:var(--muted); line-height:1.5; }
@@ -179,6 +192,7 @@
   /* ---- step 3: summary ---- */
   .pd-summary-line { margin:0 0 20px; font-size:16px; font-weight:700; color:var(--ink); }
   .pd-summary-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; border-top:1px solid var(--line); font-size:14px; color:var(--muted); }
+  .pd-summary-row[hidden] { display:none; }
   .pd-summary-row.pd-summary-total { color:var(--ink); font-weight:700; margin-bottom:22px; }
   .pd-summary-row.pd-summary-total .pd-summary-value { font-family:'Unbounded',sans-serif; font-weight:900; font-size:24px; font-variant-numeric:tabular-nums; }
 
@@ -289,6 +303,12 @@
     <a href="#entradas" class="pd-nav-cta js-copy" data-off="Generar" data-on="Comprar">Generar</a>
   </nav>
 </header>
+
+<div class="pd-promo-banner pd-pad" id="pd-promo-banner" hidden>
+  <p class="pd-promo-eyebrow">Código de promotor</p>
+  <p class="pd-promo-name" id="promo-banner-name"></p>
+  <p class="pd-promo-meta">Viernes 28 de agosto · Espacio NHN, Barranco, Lima</p>
+</div>
 
 <section id="top" class="pd-hero">
   <img class="pd-hero-photo" src="hero-photo.jpg" alt="" aria-hidden="true" data-parallax="0.22" />
@@ -405,6 +425,10 @@
           </div>
         </div>
 
+        <div class="pd-field pd-field-promo">
+          <input class="pd-input" type="text" id="f-promo" placeholder="Código de promotor (opcional)" aria-label="Código de promotor" autocomplete="off" />
+        </div>
+
         <div class="pd-declare">
           <input type="checkbox" id="f-declare" />
           <label for="f-declare">Declaro bajo mi responsabilidad que seré mayor de 18 años el día del evento (28 de agosto de 2026) y que la información brindada es correcta. · I declare I will be 18 or older on the day of the event (August 28, 2026) and that this information is accurate.</label>
@@ -413,6 +437,10 @@
 
       <div id="paid-fields" hidden>
         <div id="assistants-wrap"></div>
+
+        <div class="pd-field pd-field-promo">
+          <input class="pd-input" type="text" id="f-promo-paid" placeholder="Código de descuento (opcional)" aria-label="Código de descuento" autocomplete="off" />
+        </div>
 
         <div class="pd-declare">
           <input type="checkbox" id="f-declare-paid" />
@@ -427,6 +455,14 @@
       <p class="pd-eyebrow" style="margin-bottom:26px;">Resumen y pago</p>
 
       <p class="pd-summary-line" id="summary-line"></p>
+      <div class="pd-summary-row" id="summary-subtotal-row" hidden>
+        <span>Subtotal</span>
+        <span class="pd-summary-value" id="summary-subtotal"></span>
+      </div>
+      <div class="pd-summary-row" id="summary-discount-row" hidden>
+        <span id="summary-discount-label">Descuento</span>
+        <span class="pd-summary-value" id="summary-discount"></span>
+      </div>
       <div class="pd-summary-row pd-summary-total">
         <span>Total</span>
         <span class="pd-summary-value" id="summary-total"></span>
@@ -580,6 +616,8 @@
   const paidFieldsEl = document.getElementById('paid-fields');
   const assistantsWrap = document.getElementById('assistants-wrap');
   let selectedTier = null; // { name, price, qty, sku }
+  let appliedPromoterFree = null; // { code, name } or null — attribution only, no discount
+  let appliedPromoterPaid = null; // { code, name } or null — drives the 10% discount preview
 
   // The catalog (which SKUs are on sale, Cortesía open/soldout/closed, prices) is
   // entirely time-windowed server-side — lib/catalog.js is the single source of
@@ -591,6 +629,31 @@
   // it's only ever included in the response when that param AND the server's
   // TEST_SKU_ENABLED flag are both on, so a plain page load never triggers or
   // reveals it, in the page or in the network tab.
+  /* ---- /p/{codigo} promoter landing: a distinct, stripped-down entry point,
+     no marketing sections — logo, date/venue, "Código de X aplicado", and
+     the step wizard starting at step 1. An unknown or deactivated code just
+     redirects to the normal landing, silently. ---- */
+  const promoPathMatch = location.pathname.match(/^\/p\/([A-Za-z]+)\/?$/);
+  if (promoPathMatch) {
+    fetch('/api/promoter?code=' + encodeURIComponent(promoPathMatch[1]))
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d || !d.ok) { window.location.replace('/'); return; }
+        document.getElementById('top').hidden = true;
+        document.querySelector('.pd-cd-section').hidden = true;
+        document.getElementById('la-noche').hidden = true;
+        document.getElementById('promo-banner-name').textContent = 'Código de ' + d.name + ' aplicado';
+        document.getElementById('pd-promo-banner').hidden = false;
+        // Pre-filled but still editable — someone might receive the code by
+        // voice and type a different one over it.
+        document.getElementById('f-promo').value = d.code;
+        document.getElementById('f-promo-paid').value = d.code;
+        appliedPromoterFree = d;
+        appliedPromoterPaid = d;
+      })
+      .catch(() => { /* lookup failed — leave the normal landing visible */ });
+  }
+
   const qaRequested = new URLSearchParams(location.search).get('qa') === '1';
   fetch('/api/config' + (qaRequested ? '?qa=1' : '')).then((r) => r.json()).then((d) => {
     if (!d) return;
@@ -739,7 +802,7 @@
   });
   stepBackBtn.addEventListener('click', () => { if (currentStep > 1) goToStep(currentStep - 1); });
 
-  stepContinueBtn.addEventListener('click', () => {
+  stepContinueBtn.addEventListener('click', async () => {
     if (currentStep === 1) {
       if (!selectedTier) return;
       goToStep(2);
@@ -751,6 +814,11 @@
         return;
       }
       step2ErrorEl.hidden = true;
+      // Re-check whatever's in the promo field right now — someone can type a
+      // code and hit Continuar without ever blurring the field first, and the
+      // step 3 breakdown needs to reflect it.
+      const isFree = selectedTier.price === 0;
+      await checkPromoCode(isFree ? freePromoInput : paidPromoInput, isFree);
       updateSummary();
       goToStep(3);
     }
@@ -780,11 +848,49 @@
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
+  // cents -> "S/35" or "S/3.50" — only shows decimals when there actually are some,
+  // since every price and every 10% discount off it lands on a whole or half sol.
+  function formatSoles(cents){
+    const sign = cents < 0 ? '-' : '';
+    const abs = Math.abs(cents);
+    return sign + 'S/' + (abs % 100 === 0 ? String(abs / 100) : (abs / 100).toFixed(2));
+  }
+
+  function computeChargeCents(){
+    const subtotalCents = Math.round(selectedTier.price * 100);
+    if (!appliedPromoterPaid) return { subtotalCents, discountCents: 0, totalCents: subtotalCents };
+    const discountCents = Math.round(subtotalCents * 0.10);
+    return { subtotalCents, discountCents, totalCents: subtotalCents - discountCents };
+  }
+
   function updateSummary(){
     if (!selectedTier) return;
     document.getElementById('summary-line').textContent = selectedTier.name + (selectedTier.qty > 1 ? ' × ' + selectedTier.qty : '');
-    document.getElementById('summary-total').textContent = selectedTier.price === 0 ? 'Gratis' : 'S/' + selectedTier.price;
-    payBtn.textContent = selectedTier.price === 0 ? 'Generar mi QR gratis' : 'Pagar S/' + selectedTier.price;
+    const subtotalRow = document.getElementById('summary-subtotal-row');
+    const discountRow = document.getElementById('summary-discount-row');
+    const totalEl = document.getElementById('summary-total');
+
+    if (selectedTier.price === 0) {
+      subtotalRow.hidden = true;
+      discountRow.hidden = true;
+      totalEl.textContent = 'Gratis';
+      payBtn.textContent = 'Generar mi QR gratis';
+      return;
+    }
+
+    const { subtotalCents, discountCents, totalCents } = computeChargeCents();
+    if (appliedPromoterPaid) {
+      subtotalRow.hidden = false;
+      discountRow.hidden = false;
+      document.getElementById('summary-subtotal').textContent = formatSoles(subtotalCents);
+      document.getElementById('summary-discount-label').textContent = 'Descuento (' + appliedPromoterPaid.name + ')';
+      document.getElementById('summary-discount').textContent = '-' + formatSoles(discountCents);
+    } else {
+      subtotalRow.hidden = true;
+      discountRow.hidden = true;
+    }
+    totalEl.textContent = formatSoles(totalCents);
+    payBtn.textContent = 'Pagar ' + formatSoles(totalCents);
   }
 
   function renderAssistantBlock(index){
@@ -1008,6 +1114,48 @@
   freeFieldsEl.addEventListener('focusout', (e) => { if (e.target.classList.contains('pd-input')) validateFieldInline(e.target); });
   assistantsWrap.addEventListener('focusout', (e) => { if (e.target.classList.contains('pd-input')) validateFieldInline(e.target); });
 
+  /* ---- promoter code field: shared by the free and paid flows. Invalid or
+     unknown codes never block the flow — they just show a quiet message and
+     the field is treated as empty for pricing/attribution purposes. ---- */
+  const freePromoInput = document.getElementById('f-promo');
+  const paidPromoInput = document.getElementById('f-promo-paid');
+
+  function setPromoMessage(el, message, ok){
+    const field = el.closest('.pd-field');
+    let msgEl = field.querySelector('.pd-promo-msg');
+    if (!msgEl) { msgEl = document.createElement('p'); msgEl.className = 'pd-promo-msg'; field.appendChild(msgEl); }
+    msgEl.textContent = message;
+    msgEl.classList.toggle('is-ok', !!ok);
+    msgEl.classList.toggle('is-bad', !!message && !ok);
+  }
+
+  async function checkPromoCode(el, isFree){
+    const code = el.value.trim();
+    if (!code) {
+      setPromoMessage(el, '', false);
+      if (isFree) appliedPromoterFree = null; else appliedPromoterPaid = null;
+      if (!isFree) updateSummary();
+      return;
+    }
+    try {
+      const r = await fetch('/api/promoter?code=' + encodeURIComponent(code));
+      const d = await r.json();
+      if (d && d.ok) {
+        setPromoMessage(el, 'Código de ' + d.name + ' aplicado' + (isFree ? '.' : ' · 10% de descuento.'), true);
+        if (isFree) appliedPromoterFree = d; else appliedPromoterPaid = d;
+      } else {
+        setPromoMessage(el, 'Código no válido. Puedes continuar sin descuento.', false);
+        if (isFree) appliedPromoterFree = null; else appliedPromoterPaid = null;
+      }
+    } catch (e) {
+      // A lookup failure isn't a blocking error — the field just stays unconfirmed.
+    }
+    if (!isFree) updateSummary();
+  }
+
+  freePromoInput.addEventListener('focusout', () => checkPromoCode(freePromoInput, true));
+  paidPromoInput.addEventListener('focusout', () => checkPromoCode(paidPromoInput, false));
+
   // Shared by the free (Cortesía) and paid flows — the QR is the whole point
   // of a confirmation screen, so it renders directly here instead of behind
   // a "Ver mi entrada/orden" link to another page. entries: [{ name, code,
@@ -1177,7 +1325,7 @@
     try {
       const r = await fetch('/api/register-free', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: data.nombre, apellido: data.apellido, email: data.email, tipoDocumento: data.tipoDocumento, dni: data.dni, phone: data.phone, dob: data.dob }),
+        body: JSON.stringify({ nombre: data.nombre, apellido: data.apellido, email: data.email, tipoDocumento: data.tipoDocumento, dni: data.dni, phone: data.phone, dob: data.dob, promoterCode: freePromoInput.value.trim() || undefined }),
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }
@@ -1244,7 +1392,7 @@
     const settings = {
       title: 'Paradisio',
       currency: 'PEN',
-      amount: selectedTier.price * 100,
+      amount: computeChargeCents().totalCents,
     };
     const client = { email: assistants[0].email };
     const options = {
@@ -1298,7 +1446,7 @@
     try {
       const r = await fetch('/api/charge', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: tokenId, sku: selectedTier.sku, assistants }),
+        body: JSON.stringify({ token: tokenId, sku: selectedTier.sku, assistants, promoterCode: paidPromoInput.value.trim() || undefined }),
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }

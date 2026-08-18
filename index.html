@@ -26,15 +26,24 @@
 <meta name="theme-color" content="#FF2800" />
 
 <!-- defer: without it, this render-blocking third-party script hangs page
-     parsing (and every click handler with it) whenever checkout.culqi.com is
+     parsing (and every click handler with it) whenever the Culqi domain is
      slow, blocked, or unreachable — which is exactly what broke the "Seleccionar"
      button on Cortesía in production before. Payments are on now, so this script
      is load-bearing. This is the ONLY place the SDK is loaded from — ensureCulqiLoaded()
-     (below) waits on this exact tag and must never inject a second one; loading
-     Culqi twice throws "Identifier already declared" on the redeclared top-level
-     bindings and window.Culqi never ends up usable. __culqiLoaded/__culqiLoadError
-     are diagnostic flags only, not used to trigger any retry. -->
-<script src="https://checkout.culqi.com/js/v4" defer onload="window.__culqiLoaded=true" onerror="window.__culqiLoadError=true"></script>
+     (below) waits on this exact tag and must never inject a second one.
+
+     checkout.culqi.com/js/v4 (Checkout v4) is confirmed here to be broken:
+     production verified a single tag, a single network request, no CSP/CORS
+     issue, download succeeds — and it still throws "Identifier 'io' has
+     already been declared" from inside its own bundle and never defines
+     window.Culqi. Culqi's own docs mark v4 as being retired in favor of
+     "Checkout Custom", loaded from this different domain/path and exposing
+     window.CulqiCheckout instead of window.Culqi — confirmed against Culqi's
+     own official e-commerce plugins (culqi-woocommerce, culqi-magento,
+     culqi-prestashop all define this exact URL as their production checkout
+     endpoint) plus several independent real integrations using the same
+     window.CulqiCheckout global. -->
+<script src="https://js.culqi.com/checkout-js" defer onload="window.__culqiLoaded=true" onerror="window.__culqiLoadError=true"></script>
 <style>
   @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
   @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
@@ -859,31 +868,24 @@
 
   // The Culqi SDK loads with `defer`, so by the time a real user clicks pay it's
   // almost always ready — but a slow/blocked/failed load (ad blockers commonly
-  // touch payment-gateway scripts) previously left window.Culqi undefined
-  // forever, and payWithCulqi's bare `Culqi.publicKey = ...` threw a silent,
-  // uncaught ReferenceError: no modal, no visible error, exactly this bug.
-  // This waits for the deferred load, and retries once via a fresh <script> tag
-  // if the browser reported an outright load error (e.g. a transient blip).
-  // A previous version of this function injected a fresh <script> tag as a
-  // retry whenever window.__culqiLoadError was set — but the static tag in
-  // <head> (line ~34) is ALWAYS present on this page, so that path could run
-  // even after the original tag loaded successfully, executing the Culqi SDK
-  // a second time. Culqi's script declares top-level bindings (e.g. `io`)
-  // that can't be redeclared, so the second execution threw
-  // "Identifier 'io' has already been declared" and crashed before
-  // window.Culqi got (re)assigned — network tab showed a clean 200, but
-  // window.Culqi was still never usable. Fixed: never create a script tag
-  // while one already exists for this src; only wait for it.
+  // touch payment-gateway scripts) would leave window.CulqiCheckout undefined
+  // forever, and payWithCulqi's bare use of it would throw a silent, uncaught
+  // ReferenceError: no modal, no visible error. This waits for the deferred
+  // load, and only ever creates a fresh <script> tag if none exists at all —
+  // never a second one alongside the static tag in <head> (line ~34). Loading
+  // the SDK twice previously crashed it with "Identifier already declared" on
+  // its own internal bindings; even though this is a different script/domain
+  // now, the same discipline applies.
   function ensureCulqiLoaded(){
     return new Promise((resolve, reject) => {
-      if (window.Culqi) return resolve();
+      if (window.CulqiCheckout) return resolve();
 
-      const existing = document.querySelector('script[src="https://checkout.culqi.com/js/v4"]');
+      const existing = document.querySelector('script[src="https://js.culqi.com/checkout-js"]');
       if (!existing) {
         // No matching tag anywhere in the DOM — shouldn't normally happen,
         // since one is always in <head>, but guard against it being missing.
         const s = document.createElement('script');
-        s.src = 'https://checkout.culqi.com/js/v4';
+        s.src = 'https://js.culqi.com/checkout-js';
         s.defer = true;
         s.onload = () => resolve();
         s.onerror = () => reject(new Error('culqi_load_failed'));
@@ -894,33 +896,48 @@
       let tries = 0;
       const iv = setInterval(() => {
         tries++;
-        if (window.Culqi) { clearInterval(iv); resolve(); }
+        if (window.CulqiCheckout) { clearInterval(iv); resolve(); }
         else if (tries > 40) { clearInterval(iv); reject(new Error('culqi_load_timeout')); }
       }, 250);
     });
   }
 
+  // Checkout Custom's callback is assigned per-instance (checkout.culqi = ...),
+  // unlike v4's single global window.culqi — so a fresh CulqiCheckout instance
+  // is created on every attempt, and its own token/error is read directly off
+  // that instance rather than off a shared global.
   function payWithCulqi(assistants){
-    Culqi.publicKey = culqiPublicKey;
-    Culqi.settings({
-      title: 'Paradisio',
-      currency: 'PEN',
-      amount: selectedTier.price * 100,
-      description: 'Paradisio - Entrada ' + selectedTier.name,
-    });
-    Culqi.options({ lang: 'es', installments: false, paymentMethods: { tarjeta: true, yape: true } });
     window.__paradisioPendingAssistants = assistants;
-    Culqi.open();
+    const checkout = new window.CulqiCheckout(culqiPublicKey, {
+      settings: {
+        title: 'Paradisio',
+        currency: 'PEN',
+        amount: selectedTier.price * 100,
+        description: 'Paradisio - Entrada ' + selectedTier.name,
+      },
+      options: {
+        lang: 'auto',
+        installments: false,
+        paymentMethods: { tarjeta: true, yape: true, bancaMovil: false, agente: false, billetera: false, cuotealo: false },
+        modal: true,
+      },
+    });
+    checkout.culqi = function(){ handleCulqiResult(checkout); };
+    checkout.open();
   }
 
-  window.culqi = async function(){
-    if (!Culqi.token) { showError('El pago no pudo procesarse. · Payment could not be processed.'); return; }
+  async function handleCulqiResult(checkout){
+    if (!checkout.token) {
+      const detail = checkout.error && (checkout.error.user_message || checkout.error.merchant_message);
+      showError((detail || 'El pago no pudo procesarse.') + ' · Payment could not be processed.');
+      return;
+    }
     const assistants = window.__paradisioPendingAssistants;
     payBtn.disabled = true;
     try {
       const r = await fetch('/api/charge', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: Culqi.token.id, sku: selectedTier.sku, assistants }),
+        body: JSON.stringify({ token: checkout.token.id, sku: selectedTier.sku, assistants }),
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }
@@ -930,7 +947,7 @@
     } finally {
       payBtn.disabled = false;
     }
-  };
+  }
 
   payBtn.addEventListener('click', async () => {
     if (!selectedTier) return;
@@ -956,14 +973,14 @@
       } catch (e) {
         payBtn.disabled = false;
         console.error(
-          '[Culqi diag] SDK NO DISPONIBLE — window.Culqi nunca se definió.',
+          '[Culqi diag] SDK NO DISPONIBLE — window.CulqiCheckout nunca se definió.',
           '\n  culqiPublicKey presente:', !!culqiPublicKey, culqiPublicKey ? '(largo ' + culqiPublicKey.length + ')' : '',
-          '\n  <script> de Culqi en el DOM:', !!document.querySelector('script[src="https://checkout.culqi.com/js/v4"]'),
+          '\n  <script> de Culqi en el DOM:', !!document.querySelector('script[src="https://js.culqi.com/checkout-js"]'),
           '\n  window.__culqiLoaded:', window.__culqiLoaded,
           '\n  window.__culqiLoadError:', window.__culqiLoadError,
           '\n  motivo del timeout/fallo:', e && e.message
         );
-        showError('SDK de pago no disponible (window.Culqi no se definió). Abre la consola del navegador para más detalle, o escríbenos a info@paradisioclub.com. · Payment SDK unavailable.');
+        showError('SDK de pago no disponible (window.CulqiCheckout no se definió). Abre la consola del navegador para más detalle, o escríbenos a info@paradisioclub.com. · Payment SDK unavailable.');
         return;
       }
       payBtn.disabled = false;

@@ -159,17 +159,47 @@
   .pd-pay-btn:hover { background:var(--primary-hover); }
   .pd-pay-btn:disabled { opacity:0.5; cursor:not-allowed; }
 
-  .pd-confirm { border-top:1px solid var(--primary); background:var(--primary); padding:48px; }
-  .pd-confirm-eyebrow { margin:0 0 10px; font-size:10px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(0,0,0,0.6); font-weight:500; }
-  .pd-confirm-headline { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.6rem, 4vw, 2.6rem); line-height:1; text-transform:uppercase; color:#000; }
+  .pd-confirm { border-top:1px solid var(--primary); background:var(--primary); padding:48px; text-align:center; scroll-margin-top:64px; }
+  .pd-confirm-headline { margin:0 0 6px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.6rem, 4vw, 2.6rem); line-height:1; text-transform:uppercase; color:#000; }
   .pd-confirm-line { margin:0 0 28px; font-size:15px; color:rgba(0,0,0,0.72); }
-  .pd-confirm-qrs { display:flex; flex-wrap:wrap; gap:16px; }
-  .pd-confirm-ticket { background:#000; padding:20px 22px; display:inline-flex; flex-direction:column; align-items:flex-start; gap:10px; }
-  .pd-confirm-ticket span { font-family:monospace; font-size:12px; color:var(--ink); letter-spacing:1px; }
-  .pd-confirm-ticket a { display:inline-flex; align-items:center; gap:10px; padding:12px 23px; background:var(--ink); color:#000; font-size:10px; letter-spacing:0.25em; text-transform:uppercase; font-weight:700; border:1px solid var(--ink); transition:background 180ms ease, color 180ms ease; }
-  .pd-confirm-ticket a:hover { background:#000; color:var(--ink); }
-  .pd-confirm-spam { margin:24px 0 0; font-size:13px; line-height:1.6; color:rgba(0,0,0,0.6); max-width:60ch; }
+
+  .pd-confirm-single { display:flex; flex-direction:column; align-items:center; margin-bottom:24px; }
+  .pd-confirm-single[hidden] { display:none; }
+  .pd-confirm-qr-wrap { background:#F2EDE4; display:inline-block; padding:18px; margin-bottom:18px; }
+  .pd-confirm-qr-wrap img { display:block; width:220px; height:220px; }
+  .pd-confirm-name { margin:0 0 4px; font-size:18px; font-weight:800; color:#000; }
+  .pd-confirm-code { margin:0 0 6px; font-family:monospace; font-size:14px; letter-spacing:1px; color:#000; }
+  .pd-confirm-meta { margin:0; font-size:13px; color:rgba(0,0,0,0.65); }
+
+  .pd-confirm-carousel { margin-bottom:24px; }
+  .pd-confirm-count { margin:0 0 16px; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(0,0,0,0.65); }
+  .pd-confirm-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; cursor:grab; margin:0 -48px; padding:0 48px; }
+  .pd-confirm-track::-webkit-scrollbar { display:none; }
+  .pd-confirm-track.is-dragging { cursor:grabbing; scroll-snap-type:none; }
+  .pd-confirm-slide { flex:0 0 100%; scroll-snap-align:center; display:flex; justify-content:center; padding:0 8px; }
+  .pd-confirm-card { background:#000; padding:28px 24px; text-align:center; width:100%; max-width:340px; }
+  .pd-confirm-card .pd-confirm-tier { margin:0 0 6px; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary-hover); font-weight:700; }
+  .pd-confirm-card .pd-confirm-qr-wrap { padding:14px; margin-bottom:14px; }
+  .pd-confirm-card .pd-confirm-qr-wrap img { width:160px; height:160px; }
+  .pd-confirm-card .pd-confirm-name { color:var(--ink); font-size:16px; }
+  .pd-confirm-card .pd-confirm-dni { margin:0 0 14px; font-size:12px; color:var(--muted); }
+  .pd-confirm-card .pd-confirm-code { color:var(--ink); }
+  .pd-confirm-card .pd-confirm-meta { color:var(--muted); margin-bottom:18px; }
+  .pd-confirm-share-btn { display:inline-flex; align-items:center; gap:8px; padding:11px 20px; background:var(--ink); color:#000; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; border:1px solid var(--ink); cursor:pointer; transition:background 180ms ease, color 180ms ease; }
+  .pd-confirm-share-btn:hover { background:transparent; color:var(--ink); }
+  .pd-confirm-share-btn.is-copied { background:var(--primary-hover); border-color:var(--primary-hover); color:#000; }
+
+  .pd-confirm-arrows { display:flex; align-items:center; justify-content:center; gap:16px; margin-top:18px; }
+  .pd-confirm-arrow { width:38px; height:38px; background:#000; border:1px solid rgba(0,0,0,0.2); color:var(--ink); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity 180ms; }
+  .pd-confirm-arrow:disabled { opacity:0.3; cursor:default; }
+  @media (max-width:600px) { .pd-confirm-arrows { display:none; } }
+
+  .pd-confirm-spam { margin:0 0 6px; font-size:12.5px; line-height:1.6; color:rgba(0,0,0,0.6); max-width:60ch; margin-left:auto; margin-right:auto; }
   .pd-confirm-spam strong { color:#000; }
+  .pd-confirm-legal { margin:0 0 22px; font-size:12px; line-height:1.6; color:rgba(0,0,0,0.55); max-width:60ch; margin-left:auto; margin-right:auto; }
+  .pd-confirm-legal strong { color:rgba(0,0,0,0.75); }
+  .pd-confirm-secondary { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:#000; text-decoration:underline; text-underline-offset:3px; }
+  .pd-confirm-secondary:hover { color:rgba(0,0,0,0.65); }
 
   .pd-legal { padding:24px 48px; border-top:1px solid var(--line); }
   .pd-legal p { margin:0; font-size:12px; color:rgba(136,136,128,0.55); line-height:1.6; }
@@ -351,11 +381,28 @@
   </div>
 
   <div class="pd-confirm pd-pad" id="pd-confirm" hidden>
-    <p class="pd-confirm-eyebrow js-copy" data-off="Entrada generada / Ticket generated" data-on="Orden confirmada / Order confirmed">Entrada generada / Ticket generated</p>
     <p class="pd-confirm-headline">Nos vemos en la pista</p>
     <p class="pd-confirm-line" id="confirm-line"></p>
-    <div class="pd-confirm-qrs" id="confirm-qrs"></div>
+
+    <div class="pd-confirm-single" id="confirm-single" hidden>
+      <div class="pd-confirm-qr-wrap"><img id="confirm-qr-img" alt="Código QR de tu entrada" /></div>
+      <p class="pd-confirm-name" id="confirm-name"></p>
+      <p class="pd-confirm-code" id="confirm-code"></p>
+      <p class="pd-confirm-meta" id="confirm-meta"></p>
+    </div>
+
+    <div class="pd-confirm-carousel" id="confirm-carousel" hidden>
+      <p class="pd-confirm-count" id="confirm-count"></p>
+      <div class="pd-confirm-track" id="confirm-track"></div>
+      <div class="pd-confirm-arrows">
+        <button class="pd-confirm-arrow" id="confirm-prev" type="button" aria-label="Entrada anterior">←</button>
+        <button class="pd-confirm-arrow" id="confirm-next" type="button" aria-label="Siguiente entrada">→</button>
+      </div>
+    </div>
+
     <p class="pd-confirm-spam" id="confirm-spam"></p>
+    <p class="pd-confirm-legal">Presenta este QR junto con tu <strong>documento de identidad físico y original</strong> en la puerta. Evento exclusivo para <strong>mayores de 18 años</strong>.</p>
+    <a class="pd-confirm-secondary" id="confirm-secondary-link" href="#" target="_blank" rel="noopener"></a>
   </div>
 
   <div class="pd-legal pd-pad">
@@ -754,56 +801,144 @@
     return null;
   }
 
-  function renderConfirmationFree(tickets, email){
+  // Shared by the free (Cortesía) and paid flows — the QR is the whole point
+  // of a confirmation screen, so it renders directly here instead of behind
+  // a "Ver mi entrada/orden" link to another page. entries: [{ name, code,
+  // qr, dni?, tierLabel?, eventDateLabel }]. A single entry gets one large
+  // centered QR; two or more reuse the same swipeable carousel as /orden,
+  // embedded, since that's a tested, familiar component rather than a new one.
+  function renderConfirmation(entries, email, secondaryHref, secondaryLabel){
     checkoutEl.hidden = true;
     confirmEl.hidden = false;
-    document.getElementById('confirm-line').textContent =
-      'Enviamos tu entrada ' + selectedTier.name + ' a ' + email + '. Preséntala con tu documento en puerta. · Ticket sent, see you on the floor.';
-    const qrsWrap = document.getElementById('confirm-qrs');
-    qrsWrap.innerHTML = '';
-    tickets.forEach((t) => {
-      const box = document.createElement('div');
-      box.className = 'pd-confirm-ticket';
-      const span = document.createElement('span');
-      span.textContent = t.id;
-      const link = document.createElement('a');
-      link.href = '/entrada?t=' + encodeURIComponent(t.token);
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = 'Ver mi entrada';
-      box.appendChild(span);
-      box.appendChild(link);
-      qrsWrap.appendChild(box);
-    });
+    document.getElementById('confirm-line').textContent = 'Tu entrada llegó a ' + email;
     document.getElementById('confirm-spam').innerHTML =
-      'Tu entrada llegó a <strong>' + escapeHtmlIndex(email) + '</strong>. Si no la ves en unos minutos, revisa spam y promociones, y márcala como "No es spam".';
-    confirmEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+      'Si no la ves en unos minutos, revisa spam y promociones, y márcala como "No es spam".';
+
+    const singleEl = document.getElementById('confirm-single');
+    const carouselEl = document.getElementById('confirm-carousel');
+
+    if (entries.length === 1) {
+      carouselEl.hidden = true;
+      const e = entries[0];
+      document.getElementById('confirm-qr-img').src = e.qr;
+      document.getElementById('confirm-name').textContent = e.name;
+      document.getElementById('confirm-code').textContent = e.code;
+      document.getElementById('confirm-meta').textContent = e.eventDateLabel || '';
+      singleEl.hidden = false;
+    } else {
+      singleEl.hidden = true;
+      // Unhide before initializing — the carousel reads track.clientWidth to
+      // compute scroll position/index, which is 0 while its ancestor is
+      // still display:none.
+      carouselEl.hidden = false;
+      renderConfirmCarousel(entries);
+    }
+
+    const link = document.getElementById('confirm-secondary-link');
+    link.href = secondaryHref;
+    link.textContent = secondaryLabel;
+
+    // 'start' (not 'nearest') so the headline is always the first thing in
+    // view — this panel is now tall enough (QR or carousel) that 'nearest'
+    // could leave the title scrolled just above the viewport.
+    confirmEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
   }
 
-  function renderConfirmationOrder(order){
-    checkoutEl.hidden = true;
-    confirmEl.hidden = false;
-    const plural = order.qty > 1 ? 'entradas' : 'entrada';
-    const label = (selectedTier && selectedTier.name) || 'Club';
-    document.getElementById('confirm-line').textContent =
-      'Confirmamos tu compra de ' + order.qty + ' ' + plural + ' ' + label + '. Cada asistente que dio su correo recibió su propio QR. · Order confirmed, see you on the floor.';
-    const qrsWrap = document.getElementById('confirm-qrs');
-    qrsWrap.innerHTML = '';
-    const box = document.createElement('div');
-    box.className = 'pd-confirm-ticket';
-    const span = document.createElement('span');
-    span.textContent = order.qty + (order.qty > 1 ? ' entradas' : ' entrada');
-    const link = document.createElement('a');
-    link.href = '/orden?t=' + encodeURIComponent(order.token);
-    link.target = '_blank';
-    link.rel = 'noopener';
-    link.textContent = 'Ver mi orden';
-    box.appendChild(span);
-    box.appendChild(link);
-    qrsWrap.appendChild(box);
-    document.getElementById('confirm-spam').innerHTML =
-      'Tu compra llegó a <strong>' + escapeHtmlIndex(order.buyerEmail) + '</strong>. Si no la ves en unos minutos, revisa spam y promociones, y márcala como "No es spam".';
-    confirmEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  function renderConfirmCarousel(entries){
+    const track = document.getElementById('confirm-track');
+    track.innerHTML = entries.map((e, i) => `
+      <div class="pd-confirm-slide" data-index="${i}">
+        <div class="pd-confirm-card">
+          ${e.tierLabel ? '<p class="pd-confirm-tier">' + escapeHtmlIndex(e.tierLabel) + '</p>' : ''}
+          <div class="pd-confirm-qr-wrap"><img src="${e.qr}" alt="Código QR de la entrada de ${escapeHtmlIndex(e.name)}" /></div>
+          <p class="pd-confirm-name">${escapeHtmlIndex(e.name)}</p>
+          ${e.dni ? '<p class="pd-confirm-dni">Documento: ' + escapeHtmlIndex(e.dni) + '</p>' : ''}
+          <p class="pd-confirm-code">${escapeHtmlIndex(e.code)}</p>
+          <p class="pd-confirm-meta">${escapeHtmlIndex(e.eventDateLabel || '')}</p>
+          ${e.entradaToken ? '<button type="button" class="pd-confirm-share-btn" data-token="' + e.entradaToken + '">Compartir esta entrada</button>' : ''}
+        </div>
+      </div>
+    `).join('');
+
+    const countEl = document.getElementById('confirm-count');
+    const prevBtn = document.getElementById('confirm-prev');
+    const nextBtn = document.getElementById('confirm-next');
+
+    function currentIndex(){ return Math.round(track.scrollLeft / track.clientWidth); }
+    function goTo(i){
+      const clamped = Math.max(0, Math.min(entries.length - 1, i));
+      track.scrollTo({ left: clamped * track.clientWidth, behavior: 'smooth' });
+    }
+    function updateUi(){
+      const idx = currentIndex();
+      countEl.textContent = (idx + 1) + ' de ' + entries.length;
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = idx === entries.length - 1;
+    }
+
+    prevBtn.onclick = () => goTo(currentIndex() - 1);
+    nextBtn.onclick = () => goTo(currentIndex() + 1);
+    track.onscroll = () => window.requestAnimationFrame(updateUi);
+    updateUi();
+
+    let isDown = false, startX = 0, startScroll = 0, dragged = false;
+    track.onmousedown = (e) => {
+      isDown = true; dragged = false;
+      track.classList.add('is-dragging');
+      startX = e.pageX;
+      startScroll = track.scrollLeft;
+    };
+    window.addEventListener('mouseup', () => {
+      if (!isDown) return;
+      isDown = false;
+      track.classList.remove('is-dragging');
+      if (dragged) goTo(currentIndex());
+    });
+    track.onmousemove = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const dx = e.pageX - startX;
+      if (Math.abs(dx) > 4) dragged = true;
+      track.scrollLeft = startScroll - dx;
+    };
+
+    track.onclick = async (e) => {
+      const btn = e.target.closest('.pd-confirm-share-btn');
+      if (!btn) return;
+      const url = window.location.origin + '/entrada?t=' + btn.dataset.token;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      const original = btn.textContent;
+      btn.textContent = 'Enlace copiado ✓';
+      btn.classList.add('is-copied');
+      setTimeout(() => { btn.textContent = original; btn.classList.remove('is-copied'); }, 2000);
+    };
+  }
+
+  function renderConfirmationFree(ticket, qr, eventDateLabel, email){
+    renderConfirmation(
+      [{ name: ticket.name, code: ticket.id, qr, eventDateLabel }],
+      email,
+      '/entrada?t=' + encodeURIComponent(ticket.token),
+      'Ver mi entrada'
+    );
+  }
+
+  function renderConfirmationOrder(order, tickets, eventDateLabel){
+    const entries = tickets.map((t) => ({
+      name: t.name, code: t.id, qr: t.qr, dni: t.dni, tierLabel: t.skuLabel, eventDateLabel, entradaToken: t.token,
+    }));
+    const secondaryHref = entries.length > 1 ? '/orden?t=' + encodeURIComponent(order.token) : '/entrada?t=' + encodeURIComponent(entries[0].entradaToken);
+    const secondaryLabel = entries.length > 1 ? 'Ver mi orden' : 'Ver mi entrada';
+    renderConfirmation(entries, order.buyerEmail, secondaryHref, secondaryLabel);
   }
 
   function handleApiError(err, data){
@@ -839,7 +974,7 @@
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }
-      renderConfirmationFree(d.tickets || [d.ticket], data.email);
+      renderConfirmationFree(d.ticket, d.qr, d.eventDateLabel, data.email);
     } catch (e) {
       showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
     } finally {
@@ -960,7 +1095,7 @@
       });
       const d = await r.json();
       if (!r.ok) { handleApiError(d.error, d); return; }
-      renderConfirmationOrder(d.order);
+      renderConfirmationOrder(d.order, d.tickets, d.eventDateLabel);
     } catch (e) {
       showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
     } finally {

@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
       name: t.name,
       dni: t.dni,
       code: t.id,
-      tierLabel: tierTypeLabel(false),
+      tierLabel: t.skuLabel || tierTypeLabel(false),
       eventName: EVENT_NAME,
       eventDateLabel: EVENT_DATE_LABEL,
       validityLabel: tierValidityLabel(false),

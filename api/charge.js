@@ -1,4 +1,4 @@
-const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP, getClientIp } = require('../lib/tickets');
+const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP, getClientIp, qrDataUrl, EVENT_DATE_LABEL } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
 const { findPaidSku } = require('../lib/catalog');
 const { validateEmail } = require('../lib/email-validation');
@@ -138,7 +138,12 @@ module.exports = async (req, res) => {
       console.error('Email send failed:', emailErr);
     }
 
-    return res.status(200).json({ order, tickets });
+    // The confirmation screen shows the QR immediately instead of sending the
+    // buyer to /orden to see it — same qrDataUrl already used everywhere else
+    // a ticket's QR is rendered.
+    const ticketsWithQr = await Promise.all(tickets.map(async (t) => ({ ...t, qr: await qrDataUrl(t.id) })));
+
+    return res.status(200).json({ order, tickets: ticketsWithQr, eventDateLabel: EVENT_DATE_LABEL });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'server_error' });

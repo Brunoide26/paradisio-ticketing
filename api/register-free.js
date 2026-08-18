@@ -1,4 +1,4 @@
-const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket, getClientIp } = require('../lib/tickets');
+const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket, getClientIp, EVENT_DATE_LABEL } = require('../lib/tickets');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 const { isCortesiaDateOpen } = require('../lib/catalog');
@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
     }
 
     const qrs = await Promise.all(tickets.map((t) => qrDataUrl(t.id)));
-    return res.status(200).json({ ticket: tickets[0], qr: qrs[0], tickets, qrs });
+    return res.status(200).json({ ticket: tickets[0], qr: qrs[0], tickets, qrs, eventDateLabel: EVENT_DATE_LABEL });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'server_error' });

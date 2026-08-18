@@ -786,7 +786,7 @@
     const plural = order.qty > 1 ? 'entradas' : 'entrada';
     const label = (selectedTier && selectedTier.name) || 'Club';
     document.getElementById('confirm-line').textContent =
-      'Compramos ' + order.qty + ' ' + plural + ' ' + label + '. Cada asistente que dio su correo recibió su propio QR. · Order confirmed, see you on the floor.';
+      'Confirmamos tu compra de ' + order.qty + ' ' + plural + ' ' + label + '. Cada asistente que dio su correo recibió su propio QR. · Order confirmed, see you on the floor.';
     const qrsWrap = document.getElementById('confirm-qrs');
     qrsWrap.innerHTML = '';
     const box = document.createElement('div');
@@ -916,7 +916,7 @@
     const appearance = {
       theme: 'default',
       menuType: 'select',
-      buttonCardPayText: 'Pagar S/' + selectedTier.price,
+      buttonCardPayText: 'Pagar',
       hiddenBanner: false,
       logo: location.origin + '/logo-white.png',
       variables: {

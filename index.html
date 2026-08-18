@@ -114,25 +114,49 @@
   .pd-entradas-eyebrow { margin:0 0 12px; font-size:10px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(0,0,0,0.6); font-weight:500; }
   .pd-entradas-title { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(2.5rem, 7vw, 4.6rem); line-height:0.95; text-transform:uppercase; letter-spacing:-0.03em; color:#000; }
 
-  .pd-tier { display:flex; align-items:center; justify-content:space-between; gap:24px; width:100%; padding:38px 48px; border:none; border-bottom:1px solid var(--line); background:transparent; cursor:pointer; transition:background 180ms; text-align:left; color:inherit; font-family:inherit; }
-  .pd-tier[hidden] { display:none; }
-  .pd-tier:hover, .pd-tier:focus-visible { background:#141414; }
-  .pd-tier-left { display:flex; align-items:center; gap:40px; }
-  .pd-tier-idx { font-size:10px; letter-spacing:0.3em; color:rgba(136,136,128,0.45); font-variant-numeric:tabular-nums; }
-  .pd-tier-price { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem, 4vw, 3.1rem); font-variant-numeric:tabular-nums; }
-  .pd-tier-price.is-free { color:var(--primary); }
-  .pd-tier-price.is-paid { color:var(--ink); }
-  .pd-tier-name { margin:0 0 4px; font-size:17px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink); }
-  .pd-tier-note { margin:0; font-size:13px; color:var(--muted); }
-  .pd-tier-select { flex:none; padding:13px 30px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; border:1px solid rgba(242,237,228,0.3); color:var(--ink); transition:all 180ms; }
-  .pd-tier:hover .pd-tier-select, .pd-tier:focus-visible .pd-tier-select { border-color:var(--primary); color:var(--primary); }
-  .pd-tier.is-selected .pd-tier-select { border-color:var(--primary); color:var(--primary); }
-  .pd-tier[disabled] { cursor:default; opacity:0.55; }
-  .pd-tier[disabled]:hover { background:transparent; }
   .pd-sales-closed { padding-top:38px; padding-bottom:38px; margin:0; font-size:15px; font-weight:700; color:var(--ink); border-bottom:1px solid var(--line); }
 
-  .pd-checkout { border-top:1px solid var(--primary); background:var(--card); padding:48px; }
-  .pd-checkout-inner { max-width:720px; }
+  /* ---- the wizard itself is capped and centered, unlike the rest of the
+     page's full-bleed sections: past ~640px the form fields stretch out
+     and the flow reads as sparse rather than focused, so this is a
+     deliberate, explicit exception. ---- */
+  #pd-flow { max-width:640px; margin:0 auto; }
+
+  /* ---- step indicator: sticky under the fixed header, always visible while
+     the flow is on screen ---- */
+  .pd-steps { display:flex; align-items:center; justify-content:center; gap:10px; background:var(--card); border-bottom:1px solid var(--line); padding:20px 40px; position:sticky; top:64px; z-index:40; }
+  @media (max-width:860px) { .pd-steps { padding-left:22px; padding-right:22px; } }
+  .pd-step { display:inline-flex; background:none; border:none; padding:0; cursor:default; font-family:inherit; }
+  .pd-step-num { display:flex; align-items:center; justify-content:center; width:30px; height:30px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; border:1px solid var(--line); color:var(--muted); transition:border-color 180ms, color 180ms, background 180ms; }
+  .pd-step.is-active .pd-step-num { border-color:var(--primary); color:var(--primary); }
+  .pd-step.is-done .pd-step-num { border-color:var(--primary); background:var(--primary); color:#0A0A0A; }
+  .pd-step.is-done { cursor:pointer; }
+  .pd-step-sep { color:var(--line); font-size:13px; }
+
+  .pd-step-panel { padding-top:36px; padding-bottom:48px; }
+  .pd-step-panel[hidden] { display:none; }
+
+  /* ---- step 1: sku cards, fully tappable, no separate select button ---- */
+  .pd-sku-grid { display:grid; grid-template-columns:1fr; gap:16px; }
+  @media (min-width:560px) { .pd-sku-grid { grid-template-columns:repeat(2, 1fr); } }
+  .pd-sku-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; background:var(--card); border:1px solid var(--line); padding:28px 24px; cursor:pointer; font-family:inherit; color:inherit; transition:border-color 180ms, background 180ms; }
+  .pd-sku-card:hover, .pd-sku-card:focus-visible { border-color:rgba(255,40,0,0.45); }
+  .pd-sku-card.is-selected { border-color:var(--primary); background:rgba(255,40,0,0.08); }
+  .pd-sku-card.is-cortesia { border-color:var(--primary); }
+  .pd-sku-card[disabled] { opacity:0.5; cursor:default; }
+  .pd-sku-card[disabled]:hover { border-color:var(--line); }
+  .pd-sku-card.is-cortesia[disabled] { border-color:var(--line); }
+  .pd-sku-check { position:absolute; top:16px; right:16px; width:22px; height:22px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px; color:transparent; }
+  .pd-sku-card.is-selected .pd-sku-check { border-color:var(--primary); background:var(--primary); color:#0A0A0A; }
+  .pd-sku-price { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.7rem, 4vw, 2.4rem); font-variant-numeric:tabular-nums; }
+  .pd-sku-price.is-free { color:var(--primary); }
+  .pd-sku-price.is-paid { color:var(--ink); }
+  .pd-sku-name { margin:6px 0 0; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink); }
+  .pd-sku-people { margin:4px 0 0; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--primary); font-weight:700; }
+  .pd-sku-note { margin:10px 0 0; font-size:12.5px; line-height:1.5; color:var(--muted); }
+  .pd-sku-badge { margin-top:12px; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary-hover); }
+
+  /* ---- step 2/3 shared form pieces ---- */
   .pd-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
   .pd-field { display:flex; flex-direction:column; gap:6px; }
   .pd-field label.pd-microlabel { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); }
@@ -141,6 +165,8 @@
     font-size:14px; color:var(--ink); outline:none; width:100%;
   }
   .pd-input:focus { border-color:var(--primary); }
+  .pd-input.has-error { border-color:var(--primary-hover); }
+  .pd-field-error { margin:2px 0 0; font-size:11px; color:var(--primary-hover); }
   .pd-declare { display:flex; align-items:flex-start; gap:10px; margin-bottom:22px; }
   .pd-declare input { margin-top:3px; width:16px; height:16px; accent-color:var(--primary); flex-shrink:0; }
   .pd-declare label { font-size:12.5px; color:var(--muted); line-height:1.5; }
@@ -150,14 +176,31 @@
   .pd-assistant:last-of-type { border-bottom:none; }
   .pd-assistant-label { margin:0 0 14px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary); font-weight:700; }
 
-  .pd-order-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 0; border-top:1px solid var(--line); margin-bottom:22px; }
-  .pd-order-line { font-size:14px; color:var(--muted); }
-  .pd-order-total { font-family:'Unbounded',sans-serif; font-weight:900; font-size:24px; font-variant-numeric:tabular-nums; color:var(--ink); }
+  /* ---- step 3: summary ---- */
+  .pd-summary-line { margin:0 0 20px; font-size:16px; font-weight:700; color:var(--ink); }
+  .pd-summary-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; border-top:1px solid var(--line); font-size:14px; color:var(--muted); }
+  .pd-summary-row.pd-summary-total { color:var(--ink); font-weight:700; margin-bottom:22px; }
+  .pd-summary-row.pd-summary-total .pd-summary-value { font-family:'Unbounded',sans-serif; font-weight:900; font-size:24px; font-variant-numeric:tabular-nums; }
 
   .pd-form-error { margin:0 0 16px; font-size:12px; letter-spacing:0.02em; color:var(--primary-hover); }
+
+  /* ---- sticky bottom action bar: never lost in scroll, mobile or desktop ---- */
+  .pd-step-bar { position:sticky; bottom:0; z-index:30; display:flex; gap:12px; padding:16px 40px; background:rgba(20,20,20,0.97); backdrop-filter:blur(8px); border-top:1px solid var(--line); }
+  @media (max-width:860px) { .pd-step-bar { padding-left:22px; padding-right:22px; } }
+  .pd-step-back { flex:none; padding:17px 22px; background:transparent; border:1px solid rgba(242,237,228,0.3); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.25em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:border-color 180ms; }
+  .pd-step-back:hover { border-color:var(--ink); }
+  .pd-step-continue, .pd-step-bar .pd-pay-btn { flex:1; }
+  .pd-step-continue { padding:17px 32px; background:var(--primary); border:none; color:#0A0A0A; font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:background 180ms; }
+  .pd-step-continue:disabled { opacity:0.4; cursor:not-allowed; }
   .pd-pay-btn { padding:17px 46px; background:var(--primary); border:none; color:#0A0A0A; font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:background 180ms; }
-  .pd-pay-btn:hover { background:var(--primary-hover); }
   .pd-pay-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  /* Hover-tint only on devices that truly hover with a precise pointer —
+     otherwise a tap leaves touch/coarse-pointer browsers stuck showing the
+     :hover background (amber) instead of the resting brand red. */
+  @media (hover:hover) and (pointer:fine) {
+    .pd-step-continue:hover { background:var(--primary-hover); }
+    .pd-pay-btn:hover { background:var(--primary-hover); }
+  }
 
   .pd-confirm { border-top:1px solid var(--primary); background:var(--primary); padding:48px; text-align:center; scroll-margin-top:64px; }
   .pd-confirm-headline { margin:0 0 6px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.6rem, 4vw, 2.6rem); line-height:1; text-transform:uppercase; color:#000; }
@@ -312,12 +355,25 @@
     <h2 class="pd-entradas-title">Entradas</h2>
   </div>
 
-  <div id="tiers-list" aria-live="polite"></div>
   <p class="pd-sales-closed pd-pad" id="sales-closed-notice" hidden></p>
 
-  <div class="pd-checkout pd-pad" id="pd-checkout" hidden>
-    <div class="pd-checkout-inner">
-      <p class="pd-eyebrow js-copy" style="margin-bottom:26px;" data-off="Completa tu registro / Complete your registration" data-on="Completa tu orden / Complete your order">Completa tu registro / Complete your registration</p>
+  <div id="pd-flow">
+    <div class="pd-steps" id="pd-steps">
+      <button type="button" class="pd-step" data-step="1"><span class="pd-step-num">1</span></button>
+      <span class="pd-step-sep" aria-hidden="true">—</span>
+      <button type="button" class="pd-step" data-step="2"><span class="pd-step-num">2</span></button>
+      <span class="pd-step-sep" aria-hidden="true">—</span>
+      <button type="button" class="pd-step" data-step="3"><span class="pd-step-num">3</span></button>
+      <span class="pd-step-sep" aria-hidden="true">—</span>
+      <button type="button" class="pd-step" data-step="4"><span class="pd-step-num">4</span></button>
+    </div>
+
+    <div class="pd-step-panel pd-pad" id="step-panel-1">
+      <div class="pd-sku-grid" id="sku-grid" aria-live="polite"></div>
+    </div>
+
+    <div class="pd-step-panel pd-pad" id="step-panel-2" hidden>
+      <p class="pd-eyebrow" style="margin-bottom:26px;">Tus datos</p>
 
       <div id="free-fields">
         <div class="pd-form-grid pd-form">
@@ -364,9 +420,16 @@
         </div>
       </div>
 
-      <div class="pd-order-row">
-        <span class="pd-order-line" id="order-line"></span>
-        <span class="pd-order-total" id="order-total"></span>
+      <p class="pd-form-error" id="step2-error" hidden></p>
+    </div>
+
+    <div class="pd-step-panel pd-pad" id="step-panel-3" hidden>
+      <p class="pd-eyebrow" style="margin-bottom:26px;">Resumen y pago</p>
+
+      <p class="pd-summary-line" id="summary-line"></p>
+      <div class="pd-summary-row pd-summary-total">
+        <span>Total</span>
+        <span class="pd-summary-value" id="summary-total"></span>
       </div>
 
       <div class="pd-declare">
@@ -375,8 +438,12 @@
       </div>
 
       <p class="pd-form-error" id="form-error" hidden></p>
+    </div>
 
-      <button type="button" class="pd-pay-btn" id="pay-btn">Generar mi entrada</button>
+    <div class="pd-step-bar pd-pad" id="pd-step-bar">
+      <button type="button" class="pd-step-back" id="step-back-btn" hidden>← Atrás</button>
+      <button type="button" class="pd-step-continue" id="step-continue-btn" disabled>Continuar</button>
+      <button type="button" class="pd-pay-btn" id="pay-btn" hidden>Generar mi entrada</button>
     </div>
   </div>
 
@@ -501,13 +568,14 @@
   setInterval(renderCountdown, 1000);
 
   /* ---- ticket tiers + checkout ---- */
-  const tiersListEl = document.getElementById('tiers-list');
+  const skuGridEl = document.getElementById('sku-grid');
   const closedNoticeEl = document.getElementById('sales-closed-notice');
-  let tierButtons = [];
+  let skuCards = [];
 
-  const checkoutEl = document.getElementById('pd-checkout');
+  const pdFlowEl = document.getElementById('pd-flow');
   const confirmEl = document.getElementById('pd-confirm');
   const errorEl = document.getElementById('form-error');
+  const step2ErrorEl = document.getElementById('step2-error');
   const freeFieldsEl = document.getElementById('free-fields');
   const paidFieldsEl = document.getElementById('paid-fields');
   const assistantsWrap = document.getElementById('assistants-wrap');
@@ -537,83 +605,156 @@
     closedNoticeEl.hidden = false;
   });
 
-  function renderTierButton(idx, opts){
+  function renderSkuCard(opts){
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'pd-tier pd-pad pd-row';
-    btn.setAttribute('aria-expanded', 'false');
+    btn.className = 'pd-sku-card' + (opts.cortesia ? ' is-cortesia' : '');
     btn.dataset.tier = opts.tierId;
     btn.dataset.price = opts.price;
     btn.dataset.qty = opts.qty;
     btn.dataset.sku = opts.sku;
     if (opts.disabled) btn.disabled = true;
     btn.innerHTML =
-      '<div class="pd-tier-left">' +
-        '<span class="pd-tier-idx">' + String(idx + 1).padStart(2, '0') + '</span>' +
-        '<p class="pd-tier-price ' + (opts.price === 0 ? 'is-free' : 'is-paid') + '">' + (opts.price === 0 ? 'FREE' : 'S/ ' + opts.price) + '</p>' +
-        '<div><p class="pd-tier-name">' + escapeHtmlIndex(opts.name) + '</p><p class="pd-tier-note">' + escapeHtmlIndex(opts.note) + '</p></div>' +
-      '</div>' +
-      '<span class="pd-tier-select">' + (opts.disabled ? escapeHtmlIndex(opts.selectLabel) : 'Seleccionar') + '</span>';
+      '<span class="pd-sku-check" aria-hidden="true">✓</span>' +
+      '<p class="pd-sku-price ' + (opts.price === 0 ? 'is-free' : 'is-paid') + '">' + (opts.price === 0 ? 'FREE' : 'S/' + opts.price) + '</p>' +
+      '<p class="pd-sku-name">' + escapeHtmlIndex(opts.name) + '</p>' +
+      '<p class="pd-sku-people">' + opts.qty + (opts.qty > 1 ? ' personas' : ' persona') + '</p>' +
+      '<p class="pd-sku-note">' + escapeHtmlIndex(opts.note) + '</p>' +
+      (opts.disabled ? '<p class="pd-sku-badge">' + escapeHtmlIndex(opts.badge) + '</p>' : '');
     return btn;
   }
 
   function renderCatalog(cfg){
-    tiersListEl.innerHTML = '';
-    tierButtons = [];
+    skuGridEl.innerHTML = '';
+    skuCards = [];
     selectedTier = null;
-    checkoutEl.hidden = true;
 
     if (cfg.salesWindow === 'closed') {
       closedNoticeEl.textContent = 'Venta cerrada. Entrada en puerta S/50';
       closedNoticeEl.hidden = false;
-      appendTestTier(cfg);
+      // The hidden QA sku still needs the full flow to rehearse a purchase —
+      // only show it when that sku is actually present (server-gated).
+      pdFlowEl.hidden = !cfg.testSku;
+      appendTestSkuCard(cfg);
+      if (cfg.testSku) goToStep(1, { scroll: false });
       return;
     }
     closedNoticeEl.hidden = true;
+    pdFlowEl.hidden = false;
 
-    let idx = 0;
     if (cfg.cortesiaState === 'open') {
-      const btn = renderTierButton(idx++, {
-        tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening',
-        note: 'Ingreso libre hasta las 12:00 a.m. presentando tu QR. Sujeto a aforo.',
+      const btn = renderSkuCard({
+        tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening', cortesia: true,
+        note: 'Ingreso libre hasta las 12:00 a.m. · Sujeto a aforo',
       });
-      btn.addEventListener('click', () => selectTier(btn));
-      tiersListEl.appendChild(btn);
-      tierButtons.push(btn);
+      btn.addEventListener('click', () => selectSkuCard(btn));
+      skuGridEl.appendChild(btn);
+      skuCards.push(btn);
     } else if (cfg.cortesiaState === 'soldout') {
-      tiersListEl.appendChild(renderTierButton(idx++, {
-        tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening',
-        note: 'Ingreso libre hasta las 12:00 a.m. presentando tu QR. Sujeto a aforo.',
-        disabled: true, selectLabel: 'Cortesías agotadas',
+      skuGridEl.appendChild(renderSkuCard({
+        tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening', cortesia: true,
+        note: 'Ingreso libre hasta las 12:00 a.m. · Sujeto a aforo',
+        disabled: true, badge: 'Cortesías agotadas',
       }));
     }
 
     (cfg.paidSkus || []).forEach((sku) => {
-      const btn = renderTierButton(idx++, {
+      const btn = renderSkuCard({
         tierId: sku.tier + ' ' + sku.name, price: sku.price, qty: sku.qty, sku: sku.sku,
         name: sku.tier + ' ' + sku.name,
-        note: 'Todas las entradas pagadas son válidas a cualquier hora de la noche.',
+        note: sku.qty > 1 ? 'Entran a cualquier hora de la noche' : 'Entra a cualquier hora de la noche',
       });
-      btn.addEventListener('click', () => selectTier(btn));
-      tiersListEl.appendChild(btn);
-      tierButtons.push(btn);
+      btn.addEventListener('click', () => selectSkuCard(btn));
+      skuGridEl.appendChild(btn);
+      skuCards.push(btn);
     });
 
-    appendTestTier(cfg);
+    appendTestSkuCard(cfg);
+    // Initial render, not a user-driven step transition — set the panel/step
+    // state but don't scroll. This used to always scroll, which could fire
+    // while the user was still scrolling to #entradas themselves (or before
+    // images/layout settled) and leave the first card cut off at the top.
+    goToStep(1, { scroll: false });
   }
 
-  function appendTestTier(cfg){
+  function appendTestSkuCard(cfg){
     if (!cfg.testSku) return;
     const sku = cfg.testSku;
-    const btn = renderTierButton(tierButtons.length, {
+    const btn = renderSkuCard({
       tierId: sku.tier + ' ' + sku.name, price: sku.price, qty: sku.qty, sku: sku.sku,
       name: sku.tier + ' ' + sku.name,
       note: 'Solo pruebas internas — no válido para el evento.',
     });
-    btn.addEventListener('click', () => selectTier(btn));
-    tiersListEl.appendChild(btn);
-    tierButtons.push(btn);
+    btn.addEventListener('click', () => selectSkuCard(btn));
+    skuGridEl.appendChild(btn);
+    skuCards.push(btn);
   }
+
+  /* ---- step navigation ---- */
+  const stepsEl = document.getElementById('pd-steps');
+  const stepPanels = { 1: document.getElementById('step-panel-1'), 2: document.getElementById('step-panel-2'), 3: document.getElementById('step-panel-3') };
+  const stepBackBtn = document.getElementById('step-back-btn');
+  const stepContinueBtn = document.getElementById('step-continue-btn');
+  let currentStep = 1;
+
+  function goToStep(n, opts){
+    if (n < 1 || n > 3) return;
+    currentStep = n;
+    Object.keys(stepPanels).forEach((k) => { stepPanels[k].hidden = Number(k) !== n; });
+    stepsEl.querySelectorAll('.pd-step').forEach((el) => {
+      const s = Number(el.dataset.step);
+      el.classList.toggle('is-active', s === n);
+      el.classList.toggle('is-done', s < n);
+    });
+    stepBackBtn.hidden = n === 1;
+    stepContinueBtn.hidden = n === 3;
+    payBtn.hidden = n !== 3;
+    if (n === 1) stepContinueBtn.disabled = !selectedTier;
+    step2ErrorEl.hidden = true;
+    showError('');
+    // Initial/automatic renders (page load, sales-closed QA path) pass
+    // scroll:false — there's no user-driven transition to animate to, and
+    // scrolling on load can race the user's own scroll to #entradas or fire
+    // before layout/images settle, leaving the first card cut off.
+    if (opts && opts.scroll === false) return;
+    // #pd-steps is position:sticky, so once it's already pinned to the top
+    // (from a previous step), the browser's scrollIntoView considers it
+    // "already visible" and won't actually move the page — even though the
+    // new panel underneath is shorter and the viewport is left scrolled past
+    // it. Scrolling the non-sticky #pd-flow container by measured offset
+    // avoids that trap.
+    const headerHeight = 64;
+    const rect = pdFlowEl.getBoundingClientRect();
+    const target = window.scrollY + rect.top - headerHeight;
+    window.scrollTo({ top: Math.max(0, target), behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+
+  // Only completed steps (1–3) are clickable to jump back to; step 4 is the
+  // confirmation and isn't part of this panel-based navigation.
+  stepsEl.querySelectorAll('.pd-step').forEach((el) => {
+    el.addEventListener('click', () => {
+      const s = Number(el.dataset.step);
+      if (s >= 1 && s <= 3 && s < currentStep) goToStep(s);
+    });
+  });
+  stepBackBtn.addEventListener('click', () => { if (currentStep > 1) goToStep(currentStep - 1); });
+
+  stepContinueBtn.addEventListener('click', () => {
+    if (currentStep === 1) {
+      if (!selectedTier) return;
+      goToStep(2);
+    } else if (currentStep === 2) {
+      const err = selectedTier.price === 0 ? validateFreeData(readFreeForm()) : validatePaidData(readAssistants());
+      if (err) {
+        step2ErrorEl.textContent = err;
+        step2ErrorEl.hidden = false;
+        return;
+      }
+      step2ErrorEl.hidden = true;
+      updateSummary();
+      goToStep(3);
+    }
+  });
 
   // Mirrors lib/tickets.js's calcAge: the 18+ gate checks age as of the event
   // date, not today — someone who's 17 now but turns 18 before the event can
@@ -639,12 +780,10 @@
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
-  function updateOrderSummary(){
-    const line = document.getElementById('order-line');
-    const total = document.getElementById('order-total');
+  function updateSummary(){
     if (!selectedTier) return;
-    line.textContent = selectedTier.name + (selectedTier.qty > 1 ? ' × ' + selectedTier.qty : '');
-    total.textContent = selectedTier.price === 0 ? 'Gratis' : 'S/ ' + selectedTier.price;
+    document.getElementById('summary-line').textContent = selectedTier.name + (selectedTier.qty > 1 ? ' × ' + selectedTier.qty : '');
+    document.getElementById('summary-total').textContent = selectedTier.price === 0 ? 'Gratis' : 'S/' + selectedTier.price;
     payBtn.textContent = selectedTier.price === 0 ? 'Generar mi QR gratis' : 'Pagar S/' + selectedTier.price;
   }
 
@@ -670,36 +809,31 @@
     return div;
   }
 
-  function selectTier(btn){
+  function selectSkuCard(btn){
     const tier = btn.getAttribute('data-tier');
     const price = parseInt(btn.getAttribute('data-price'), 10);
     const qty = parseInt(btn.getAttribute('data-qty'), 10);
     const sku = btn.getAttribute('data-sku');
-    const alreadySelected = selectedTier && selectedTier.sku === sku;
-    tierButtons.forEach((b) => { b.classList.remove('is-selected'); b.setAttribute('aria-expanded','false'); b.querySelector('.pd-tier-select').textContent = 'Seleccionar'; });
+    const sameSkuAsBefore = selectedTier && selectedTier.sku === sku;
+
+    skuCards.forEach((c) => c.classList.remove('is-selected'));
+    btn.classList.add('is-selected');
     confirmEl.hidden = true;
     showError('');
-    if (alreadySelected) {
-      selectedTier = null;
-      checkoutEl.hidden = true;
-      return;
-    }
+
     selectedTier = { name: tier, price, qty, sku };
-    btn.classList.add('is-selected');
-    btn.setAttribute('aria-expanded','true');
-    btn.querySelector('.pd-tier-select').textContent = 'Seleccionado ✓';
+    stepContinueBtn.disabled = false;
 
     const isFree = price === 0;
     freeFieldsEl.hidden = !isFree;
     paidFieldsEl.hidden = isFree;
-    if (!isFree) {
+    // Re-picking the same sku (e.g. after tapping "1" to look back) keeps
+    // whatever was already typed — only a genuinely different sku (different
+    // headcount) needs fresh assistant blocks.
+    if (!isFree && !sameSkuAsBefore) {
       assistantsWrap.innerHTML = '';
       for (let i = 0; i < qty; i++) assistantsWrap.appendChild(renderAssistantBlock(i));
     }
-
-    checkoutEl.hidden = false;
-    updateOrderSummary();
-    checkoutEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
 
   function readFreeForm(){
@@ -736,7 +870,12 @@
     return isValidDocumentGeneric(v);
   }
 
-  function validateFree(data){
+  // Split so step 2 ("Continuar") only gates on the person's own data, and
+  // the Terms/Devoluciones/Privacidad checkbox — now physically in step 3 —
+  // is gated separately at final submit. validateFree stays the full check,
+  // used as a defense-in-depth belt-and-suspenders re-check right before
+  // sending the request.
+  function validateFreeData(data){
     if (!isValidNamePart(data.nombre) || !isValidNamePart(data.apellido)) {
       return 'Ingresa un nombre y apellido válidos. · Please enter a valid first and last name.';
     }
@@ -759,10 +898,13 @@
     if (!data.declared) {
       return 'Debes marcar la declaración de mayoría de edad para continuar. · Please confirm the 18+ declaration.';
     }
-    if (!data.legalAccepted) {
-      return 'Debes aceptar los Términos, Devoluciones y Privacidad para continuar. · You must accept the Terms, Returns and Privacy policies.';
-    }
     return null;
+  }
+
+  function validateFree(data){
+    return validateFreeData(data) || (!data.legalAccepted
+      ? 'Debes aceptar los Términos, Devoluciones y Privacidad para continuar. · You must accept the Terms, Returns and Privacy policies.'
+      : null);
   }
 
   function readAssistants(){
@@ -776,7 +918,7 @@
     }));
   }
 
-  function validatePaid(assistants){
+  function validatePaidData(assistants){
     for (let i = 0; i < assistants.length; i++) {
       const a = assistants[i];
       const label = i === 0 ? 'Tú (comprador)' : 'Asistente ' + (i + 1);
@@ -795,11 +937,76 @@
     if (!document.getElementById('f-declare-paid').checked) {
       return 'Debes marcar la declaración de mayoría de edad para continuar. · Please confirm the 18+ declaration.';
     }
-    if (!document.getElementById('f-legal').checked) {
-      return 'Debes aceptar los Términos, Devoluciones y Privacidad para continuar. · You must accept the Terms, Returns and Privacy policies.';
-    }
     return null;
   }
+
+  function validatePaid(assistants){
+    return validatePaidData(assistants) || (!document.getElementById('f-legal').checked
+      ? 'Debes aceptar los Términos, Devoluciones y Privacidad para continuar. · You must accept the Terms, Returns and Privacy policies.'
+      : null);
+  }
+
+  /* ---- inline (on-blur) field validation for step 2 — same validators as
+     the aggregate check, surfaced per-field instead of only at "Continuar". ---- */
+  function setFieldError(inputEl, message){
+    const field = inputEl.closest('.pd-field');
+    if (!field) return;
+    let errEl = field.querySelector('.pd-field-error');
+    if (message) {
+      if (!errEl) { errEl = document.createElement('p'); errEl.className = 'pd-field-error'; field.appendChild(errEl); }
+      errEl.textContent = message;
+      inputEl.classList.add('has-error');
+    } else {
+      if (errEl) errEl.textContent = '';
+      inputEl.classList.remove('has-error');
+    }
+  }
+
+  function inlineFieldKind(el){
+    if (el.dataset.field) return el.dataset.field;
+    const map = { 'f-nombre': 'nombre', 'f-apellido': 'apellido', 'f-email': 'email', 'f-dni': 'numeroDocumento', 'f-phone': 'phone', 'f-dob': 'dob' };
+    return map[el.id] || null;
+  }
+
+  function inlineDocType(el){
+    if (el.dataset.field) {
+      const block = el.closest('.pd-assistant');
+      return block ? block.querySelector('[data-field="tipoDocumento"]').value : 'DNI';
+    }
+    return document.getElementById('f-tipo-documento').value;
+  }
+
+  function validateFieldInline(el){
+    const kind = inlineFieldKind(el);
+    if (!kind) return;
+    const v = el.value.trim();
+    let msg = '';
+    if (kind === 'nombre' || kind === 'apellido') {
+      if (!v) msg = 'Requerido.';
+      else if (!isValidNamePart(v)) msg = 'Nombre inválido.';
+    } else if (kind === 'email') {
+      const isBuyer = !el.dataset.field || (el.closest('.pd-assistant') && el.closest('.pd-assistant').dataset.index === '0');
+      if (!v && isBuyer) msg = 'Requerido.';
+      else if (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) msg = 'Email inválido.';
+    } else if (kind === 'numeroDocumento') {
+      if (!v) msg = 'Requerido.';
+      else if (!isValidDocumentTyped(v, inlineDocType(el))) msg = 'Documento inválido.';
+    } else if (kind === 'dob') {
+      if (!v) {
+        msg = 'Requerido.';
+      } else {
+        const age = calcAge(v);
+        if (age === null) msg = 'Fecha inválida.';
+        else if (age < 18) msg = 'Debes tener 18 años cumplidos para el 28 de agosto.';
+      }
+    } else if (kind === 'phone') {
+      if (!v) msg = 'Requerido.';
+    }
+    setFieldError(el, msg);
+  }
+
+  freeFieldsEl.addEventListener('focusout', (e) => { if (e.target.classList.contains('pd-input')) validateFieldInline(e.target); });
+  assistantsWrap.addEventListener('focusout', (e) => { if (e.target.classList.contains('pd-input')) validateFieldInline(e.target); });
 
   // Shared by the free (Cortesía) and paid flows — the QR is the whole point
   // of a confirmation screen, so it renders directly here instead of behind
@@ -808,7 +1015,7 @@
   // centered QR; two or more reuse the same swipeable carousel as /orden,
   // embedded, since that's a tested, familiar component rather than a new one.
   function renderConfirmation(entries, email, secondaryHref, secondaryLabel){
-    checkoutEl.hidden = true;
+    pdFlowEl.hidden = true;
     confirmEl.hidden = false;
     document.getElementById('confirm-line').textContent = 'Tu entrada llegó a ' + email;
     document.getElementById('confirm-spam').innerHTML =

@@ -28,9 +28,10 @@
 <!-- defer: without it, this render-blocking third-party script hangs page
      parsing (and every click handler with it) whenever checkout.culqi.com is
      slow, blocked, or unreachable — which is exactly what broke the "Seleccionar"
-     button on Cortesía in production. Payments are hidden behind PAYMENTS_ENABLED
-     right now, so Culqi is never even invoked, but the tag still loaded eagerly. -->
-<script src="https://checkout.culqi.com/js/v4" defer></script>
+     button on Cortesía in production before. Payments are on now, so this script
+     is load-bearing — window.__culqiLoaded/__culqiLoadError let the pay button
+     detect a slow/blocked/failed load instead of throwing a silent ReferenceError. -->
+<script src="https://checkout.culqi.com/js/v4" defer onload="window.__culqiLoaded=true" onerror="window.__culqiLoadError=true"></script>
 <style>
   @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
   @font-face { font-family:'DM Sans'; src:url('fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
@@ -852,6 +853,34 @@
     }
   }
 
+  // The Culqi SDK loads with `defer`, so by the time a real user clicks pay it's
+  // almost always ready — but a slow/blocked/failed load (ad blockers commonly
+  // touch payment-gateway scripts) previously left window.Culqi undefined
+  // forever, and payWithCulqi's bare `Culqi.publicKey = ...` threw a silent,
+  // uncaught ReferenceError: no modal, no visible error, exactly this bug.
+  // This waits for the deferred load, and retries once via a fresh <script> tag
+  // if the browser reported an outright load error (e.g. a transient blip).
+  function ensureCulqiLoaded(){
+    return new Promise((resolve, reject) => {
+      if (window.Culqi) return resolve();
+      if (window.__culqiLoadError) {
+        const s = document.createElement('script');
+        s.src = 'https://checkout.culqi.com/js/v4';
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('culqi_load_failed'));
+        document.head.appendChild(s);
+        return;
+      }
+      let tries = 0;
+      const iv = setInterval(() => {
+        tries++;
+        if (window.Culqi) { clearInterval(iv); resolve(); }
+        else if (window.__culqiLoadError) { clearInterval(iv); ensureCulqiLoaded().then(resolve, reject); }
+        else if (tries > 40) { clearInterval(iv); reject(new Error('culqi_load_timeout')); }
+      }, 250);
+    });
+  }
+
   function payWithCulqi(assistants){
     Culqi.publicKey = culqiPublicKey;
     Culqi.settings({
@@ -884,7 +913,7 @@
     }
   };
 
-  payBtn.addEventListener('click', () => {
+  payBtn.addEventListener('click', async () => {
     if (!selectedTier) return;
     if (selectedTier.price === 0) {
       const data = readFreeForm();
@@ -897,6 +926,19 @@
       const err = validatePaid(assistants);
       if (err) { showError(err); return; }
       showError('');
+      if (!culqiPublicKey) {
+        showError('Configuración de pago incompleta. Escríbenos a info@paradisioclub.com. · Payment configuration is incomplete.');
+        return;
+      }
+      payBtn.disabled = true;
+      try {
+        await ensureCulqiLoaded();
+      } catch (e) {
+        payBtn.disabled = false;
+        showError('No pudimos cargar el sistema de pago. Revisa tu conexión o desactiva bloqueadores de anuncios, y vuelve a intentar. · Payment system failed to load — check your connection or disable ad blockers and try again.');
+        return;
+      }
+      payBtn.disabled = false;
       payWithCulqi(assistants);
     }
   });

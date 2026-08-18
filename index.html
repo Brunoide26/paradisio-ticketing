@@ -946,7 +946,8 @@
       if (err) { showError(err); return; }
       showError('');
       if (!culqiPublicKey) {
-        showError('Configuración de pago incompleta. Escríbenos a info@paradisioclub.com. · Payment configuration is incomplete.');
+        console.error('[Culqi diag] FALTA CONFIGURACIÓN — culqiPublicKey vino vacío de /api/config. Revisa que CULQI_PUBLIC_KEY esté puesto en Vercel (Production) con ese nombre exacto.');
+        showError('Falta configuración de pago (culqiPublicKey vacío). Escríbenos a info@paradisioclub.com. · Payment configuration missing.');
         return;
       }
       payBtn.disabled = true;
@@ -954,7 +955,15 @@
         await ensureCulqiLoaded();
       } catch (e) {
         payBtn.disabled = false;
-        showError('No pudimos cargar el sistema de pago. Revisa tu conexión o desactiva bloqueadores de anuncios, y vuelve a intentar. · Payment system failed to load — check your connection or disable ad blockers and try again.');
+        console.error(
+          '[Culqi diag] SDK NO DISPONIBLE — window.Culqi nunca se definió.',
+          '\n  culqiPublicKey presente:', !!culqiPublicKey, culqiPublicKey ? '(largo ' + culqiPublicKey.length + ')' : '',
+          '\n  <script> de Culqi en el DOM:', !!document.querySelector('script[src="https://checkout.culqi.com/js/v4"]'),
+          '\n  window.__culqiLoaded:', window.__culqiLoaded,
+          '\n  window.__culqiLoadError:', window.__culqiLoadError,
+          '\n  motivo del timeout/fallo:', e && e.message
+        );
+        showError('SDK de pago no disponible (window.Culqi no se definió). Abre la consola del navegador para más detalle, o escríbenos a info@paradisioclub.com. · Payment SDK unavailable.');
         return;
       }
       payBtn.disabled = false;

@@ -56,6 +56,10 @@
   tr.row-flag:hover { background:#241d00; }
   .badge-void { background:#2a0a0a; color:#e07f7f; }
   .table-scroll { overflow-x:auto; }
+  .sortable-th { cursor:pointer; user-select:none; }
+  .sortable-th:hover { color:#ccc; }
+  .sort-arrow { color:var(--pink); }
+  .toggle-label { display:flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; }
   .hint { color:#666; font-size:12px; margin-top:8px; }
 
   .tabs { display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid var(--line); }
@@ -132,6 +136,7 @@
       <button class="tab-btn is-active" id="tab-tickets">Tickets</button>
       <button class="tab-btn" id="tab-reclamos">Reclamaciones</button>
       <button class="tab-btn" id="tab-puerta">Puerta en vivo</button>
+      <button class="tab-btn" id="tab-promotores">Promotores</button>
     </div>
 
     <div id="tickets-panel">
@@ -206,6 +211,32 @@
         <div class="puerta-chart" id="puerta-chart"></div>
       </div>
       <div class="hint" id="puerta-updated"></div>
+    </div>
+
+    <div id="promotores-panel" style="display:none;">
+      <div class="toolbar">
+        <button class="btn btn-ghost" id="promotores-export-btn">Exportar CSV</button>
+        <button class="btn btn-ghost" id="promotores-refresh-btn">Actualizar</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable-th" data-sort="name">Promotor <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="cortesias">Cortesías <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="pagadas">Pagadas <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="personas">Personas <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="ingreso">Ingreso <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="ingresaron">Ingresaron <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="conversion">Conversión <span class="sort-arrow"></span></th>
+              <th>Link</th>
+              <th>Activo</th>
+            </tr>
+          </thead>
+          <tbody id="promotores-table-body"></tbody>
+        </table>
+      </div>
+      <div class="hint">Ordena haciendo clic en cualquier columna. "Ingresaron" es el dato más importante: cuántos de los QRs de cada promotor entraron realmente al evento. Desactivar un código detiene su descuento y su link a futuro, pero conserva la atribución de las entradas ya emitidas.</div>
     </div>
   </div>
 </div>
@@ -638,7 +669,7 @@
   let allReclamos = [];
   let reclamosLoaded = false;
 
-  const TABS = ['tickets', 'reclamos', 'puerta'];
+  const TABS = ['tickets', 'reclamos', 'puerta', 'promotores'];
   function switchTab(name){
     TABS.forEach(t => {
       document.getElementById('tab-' + t).classList.toggle('is-active', t === name);
@@ -646,10 +677,12 @@
     });
     if (name === 'reclamos' && !reclamosLoaded) loadReclamos();
     if (name === 'puerta') loadPuertaEnVivo();
+    if (name === 'promotores') loadPromoters();
   }
   document.getElementById('tab-tickets').onclick = function(){ switchTab('tickets'); };
   document.getElementById('tab-reclamos').onclick = function(){ switchTab('reclamos'); };
   document.getElementById('tab-puerta').onclick = function(){ switchTab('puerta'); };
+  document.getElementById('tab-promotores').onclick = function(){ switchTab('promotores'); };
 
   // --- Block 7: live door view. Refreshes on its own 30s timer, independent of
   // the main "Actualizar" button on the Tickets tab. ---
@@ -872,6 +905,136 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'paradisio-reclamaciones.csv';
+    a.click();
+  };
+
+  /* ---- Promotores tab ---- */
+  let allPromoters = [];
+  // "Ingresaron" first by default — per the spec, it's the number that
+  // actually decides who gets kept for VOL. 2.
+  let promoSort = { key: 'ingresaron', dir: 'desc' };
+
+  async function loadPromoters(){
+    try {
+      const r = await fetch('/api/admin-promoters', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE })
+      });
+      if (r.status === 401) { alert('Clave incorrecta'); return; }
+      const d = await r.json();
+      allPromoters = d.promoters || [];
+      renderPromotoresTable();
+    } catch(e) {
+      alert('Error de conexión al cargar promotores');
+    }
+  }
+
+  function sortedPromoters(){
+    const { key, dir } = promoSort;
+    return [...allPromoters].sort((a, b) => {
+      let av = a[key], bv = b[key];
+      if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+      if (av < bv) return dir === 'asc' ? -1 : 1;
+      if (av > bv) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  function promoterLink(code){
+    return location.origin + '/p/' + code;
+  }
+
+  function updateSortHeaders(){
+    document.querySelectorAll('#promotores-panel .sortable-th').forEach(th => {
+      const arrow = th.querySelector('.sort-arrow');
+      arrow.textContent = th.dataset.sort === promoSort.key ? (promoSort.dir === 'asc' ? '↑' : '↓') : '';
+    });
+  }
+
+  function renderPromotoresTable(){
+    const body = document.getElementById('promotores-table-body');
+    const list = sortedPromoters();
+    if (list.length === 0) {
+      body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#666;">Sin datos</td></tr>';
+      updateSortHeaders();
+      return;
+    }
+    body.innerHTML = list.map(p => `
+      <tr>
+        <td>${escapeHtml(p.name)}<br><span style="font-family:monospace;color:#888;font-size:11px;">${escapeHtml(p.code)}</span></td>
+        <td>${p.cortesias}</td>
+        <td>${p.pagadas}</td>
+        <td>${p.personas}</td>
+        <td>S/${p.ingreso}</td>
+        <td>${p.ingresaron}</td>
+        <td>${p.conversion}%</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="copyPromoterLink(this,'${p.code}')">Copiar link</button></td>
+        <td>
+          <label class="toggle-label">
+            <input type="checkbox" ${p.active ? 'checked' : ''} onchange="togglePromoterActive('${p.code}', this.checked)" />
+            ${p.active ? 'Activo' : 'Inactivo'}
+          </label>
+        </td>
+      </tr>
+    `).join('');
+    updateSortHeaders();
+  }
+
+  document.querySelectorAll('#promotores-panel .sortable-th').forEach(th => {
+    th.addEventListener('click', function(){
+      const key = th.dataset.sort;
+      if (promoSort.key === key) promoSort.dir = promoSort.dir === 'asc' ? 'desc' : 'asc';
+      else promoSort = { key, dir: key === 'name' ? 'asc' : 'desc' };
+      renderPromotoresTable();
+    });
+  });
+
+  window.copyPromoterLink = async function(btn, code){
+    const url = promoterLink(code);
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    const original = btn.textContent;
+    btn.textContent = 'Copiado ✓';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  };
+
+  window.togglePromoterActive = async function(code, active){
+    try {
+      const r = await fetch('/api/admin-promoter-toggle', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ code, active, passcode: PASSCODE })
+      });
+      if (!r.ok) { alert('No se pudo actualizar el promotor.'); await loadPromoters(); return; }
+      const p = allPromoters.find(x => x.code === code);
+      if (p) p.active = active;
+      renderPromotoresTable();
+    } catch(e) {
+      alert('Error de conexión al actualizar el promotor.');
+      await loadPromoters();
+    }
+  };
+
+  document.getElementById('promotores-refresh-btn').onclick = loadPromoters;
+
+  document.getElementById('promotores-export-btn').onclick = function(){
+    const headers = ['Codigo','Nombre','Cortesias','Pagadas','Personas','Ingreso','Ingresaron','Conversion','Activo','Link'];
+    const rows = sortedPromoters().map(p => [
+      p.code, p.name, p.cortesias, p.pagadas, p.personas, p.ingreso, p.ingresaron, p.conversion,
+      p.active ? 'si' : 'no', promoterLink(p.code)
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'paradisio-promotores.csv';
     a.click();
   };
 </script>

@@ -3,6 +3,7 @@ const { PAYMENTS_ENABLED } = require('../lib/config');
 const { findPaidSku } = require('../lib/catalog');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
+const { resolveActivePromoter, applyDiscount } = require('../lib/promoters');
 
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
 
@@ -11,7 +12,7 @@ module.exports = async (req, res) => {
   if (!PAYMENTS_ENABLED) return res.status(403).json({ error: 'payments_disabled' });
 
   try {
-    const { token, sku: skuId, assistants } = req.body || {};
+    const { token, sku: skuId, assistants, promoterCode } = req.body || {};
 
     // Price and headcount are always read from the current window's catalog,
     // never from the client — a stale/forged sku id (wrong window, wrong price)
@@ -72,6 +73,14 @@ module.exports = async (req, res) => {
 
     const skuLabel = `${sku.tier} ${sku.name}`;
 
+    // The discount is resolved and applied here, server-side, from the sku's
+    // own price — never from a client-supplied amount. An unknown/inactive
+    // code silently charges full price rather than blocking the purchase.
+    const promoter = promoterCode ? await resolveActivePromoter(promoterCode) : null;
+    const { subtotalCents, discountCents, totalCents } = applyDiscount(sku.price);
+    const chargeCents = promoter ? totalCents : subtotalCents;
+    const appliedDiscountCents = promoter ? discountCents : 0;
+
     // Charge the card server-side ONCE for the full bundle amount, using the Culqi
     // secret key — a Culqi token is single-use, so multi-ticket orders must be one
     // charge, not one per ticket. Culqi amounts are in cents ("céntimos").
@@ -82,7 +91,7 @@ module.exports = async (req, res) => {
         Authorization: `Bearer ${process.env.CULQI_SECRET_KEY}`,
       },
       body: JSON.stringify({
-        amount: sku.price * 100,
+        amount: chargeCents,
         currency_code: 'PEN',
         email: buyer.email,
         source_id: token,
@@ -98,6 +107,7 @@ module.exports = async (req, res) => {
     }
 
     // Payment succeeded -> issue one nominal ticket per assistant, grouped under one order.
+    const chargedSoles = chargeCents / 100;
     const { id: orderId, token: orderToken } = reserveOrderIdentity();
     const ip = getClientIp(req);
     const tickets = [];
@@ -109,10 +119,11 @@ module.exports = async (req, res) => {
         docType: a.tipoDocumento,
         dob: a.dob,
         type: 'paid',
-        amount: sku.price,
+        amount: chargedSoles,
         skuLabel,
         orderId,
         ip,
+        promoterCode: promoter ? promoter.code : null,
       });
       t.culqiChargeId = culqiData.id;
       tickets.push(t);
@@ -124,9 +135,12 @@ module.exports = async (req, res) => {
       buyerName: `${buyer.nombre} ${buyer.apellido}`.trim(),
       buyerEmail: buyer.email,
       ticketIds: tickets.map((t) => t.id),
-      amount: sku.price,
+      amount: chargedSoles,
       qty,
       skuLabel,
+      promoterCode: promoter ? promoter.code : null,
+      subtotal: sku.price,
+      discountAmount: appliedDiscountCents / 100,
     });
 
     try {

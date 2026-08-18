@@ -2,13 +2,14 @@ const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 const { isCortesiaDateOpen } = require('../lib/catalog');
+const { resolveActivePromoter } = require('../lib/promoters');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   if (!isCortesiaDateOpen()) return res.status(403).json({ error: 'cortesia_closed' });
 
   try {
-    const { nombre, apellido, phone, email, tipoDocumento, dni, dob } = req.body || {};
+    const { nombre, apellido, phone, email, tipoDocumento, dni, dob, promoterCode } = req.body || {};
     // Cortesía is one per person — fixed at qty 1, regardless of what the client sends.
     const qty = 1;
     if (!nombre || !apellido || !phone || !email || !tipoDocumento || !dni || !dob) {
@@ -48,10 +49,15 @@ module.exports = async (req, res) => {
     const counters = await getCounters();
     if ((counters.free || 0) + qty > FREE_CAP) return res.status(409).json({ error: 'sold_out' });
 
+    // Cortesía never discounts (it's already free) — a code here is
+    // attribution-only, so an unknown/inactive code is silently dropped
+    // rather than blocking the registration.
+    const promoter = promoterCode ? await resolveActivePromoter(promoterCode) : null;
+
     const ip = getClientIp(req);
     const tickets = [];
     for (let i = 0; i < qty; i++) {
-      tickets.push(await createTicket({ name, phone, email, dni, docType: tipoDocumento, dob, type: 'free', amount: 0, ip }));
+      tickets.push(await createTicket({ name, phone, email, dni, docType: tipoDocumento, dob, type: 'free', amount: 0, ip, promoterCode: promoter ? promoter.code : null }));
     }
 
     // Send email(s), but don't fail the request if email delivery has an issue —

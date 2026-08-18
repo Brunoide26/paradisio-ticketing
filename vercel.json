@@ -1,7 +1,7 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/p/:code", "destination": "/index.html" }
+    { "source": "/p/:code", "destination": "/api/p/:code" }
   ],
   "headers": [
     {

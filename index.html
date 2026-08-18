@@ -29,8 +29,11 @@
      parsing (and every click handler with it) whenever checkout.culqi.com is
      slow, blocked, or unreachable — which is exactly what broke the "Seleccionar"
      button on Cortesía in production before. Payments are on now, so this script
-     is load-bearing — window.__culqiLoaded/__culqiLoadError let the pay button
-     detect a slow/blocked/failed load instead of throwing a silent ReferenceError. -->
+     is load-bearing. This is the ONLY place the SDK is loaded from — ensureCulqiLoaded()
+     (below) waits on this exact tag and must never inject a second one; loading
+     Culqi twice throws "Identifier already declared" on the redeclared top-level
+     bindings and window.Culqi never ends up usable. __culqiLoaded/__culqiLoadError
+     are diagnostic flags only, not used to trigger any retry. -->
 <script src="https://checkout.culqi.com/js/v4" defer onload="window.__culqiLoaded=true" onerror="window.__culqiLoadError=true"></script>
 <style>
   @font-face { font-family:'Unbounded'; src:url('fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
@@ -353,7 +356,7 @@
 
       <p class="pd-form-error" id="form-error" hidden></p>
 
-      <button type="button" class="pd-pay-btn js-copy" id="pay-btn" data-off="Generar mi entrada" data-on="Confirmar y pagar">Generar mi entrada</button>
+      <button type="button" class="pd-pay-btn" id="pay-btn">Generar mi entrada</button>
     </div>
   </div>
 
@@ -605,6 +608,7 @@
     if (!selectedTier) return;
     line.textContent = selectedTier.name + (selectedTier.qty > 1 ? ' × ' + selectedTier.qty : '');
     total.textContent = selectedTier.price === 0 ? 'Gratis' : 'S/ ' + selectedTier.price;
+    payBtn.textContent = selectedTier.price === 0 ? 'Generar mi QR gratis' : 'Pagar S/' + selectedTier.price;
   }
 
   function renderAssistantBlock(index){
@@ -860,22 +864,37 @@
   // uncaught ReferenceError: no modal, no visible error, exactly this bug.
   // This waits for the deferred load, and retries once via a fresh <script> tag
   // if the browser reported an outright load error (e.g. a transient blip).
+  // A previous version of this function injected a fresh <script> tag as a
+  // retry whenever window.__culqiLoadError was set — but the static tag in
+  // <head> (line ~34) is ALWAYS present on this page, so that path could run
+  // even after the original tag loaded successfully, executing the Culqi SDK
+  // a second time. Culqi's script declares top-level bindings (e.g. `io`)
+  // that can't be redeclared, so the second execution threw
+  // "Identifier 'io' has already been declared" and crashed before
+  // window.Culqi got (re)assigned — network tab showed a clean 200, but
+  // window.Culqi was still never usable. Fixed: never create a script tag
+  // while one already exists for this src; only wait for it.
   function ensureCulqiLoaded(){
     return new Promise((resolve, reject) => {
       if (window.Culqi) return resolve();
-      if (window.__culqiLoadError) {
+
+      const existing = document.querySelector('script[src="https://checkout.culqi.com/js/v4"]');
+      if (!existing) {
+        // No matching tag anywhere in the DOM — shouldn't normally happen,
+        // since one is always in <head>, but guard against it being missing.
         const s = document.createElement('script');
         s.src = 'https://checkout.culqi.com/js/v4';
+        s.defer = true;
         s.onload = () => resolve();
         s.onerror = () => reject(new Error('culqi_load_failed'));
         document.head.appendChild(s);
         return;
       }
+
       let tries = 0;
       const iv = setInterval(() => {
         tries++;
         if (window.Culqi) { clearInterval(iv); resolve(); }
-        else if (window.__culqiLoadError) { clearInterval(iv); ensureCulqiLoaded().then(resolve, reject); }
         else if (tries > 40) { clearInterval(iv); reject(new Error('culqi_load_timeout')); }
       }, 250);
     });

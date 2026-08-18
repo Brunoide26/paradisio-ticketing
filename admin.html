@@ -51,6 +51,7 @@
   .badge-mail-bounced { background:#2a0a0a; color:#e07f7f; }
   .badge-mail-pending { background:#2a2a2a; color:#999; }
   .badge-suspicious { background:#2a2200; color:#e0c87f; cursor:help; }
+  .badge-age-watch { background:#2a2200; color:#e0c87f; cursor:help; }
   tr.row-flag { background:#1a1600; }
   tr.row-flag:hover { background:#241d00; }
   .badge-void { background:#2a0a0a; color:#e07f7f; }
@@ -60,6 +61,21 @@
   .tabs { display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid var(--line); }
   .tab-btn { background:none; border:none; color:#888; font-family:inherit; font-size:13px; font-weight:600; padding:10px 4px; margin-right:20px; cursor:pointer; border-bottom:2px solid transparent; }
   .tab-btn.is-active { color:#fff; border-bottom-color:var(--pink); }
+
+  .puerta-grid { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+  .puerta-card { flex:1; min-width:220px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:24px; text-align:center; }
+  .puerta-card-main { border-color:var(--pink); background:rgba(255,40,0,0.08); }
+  .puerta-big-num { font-family:'Unbounded',sans-serif; font-size:40px; margin:0 0 6px; }
+  .puerta-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px; margin:0 0 4px; }
+  .puerta-sub { font-size:13px; color:#ccc; margin:0; }
+  .puerta-progress { height:8px; background:#000; border-radius:4px; overflow:hidden; margin-top:14px; }
+  .puerta-progress-fill { height:100%; width:100%; background:var(--pink); transform:scaleX(0); transform-origin:left; transition:transform 400ms ease; }
+  .puerta-chart-wrap { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:24px; margin-bottom:20px; }
+  .puerta-chart { display:flex; align-items:flex-end; gap:6px; height:140px; }
+  .puerta-bar-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .puerta-bar { width:100%; background:var(--pink); border-radius:3px 3px 0 0; min-height:2px; }
+  .puerta-bar-label { font-size:9px; color:#777; margin-top:6px; }
+  .puerta-bar-count { font-size:10px; color:#ccc; margin-bottom:4px; }
 
   .semaforo-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
   .semaforo-green { background:#4fd07a; }
@@ -115,6 +131,7 @@
     <div class="tabs">
       <button class="tab-btn is-active" id="tab-tickets">Tickets</button>
       <button class="tab-btn" id="tab-reclamos">Reclamaciones</button>
+      <button class="tab-btn" id="tab-puerta">Puerta en vivo</button>
     </div>
 
     <div id="tickets-panel">
@@ -133,6 +150,7 @@
         </label>
         <button class="btn btn-ghost" id="view-toggle-btn">Vista: por orden</button>
         <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
+        <button class="btn btn-pink" id="export-emails-btn">Exportar lista de correos</button>
         <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
       </div>
       <div class="table-scroll">
@@ -167,6 +185,27 @@
         </table>
       </div>
       <div class="hint">El plazo de respuesta es de 15 días hábiles improrrogables desde el día siguiente a la presentación. Verde: más de 7 días. Ámbar: 3 a 7 días. Rojo: menos de 3 días o vencido.</div>
+    </div>
+
+    <div id="puerta-panel" style="display:none;">
+      <div class="puerta-grid">
+        <div class="puerta-card puerta-card-main">
+          <p class="puerta-big-num" id="puerta-pct">—%</p>
+          <p class="puerta-label">Ingresados / Vigentes</p>
+          <p class="puerta-sub" id="puerta-counts">— / —</p>
+          <div class="puerta-progress"><div class="puerta-progress-fill" id="puerta-progress-fill"></div></div>
+        </div>
+        <div class="puerta-card">
+          <p class="puerta-big-num" id="puerta-remaining">—</p>
+          <p class="puerta-label">Cortesía por ingresar antes de medianoche</p>
+          <p class="puerta-sub" id="puerta-countdown">—</p>
+        </div>
+      </div>
+      <div class="puerta-chart-wrap">
+        <p class="pd-eyebrow" style="margin-bottom:14px;">Ritmo de ingreso por hora</p>
+        <div class="puerta-chart" id="puerta-chart"></div>
+      </div>
+      <div class="hint" id="puerta-updated"></div>
     </div>
   </div>
 </div>
@@ -249,6 +288,8 @@
       document.getElementById('dashboard-area').style.display = 'block';
       renderStats(d.counters, allTickets);
       renderCurrentView(allTickets);
+      renderPuertaEnVivo(d.tickets, d.counters);
+      startPuertaAutoRefresh();
     } catch(e){
       alert('Error de conexión');
     }
@@ -262,12 +303,18 @@
     // same treatment as an anulada, without double-counting a ticket that's both.
     const bounced = tickets.filter(t => !t.voided && t.emailStatus === 'bounced').length;
     const vigentes = generados - anulados - bounced;
+    // Same "vigente" definition (not voided, not bounced), split by ticket type so
+    // cortesía capacity and paid sales can be watched independently.
+    const cortesiasVigentes = tickets.filter(t => t.type === 'free' && !t.voided && t.emailStatus !== 'bounced').length;
+    const pagadasVigentes = tickets.filter(t => t.type === 'paid' && !t.voided && t.emailStatus !== 'bounced').length;
     const ingresados = c.checkedin || 0;
 
     const cards = [
       [generados, 'QRs generados', false],
       [anulados, 'QRs anulados', false],
       [vigentes, 'QRs vigentes', true],
+      [cortesiasVigentes, 'Cortesías vigentes', false],
+      [pagadasVigentes, 'Pagadas vigentes', false],
       [ingresados, 'Ingresados', false],
     ];
     el.innerHTML = cards.map(([num, label, featured]) =>
@@ -382,6 +429,26 @@
     return '<span class="badge badge-mail-pending">Pendiente</span>';
   }
 
+  // The 18+ gate checks age as of event day (2026-08-28), so someone under 18
+  // today can register if they'll turn 18 by then. Door staff need a heads-up
+  // to look closely at that ID rather than assume a registration mistake.
+  const EVENT_DATE_ISO = '2026-08-28';
+  function ageAsOf(dobStr, asOf){
+    const dob = new Date(dobStr + 'T00:00:00');
+    if (isNaN(dob.getTime())) return null;
+    let age = asOf.getFullYear() - dob.getFullYear();
+    const m = asOf.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && asOf.getDate() < dob.getDate())) age--;
+    return age;
+  }
+  function turns18BeforeEvent(dobStr){
+    if (!dobStr) return false;
+    const ageToday = ageAsOf(dobStr, new Date());
+    const ageAtEvent = ageAsOf(dobStr, new Date(EVENT_DATE_ISO + 'T00:00:00'));
+    if (ageToday === null || ageAtEvent === null) return false;
+    return ageToday < 18 && ageAtEvent >= 18;
+  }
+
   function ticketRowHtml(t){
     const typeBadge = t.type==='paid' ? '<span class="badge badge-paid">Pagada</span>' : '<span class="badge badge-free">Gratis</span>';
     let statusBadge = t.checkedIn ? '<span class="badge badge-in">En puerta</span>' : '<span class="badge badge-out">Pendiente</span>';
@@ -395,11 +462,14 @@
     const suspiciousBadge = reasons
       ? ` <span class="badge badge-suspicious" title="${escapeHtml([...reasons].join(' · '))}">⚠ Revisar</span>`
       : '';
+    const ageWatchBadge = turns18BeforeEvent(t.dob)
+      ? ` <span class="badge badge-age-watch" title="Cumple 18 años entre hoy y el evento — verificar el documento con atención en puerta">🎂 Cumple 18 pronto</span>`
+      : '';
     return `<tr${rowClass}>
       <td style="font-family:monospace;">${t.id}</td>
       <td>${escapeHtml(t.name)}${suspiciousBadge}</td>
       <td>${escapeHtml(t.dni||'')}</td>
-      <td>${escapeHtml(t.dob||'')}</td>
+      <td>${escapeHtml(t.dob||'')}${ageWatchBadge}</td>
       <td>${escapeHtml(t.phone||'')}</td>
       <td>${escapeHtml(t.email||'')}</td>
       <td>${typeBadge}</td>
@@ -531,23 +601,132 @@
     a.click();
   };
 
+  // Block 8: the real asset for a follow-up "fecha 2" campaign — only people who
+  // (a) actually got the email (delivered, not bounced), (b) hold a vigente
+  // ticket (not voided), and (c) actually showed up (checkedIn). A bounced or
+  // no-show contact isn't a real attendee and would just pollute the list.
+  document.getElementById('export-emails-btn').onclick = function(){
+    const eligible = allTickets.filter(t =>
+      t.emailStatus === 'delivered' && !t.voided && t.checkedIn && (t.email || '').trim()
+    );
+
+    const seen = new Set();
+    const deduped = [];
+    eligible.forEach(t => {
+      const key = t.email.trim().toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      deduped.push(t);
+    });
+
+    if (deduped.length === 0) {
+      alert('Todavía no hay correos que cumplan los tres filtros (entregado, vigente, ingresó).');
+      return;
+    }
+
+    const headers = ['Nombre', 'Email'];
+    const rows = deduped.map(t => [t.name, t.email]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'paradisio-lista-correos-fecha2.csv';
+    a.click();
+  };
+
   /* ---- Reclamaciones tab ---- */
   let allReclamos = [];
   let reclamosLoaded = false;
 
-  document.getElementById('tab-tickets').onclick = function(){
-    document.getElementById('tab-tickets').classList.add('is-active');
-    document.getElementById('tab-reclamos').classList.remove('is-active');
-    document.getElementById('tickets-panel').style.display = 'block';
-    document.getElementById('reclamos-panel').style.display = 'none';
-  };
-  document.getElementById('tab-reclamos').onclick = function(){
-    document.getElementById('tab-reclamos').classList.add('is-active');
-    document.getElementById('tab-tickets').classList.remove('is-active');
-    document.getElementById('reclamos-panel').style.display = 'block';
-    document.getElementById('tickets-panel').style.display = 'none';
-    if (!reclamosLoaded) loadReclamos();
-  };
+  const TABS = ['tickets', 'reclamos', 'puerta'];
+  function switchTab(name){
+    TABS.forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('is-active', t === name);
+      document.getElementById(t + '-panel').style.display = t === name ? 'block' : 'none';
+    });
+    if (name === 'reclamos' && !reclamosLoaded) loadReclamos();
+    if (name === 'puerta') loadPuertaEnVivo();
+  }
+  document.getElementById('tab-tickets').onclick = function(){ switchTab('tickets'); };
+  document.getElementById('tab-reclamos').onclick = function(){ switchTab('reclamos'); };
+  document.getElementById('tab-puerta').onclick = function(){ switchTab('puerta'); };
+
+  // --- Block 7: live door view. Refreshes on its own 30s timer, independent of
+  // the main "Actualizar" button on the Tickets tab. ---
+
+  function puertaVigentes(tickets){
+    // Same "vigente" definition as the counters up top: not voided, not bounced.
+    return tickets.filter(t => !t.voided && t.emailStatus !== 'bounced');
+  }
+
+  function renderPuertaEnVivo(tickets, counters){
+    const vigentes = puertaVigentes(tickets);
+    const ingresados = counters.checkedin || 0;
+    const pct = vigentes.length ? Math.round((ingresados / vigentes.length) * 100) : 0;
+
+    document.getElementById('puerta-pct').textContent = pct + '%';
+    document.getElementById('puerta-counts').textContent = ingresados + ' / ' + vigentes.length;
+    document.getElementById('puerta-progress-fill').style.transform = 'scaleX(' + (Math.min(100, pct) / 100) + ')';
+
+    // Midnight is the Cortesía cutoff (Club stays valid until 3am), so that's the
+    // segment with a real deadline door staff need to watch.
+    const freeVigentes = vigentes.filter(t => t.type === 'free');
+    const freeIngresados = freeVigentes.filter(t => t.checkedIn).length;
+    document.getElementById('puerta-remaining').textContent = freeVigentes.length - freeIngresados;
+
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const diffMs = midnight - now;
+    const h = Math.floor(diffMs / 3600000);
+    const m = Math.floor((diffMs % 3600000) / 60000);
+    document.getElementById('puerta-countdown').textContent = 'Faltan ' + h + 'h ' + m + 'm para medianoche';
+
+    const hourly = {};
+    tickets.forEach(t => {
+      if (!t.checkedIn || !t.checkedInAt) return;
+      const hh = new Date(t.checkedInAt).getHours();
+      hourly[hh] = (hourly[hh] || 0) + 1;
+    });
+    const hours = Object.keys(hourly).map(Number).sort((a, b) => a - b);
+    const chartEl = document.getElementById('puerta-chart');
+    if (hours.length === 0) {
+      chartEl.innerHTML = '<p style="color:#666;font-size:13px;">Aún no hay ingresos registrados.</p>';
+    } else {
+      const maxCount = Math.max(...hours.map(hh => hourly[hh]));
+      chartEl.innerHTML = hours.map(hh => {
+        const count = hourly[hh];
+        const heightPct = Math.round((count / maxCount) * 100);
+        const label = String(hh).padStart(2, '0') + ':00';
+        return `<div class="puerta-bar-col">
+          <span class="puerta-bar-count">${count}</span>
+          <div class="puerta-bar" style="height:${heightPct}%;"></div>
+          <span class="puerta-bar-label">${label}</span>
+        </div>`;
+      }).join('');
+    }
+
+    document.getElementById('puerta-updated').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-PE');
+  }
+
+  async function loadPuertaEnVivo(){
+    try {
+      const r = await fetch('/api/admin-list', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: PASSCODE }),
+      });
+      if (!r.ok) return;
+      const d = await r.json();
+      renderPuertaEnVivo(d.tickets, d.counters);
+    } catch (e) {}
+  }
+
+  let puertaIntervalStarted = false;
+  function startPuertaAutoRefresh(){
+    if (puertaIntervalStarted) return;
+    puertaIntervalStarted = true;
+    setInterval(loadPuertaEnVivo, 30000);
+  }
 
   async function loadReclamos(){
     try {

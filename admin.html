@@ -321,7 +321,6 @@
       renderStats(d.counters, allTickets);
       renderCurrentView(allTickets);
       renderPuertaEnVivo(d.tickets, d.counters);
-      startPuertaAutoRefresh();
     } catch(e){
       alert('Error de conexión');
     }
@@ -671,19 +670,40 @@
   let reclamosLoaded = false;
 
   const TABS = ['tickets', 'reclamos', 'puerta', 'promotores'];
+  let activeTab = 'tickets';
   function switchTab(name){
+    activeTab = name;
     TABS.forEach(t => {
       document.getElementById('tab-' + t).classList.toggle('is-active', t === name);
       document.getElementById(t + '-panel').style.display = t === name ? 'block' : 'none';
     });
     if (name === 'reclamos' && !reclamosLoaded) loadReclamos();
-    if (name === 'puerta') loadPuertaEnVivo();
+    if (name === 'puerta') {
+      loadPuertaEnVivo();
+      if (!document.hidden) startPuertaAutoRefresh();
+    } else {
+      stopPuertaAutoRefresh();
+    }
     if (name === 'promotores') loadPromoters();
   }
   document.getElementById('tab-tickets').onclick = function(){ switchTab('tickets'); };
   document.getElementById('tab-reclamos').onclick = function(){ switchTab('reclamos'); };
   document.getElementById('tab-puerta').onclick = function(){ switchTab('puerta'); };
   document.getElementById('tab-promotores').onclick = function(){ switchTab('promotores'); };
+
+  // Only polls while the Puerta en vivo tab is actually the one on screen --
+  // it used to run unconditionally the moment anyone logged in, regardless
+  // of which tab they were looking at, and kept running for as long as the
+  // browser tab stayed open. Also pauses while this browser tab itself is
+  // in the background (document.hidden), resuming only if Puerta is still
+  // the active admin tab when it comes back to the foreground.
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) {
+      stopPuertaAutoRefresh();
+    } else if (activeTab === 'puerta') {
+      startPuertaAutoRefresh();
+    }
+  });
 
   // --- Block 7: live door view. Refreshes on its own 30s timer, independent of
   // the main "Actualizar" button on the Tickets tab. ---
@@ -755,11 +775,15 @@
     } catch (e) {}
   }
 
-  let puertaIntervalStarted = false;
+  let puertaIntervalId = null;
   function startPuertaAutoRefresh(){
-    if (puertaIntervalStarted) return;
-    puertaIntervalStarted = true;
-    setInterval(loadPuertaEnVivo, 30000);
+    if (puertaIntervalId) return;
+    puertaIntervalId = setInterval(loadPuertaEnVivo, 30000);
+  }
+  function stopPuertaAutoRefresh(){
+    if (!puertaIntervalId) return;
+    clearInterval(puertaIntervalId);
+    puertaIntervalId = null;
   }
 
   async function loadReclamos(){

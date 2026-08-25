@@ -1,6 +1,6 @@
 const { PAYMENTS_ENABLED } = require('../lib/config');
-const { EVENT_DATE_ISO, getCounters } = require('../lib/tickets');
-const { getSalesWindow, getPaidSkus, isCortesiaDateOpen, CORTESIA_CAP, TEST_SKU_ENABLED, TEST_SKU } = require('../lib/catalog');
+const { EVENT_DATE_ISO, FREE_CAP, getCounters } = require('../lib/tickets');
+const { getSalesWindow, getPaidSkus, isCortesiaDateOpen, TEST_SKU_ENABLED, TEST_SKU } = require('../lib/catalog');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
@@ -17,10 +17,14 @@ module.exports = async (req, res) => {
 
   // cortesiaState never exposes the raw QR count (no visible capacity counter) —
   // only whether registration is still open, sold out at the cap, or closed by date.
+  // Compares against FREE_CAP (lib/tickets.js) -- the same value register-free.js
+  // actually enforces (it respects a FREE_CAP env var override; the raw
+  // CORTESIA_CAP constant this used to compare against does not) -- so the
+  // badge shown here can never say "open" while the real gate rejects.
   let cortesiaState = 'closed';
   if (isCortesiaDateOpen(now)) {
     const counters = await getCounters();
-    cortesiaState = (counters.free || 0) >= CORTESIA_CAP ? 'soldout' : 'open';
+    cortesiaState = (counters.free || 0) >= FREE_CAP ? 'soldout' : 'open';
   }
 
   return res.status(200).json({

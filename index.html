@@ -709,7 +709,7 @@
     if (cfg.cortesiaState === 'open') {
       const btn = renderSkuCard({
         tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening', cortesia: true,
-        note: 'Ingreso libre hasta las 12:00 a.m. · Sujeto a aforo',
+        note: 'Ingreso desde las 9 p.m. hasta las 12:00 a.m. · Sujeto a aforo',
       });
       btn.addEventListener('click', () => selectSkuCard(btn));
       skuGridEl.appendChild(btn);
@@ -717,7 +717,7 @@
     } else if (cfg.cortesiaState === 'soldout') {
       skuGridEl.appendChild(renderSkuCard({
         tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening', cortesia: true,
-        note: 'Ingreso libre hasta las 12:00 a.m. · Sujeto a aforo',
+        note: 'Ingreso desde las 9 p.m. hasta las 12:00 a.m. · Sujeto a aforo',
         disabled: true, badge: 'Cortesías agotadas',
       }));
     }
@@ -726,7 +726,7 @@
       const btn = renderSkuCard({
         tierId: sku.tier + ' ' + sku.name, price: sku.price, qty: sku.qty, sku: sku.sku,
         name: sku.tier + ' ' + sku.name,
-        note: sku.qty > 1 ? 'Entran a cualquier hora de la noche' : 'Entra a cualquier hora de la noche',
+        note: 'Ingreso desde las 9 p.m.',
       });
       btn.addEventListener('click', () => selectSkuCard(btn));
       skuGridEl.appendChild(btn);

@@ -706,6 +706,9 @@
     closedNoticeEl.hidden = true;
     pdFlowEl.hidden = false;
 
+    // 'soldout' and 'closed' both mean the Cortesía card doesn't render at
+    // all -- not grayed out, no "agotadas" badge, just absent. The grid
+    // (auto-fit/explicit columns) reflows on its own around the paid cards.
     if (cfg.cortesiaState === 'open') {
       const btn = renderSkuCard({
         tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening', cortesia: true,
@@ -714,12 +717,6 @@
       btn.addEventListener('click', () => selectSkuCard(btn));
       skuGridEl.appendChild(btn);
       skuCards.push(btn);
-    } else if (cfg.cortesiaState === 'soldout') {
-      skuGridEl.appendChild(renderSkuCard({
-        tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening', cortesia: true,
-        note: 'Ingreso desde las 9 p.m. hasta las 12:00 a.m. · Sujeto a aforo',
-        disabled: true, badge: 'Cortesías agotadas',
-      }));
     }
 
     (cfg.paidSkus || []).forEach((sku) => {

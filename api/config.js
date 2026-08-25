@@ -1,5 +1,5 @@
 const { PAYMENTS_ENABLED } = require('../lib/config');
-const { EVENT_DATE_ISO, FREE_CAP, getCounters } = require('../lib/tickets');
+const { EVENT_DATE_ISO, isCortesiaSoldOut } = require('../lib/tickets');
 const { getSalesWindow, getPaidSkus, isCortesiaDateOpen, TEST_SKU_ENABLED, TEST_SKU } = require('../lib/catalog');
 
 module.exports = async (req, res) => {
@@ -17,14 +17,15 @@ module.exports = async (req, res) => {
 
   // cortesiaState never exposes the raw QR count (no visible capacity counter) —
   // only whether registration is still open, sold out at the cap, or closed by date.
-  // Compares against FREE_CAP (lib/tickets.js) -- the same value register-free.js
-  // actually enforces (it respects a FREE_CAP env var override; the raw
-  // CORTESIA_CAP constant this used to compare against does not) -- so the
-  // badge shown here can never say "open" while the real gate rejects.
+  // isCortesiaSoldOut() (lib/tickets.js) is the exact same function
+  // register-free.js calls to actually reject registrations -- one shared
+  // source of truth, so the badge shown here can never say "open" while the
+  // real gate rejects. It also latches permanently sold out once FREE_CAP is
+  // reached, even if counters.free later drops from voided tickets -- freed
+  // slots are re-offered manually, not auto-reopened.
   let cortesiaState = 'closed';
   if (isCortesiaDateOpen(now)) {
-    const counters = await getCounters();
-    cortesiaState = (counters.free || 0) >= FREE_CAP ? 'soldout' : 'open';
+    cortesiaState = (await isCortesiaSoldOut()) ? 'soldout' : 'open';
   }
 
   return res.status(200).json({

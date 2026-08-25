@@ -40,9 +40,18 @@
   .field input { width:100%; background:#000; border:1px solid var(--line); color:#fff; padding:12px; border-radius:7px; font-size:15px; }
   .btn { width:100%; font-weight:600; font-size:14px; padding:14px; border-radius:8px; border:none; cursor:pointer; background:var(--white); color:#000; }
   .result { margin-top:16px; padding:18px; border-radius:8px; font-size:17px; font-weight:700; text-align:center; line-height:1.5; }
-  .ok { background:#0a2a12; color:#7fe0a0; border:1px solid #1a5a30; }
-  .bad { background:#2a0a0a; color:#e07f7f; border:1px solid #5a1a1a; }
-  .used { background:#2a2200; color:#e0c87f; border:1px solid #5a4a1a; }
+
+  /* Full-screen solid-color state -- meant to read at a glance from across
+     the door line, not as a bordered box you have to look closely to tell
+     apart. Covers the whole viewport; tapping it (or the next scan) closes it. */
+  .result-overlay { position:fixed; inset:0; z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:40px 28px; text-align:center; cursor:pointer; }
+  .result-overlay[hidden] { display:none; }
+  .result-overlay.is-ok { background:#16a34a; color:#052e16; }
+  .result-overlay.is-bad { background:#dc2626; color:#2d0a0a; }
+  .result-overlay-type { font-family:'Unbounded',sans-serif; font-weight:900; font-size:15px; letter-spacing:0.3em; text-transform:uppercase; opacity:0.85; }
+  .result-overlay-headline { font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.8rem, 9vw, 3rem); line-height:1.05; text-transform:uppercase; }
+  .result-overlay-detail { font-size:16px; font-weight:600; line-height:1.5; max-width:340px; }
+  .result-overlay-hint { margin-top:10px; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; opacity:0.7; }
 
   /* ---- shared site footer ---- */
   .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:48px 24px; margin:48px -16px -40px; }
@@ -76,6 +85,13 @@
     <div class="field"><label>O escribe el código manualmente (PDS-XXXXXX)</label><input type="text" id="ticket-id" autocapitalize="characters" /></div>
     <button class="btn" id="btn-checkin">Validar e ingresar</button>
     <div id="result"></div>
+  </div>
+
+  <div class="result-overlay" id="result-overlay" hidden>
+    <p class="result-overlay-type" id="result-overlay-type"></p>
+    <p class="result-overlay-headline" id="result-overlay-headline"></p>
+    <p class="result-overlay-detail" id="result-overlay-detail"></p>
+    <p class="result-overlay-hint">Toca para cerrar</p>
   </div>
 
   <footer class="pd-footer">
@@ -122,48 +138,75 @@
   }
   refreshStats();
 
+  // Full-screen solid-color state so door staff can read valid/invalid from
+  // a few feet away without squinting at text -- green only for a genuinely
+  // valid scan, red for every rejection (not_found/voided/already_used/
+  // expired), each with its own message. Auto-hides after a few seconds or
+  // on tap, whichever comes first.
+  const overlayEl = document.getElementById('result-overlay');
+  const overlayTypeEl = document.getElementById('result-overlay-type');
+  const overlayHeadlineEl = document.getElementById('result-overlay-headline');
+  const overlayDetailEl = document.getElementById('result-overlay-detail');
+  let overlayTimer = null;
+
+  function showOverlay(kind, type, headline, detail){
+    overlayEl.className = 'result-overlay is-' + kind;
+    overlayTypeEl.textContent = type;
+    overlayHeadlineEl.textContent = headline;
+    overlayDetailEl.textContent = detail || '';
+    overlayEl.hidden = false;
+    clearTimeout(overlayTimer);
+    overlayTimer = setTimeout(hideOverlay, 4000);
+  }
+  function hideOverlay(){
+    overlayEl.hidden = true;
+    clearTimeout(overlayTimer);
+  }
+  overlayEl.addEventListener('click', hideOverlay);
+
+  function docLabel(ticket){
+    return (ticket.docType || 'DNI') + ' ' + (ticket.dni || '—');
+  }
+
   async function doCheckin(ticketId){
     const passcode = document.getElementById('passcode').value;
     const resultEl = document.getElementById('result');
     if(!ticketId) return;
     resultEl.innerHTML = '<div class="result">Verificando…</div>';
-    resultEl.scrollIntoView({behavior:'smooth', block:'center'});
     try {
       const r = await fetch('/api/checkin', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ ticketId, passcode })
       });
       const d = await r.json();
+      resultEl.innerHTML = '';
       if(r.status === 401){
-        resultEl.innerHTML = '<div class="result bad">✗ Clave de staff incorrecta.</div>';
-        resultEl.scrollIntoView({behavior:'smooth', block:'center'});
+        showOverlay('bad', 'Error', 'Clave incorrecta', 'Verifica la clave de staff e intenta de nuevo.');
         return;
       }
       // passcode was accepted -> remember it on this device so staff don't retype it
       localStorage.setItem('paradisio_staff_passcode', passcode);
 
-      function docLabel(ticket){
-        return (ticket.docType || 'DNI') + ' ' + (ticket.dni || '—');
-      }
-
       if(!d.ok){
         if(d.reason === 'not_found'){
-          resultEl.innerHTML = '<div class="result bad">✗ INVÁLIDO — ticket no encontrado: '+ticketId+'</div>';
+          showOverlay('bad', 'Inválido', 'QR NO ENCONTRADO', 'Código: ' + ticketId);
         } else if(d.reason === 'already_used'){
-          resultEl.innerHTML = '<div class="result used">⚠ YA INGRESÓ — '+d.ticket.name+' ('+docLabel(d.ticket)+') a las '+new Date(d.ticket.checkedInAt).toLocaleTimeString()+'</div>';
+          showOverlay('bad', 'Ya ingresó', 'YA INGRESÓ', d.ticket.name + ' (' + docLabel(d.ticket) + ') — a las ' + new Date(d.ticket.checkedInAt).toLocaleTimeString());
         } else if(d.reason === 'voided'){
-          resultEl.innerHTML = '<div class="result bad">✗ ANULADO — '+d.ticket.name+' ('+docLabel(d.ticket)+') — NO debe ingresar</div>';
+          showOverlay('bad', 'Anulado', 'ANULADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — NO debe ingresar');
+        } else if(d.reason === 'cortesia_expired'){
+          showOverlay('bad', 'Cortesía', 'QR EXPIRADO', 'Pasar a caja para pagar ingreso');
+        } else {
+          showOverlay('bad', 'Error', 'NO SE PUDO VALIDAR', '');
         }
-        resultEl.scrollIntoView({behavior:'smooth', block:'center'});
         return;
       }
-      resultEl.innerHTML = '<div class="result ok">✓ VÁLIDO — '+d.ticket.name+'<br/>'+docLabel(d.ticket)+' · '+(d.ticket.type==='paid'?'Entrada pagada':'Lista gratis')+'</div>';
-      resultEl.scrollIntoView({behavior:'smooth', block:'center'});
+      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : 'CORTESÍA';
+      showOverlay('ok', typeLabel, 'VÁLIDO', d.ticket.name + ' — ' + docLabel(d.ticket));
       document.getElementById('ticket-id').value = '';
       refreshStats();
     } catch(e){
-      resultEl.innerHTML = '<div class="result bad">Error de conexión, intenta de nuevo.</div>';
-      resultEl.scrollIntoView({behavior:'smooth', block:'center'});
+      showOverlay('bad', 'Error', 'ERROR DE CONEXIÓN', 'Intenta de nuevo.');
     }
   }
 

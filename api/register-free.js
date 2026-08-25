@@ -1,4 +1,4 @@
-const { getCounters, createTicket, sendTicketEmail, qrDataUrl, calcAge, FREE_CAP, findConflictingFreeTicket, getClientIp, EVENT_DATE_LABEL } = require('../lib/tickets');
+const { createTicket, sendTicketEmail, qrDataUrl, calcAge, isCortesiaSoldOut, findConflictingFreeTicket, getClientIp, EVENT_DATE_LABEL } = require('../lib/tickets');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 const { isCortesiaDateOpen } = require('../lib/catalog');
@@ -46,8 +46,11 @@ module.exports = async (req, res) => {
       return res.status(409).json({ error: 'free_already_claimed', field });
     }
 
-    const counters = await getCounters();
-    if ((counters.free || 0) + qty > FREE_CAP) return res.status(409).json({ error: 'sold_out' });
+    // Same shared check api/config.js uses for cortesiaState -- one source of
+    // truth, and it latches permanently sold out once FREE_CAP is reached
+    // (see isCortesiaSoldOut in lib/tickets.js), so a voided ticket freeing a
+    // slot later doesn't silently let registration reopen on its own.
+    if (await isCortesiaSoldOut()) return res.status(409).json({ error: 'sold_out' });
 
     // Cortesía never discounts (it's already free) — a code here is
     // attribution-only, so an unknown/inactive code is silently dropped

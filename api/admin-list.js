@@ -1,4 +1,4 @@
-const { listAllTickets, getCounters } = require('../lib/tickets');
+const { listAllTickets, getCounters, getCortesiaStatus } = require('../lib/tickets');
 
 module.exports = async (req, res) => {
   try {
@@ -8,7 +8,8 @@ module.exports = async (req, res) => {
     }
     const tickets = await listAllTickets();
     const counters = await getCounters();
-    return res.status(200).json({ tickets, counters });
+    const cortesia = await getCortesiaStatus();
+    return res.status(200).json({ tickets, counters, cortesia });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'server_error' });

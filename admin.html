@@ -63,6 +63,15 @@
   .toggle-label { display:flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; }
   .hint { color:#666; font-size:12px; margin-top:8px; }
 
+  .cortesia-card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin-bottom:20px; }
+  .cortesia-row { display:flex; align-items:center; gap:24px; flex-wrap:wrap; justify-content:space-between; }
+  .cortesia-status { display:flex; align-items:center; gap:10px; }
+  .cortesia-label { font-family:'Unbounded',sans-serif; font-size:14px; }
+  .cortesia-reason { font-size:12px; color:#999; margin-top:2px; }
+  .cortesia-metrics { display:flex; gap:20px; flex-wrap:wrap; font-size:13px; color:#ccc; }
+  .cortesia-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+
   .tabs { display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid var(--line); }
   .tab-btn { background:none; border:none; color:#888; font-family:inherit; font-size:13px; font-weight:600; padding:10px 4px; margin-right:20px; cursor:pointer; border-bottom:2px solid transparent; }
   .tab-btn.is-active { color:#fff; border-bottom-color:var(--pink); }
@@ -133,6 +142,28 @@
   </div>
 
   <div id="dashboard-area" style="display:none;">
+    <div class="cortesia-card" id="cortesia-card">
+      <div class="cortesia-row">
+        <div class="cortesia-status">
+          <span class="semaforo-dot" id="cortesia-dot"></span>
+          <div>
+            <div class="cortesia-label" id="cortesia-label">—</div>
+            <div class="cortesia-reason" id="cortesia-reason"></div>
+          </div>
+        </div>
+        <div class="cortesia-metrics">
+          <span>Vigentes: <strong id="cortesia-vigentes">—</strong> / <span id="cortesia-cap">—</span></span>
+          <span>counters.free (crudo): <strong id="cortesia-raw">—</strong></span>
+        </div>
+        <div class="cortesia-actions">
+          <button class="btn btn-pink" id="cortesia-open-btn">Abrir cortesías</button>
+          <button class="btn btn-ghost" id="cortesia-close-btn">Cerrar cortesías</button>
+          <button class="btn btn-ghost" id="cortesia-resync-btn">Resincronizar contador</button>
+        </div>
+      </div>
+      <div class="hint">El control manual manda sobre el cierre automático por cap. "Vigentes" y "counters.free" deberían coincidir; si no, usa Resincronizar.</div>
+    </div>
+
     <div class="tabs">
       <button class="tab-btn is-active" id="tab-tickets">Tickets</button>
       <button class="tab-btn" id="tab-reclamos">Reclamaciones</button>
@@ -319,6 +350,7 @@
       document.getElementById('login-area').style.display = 'none';
       document.getElementById('dashboard-area').style.display = 'block';
       renderStats(d.counters, allTickets);
+      renderCortesiaCard(d.cortesia, allTickets);
       renderCurrentView(allTickets);
       renderPuertaEnVivo(d.tickets, d.counters);
     } catch(e){
@@ -355,6 +387,77 @@
     document.getElementById('stats-subline').textContent =
       `Gratis: ${c.free||0} · Pagadas: ${c.paid||0} · En puerta: ${ingresados} · Correo rebotado: ${bounced}`;
   }
+
+  // Manual open/closed control for Cortesía registration -- shown regardless
+  // of which tab is active, since it's the kind of thing you want visible at
+  // a glance. "Vigentes" here counts every non-voided free ticket (matching
+  // exactly what counters.free is supposed to track, and what Resincronizar
+  // recomputes), NOT the bounced-excluding "Cortesías vigentes" stat above --
+  // otherwise the two numbers would never be directly comparable for drift.
+  function renderCortesiaCard(status, tickets){
+    if (!status) return;
+    const vigentes = tickets.filter(t => t.type === 'free' && !t.voided).length;
+    const isOpen = status.state === 'open';
+    document.getElementById('cortesia-dot').className = 'semaforo-dot ' + (isOpen ? 'semaforo-green' : 'semaforo-red');
+    document.getElementById('cortesia-label').textContent = isOpen ? 'Cortesías: ABIERTO' : 'Cortesías: CERRADO';
+    let reasonText = '';
+    if (!isOpen) {
+      reasonText = status.reason === 'manual'
+        ? 'Cerrado manualmente desde este panel'
+        : 'Cerrado automáticamente: se alcanzó el cap (FREE_CAP)';
+    }
+    document.getElementById('cortesia-reason').textContent = reasonText;
+    document.getElementById('cortesia-vigentes').textContent = vigentes;
+    document.getElementById('cortesia-cap').textContent = status.freeCap;
+    document.getElementById('cortesia-raw').textContent = status.countersFree;
+    document.getElementById('cortesia-open-btn').disabled = isOpen;
+    document.getElementById('cortesia-close-btn').disabled = !isOpen;
+  }
+
+  document.getElementById('cortesia-open-btn').onclick = async function(){
+    if (!confirm('¿Abrir el registro de cortesías? Esto también anula cualquier cierre automático por cap.')) return;
+    try {
+      const r = await fetch('/api/admin-cortesia-toggle', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, open: true })
+      });
+      if (r.status === 401) { alert('Clave incorrecta'); return; }
+      await loadData();
+    } catch(e){
+      alert('Error de conexión al abrir cortesías');
+    }
+  };
+
+  document.getElementById('cortesia-close-btn').onclick = async function(){
+    if (!confirm('¿Cerrar el registro de cortesías? La card desaparecerá de la web y se rechazarán nuevas solicitudes.')) return;
+    try {
+      const r = await fetch('/api/admin-cortesia-toggle', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, open: false })
+      });
+      if (r.status === 401) { alert('Clave incorrecta'); return; }
+      await loadData();
+    } catch(e){
+      alert('Error de conexión al cerrar cortesías');
+    }
+  };
+
+  document.getElementById('cortesia-resync-btn').onclick = async function(){
+    if (!confirm('¿Resincronizar counters.free con el conteo real de cortesías vigentes? Esto NO reabre el registro si está cerrado.')) return;
+    try {
+      const r = await fetch('/api/admin-cortesia-resync', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE })
+      });
+      if (r.status === 401) { alert('Clave incorrecta'); return; }
+      const d = await r.json();
+      if (!d.ok) { alert('No se pudo resincronizar.'); return; }
+      alert('Resincronizado: counters.free pasó de ' + d.before + ' a ' + d.after + '.');
+      await loadData();
+    } catch(e){
+      alert('Error de conexión al resincronizar');
+    }
+  };
 
   // --- Block 5: suspicious-duplicate detection. Flags only, never auto-blocks —
   // it's for a human to review and decide. ---

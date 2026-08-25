@@ -22,9 +22,18 @@ module.exports = async (req, res) => {
       const cortesias = own.filter((t) => t.type === 'free').length;
       const pagadas = own.filter((t) => t.type === 'paid').length;
       const personas = cortesias + pagadas;
-      const ingreso = own
-        .filter((t) => t.type === 'paid')
-        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      // Revenue is per ORDER, not per ticket: a Duo/Trio charges once (see
+      // api/charge.js) and stores that same order total as `amount` on
+      // EVERY ticket in the order, so summing amount per ticket would
+      // double/triple-count a group sale's revenue. Count each order's
+      // amount exactly once (keyed by orderId) instead -- an individual
+      // sale has no other ticket sharing its orderId, so it's unaffected.
+      const paidOrderAmounts = new Map();
+      own.filter((t) => t.type === 'paid').forEach((t) => {
+        const key = t.orderId || t.id;
+        if (!paidOrderAmounts.has(key)) paidOrderAmounts.set(key, t.amount || 0);
+      });
+      const ingreso = [...paidOrderAmounts.values()].reduce((sum, a) => sum + a, 0);
       const ingresaron = own.filter((t) => t.checkedIn).length;
       const conversion = personas > 0 ? Math.round((ingresaron / personas) * 1000) / 10 : 0;
       return {

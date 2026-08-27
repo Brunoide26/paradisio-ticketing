@@ -169,6 +169,7 @@
       <button class="tab-btn" id="tab-reclamos">Reclamaciones</button>
       <button class="tab-btn" id="tab-puerta">Puerta en vivo</button>
       <button class="tab-btn" id="tab-promotores">Promotores</button>
+      <button class="tab-btn" id="tab-emision">Emisión manual</button>
     </div>
 
     <div id="tickets-panel">
@@ -270,6 +271,40 @@
       </div>
       <div class="hint">Ordena haciendo clic en cualquier columna. "Ingresaron" es el dato más importante: cuántos de los QRs de cada promotor entraron realmente al evento. Desactivar un código detiene su descuento y su link a futuro, pero conserva la atribución de las entradas ya emitidas.</div>
     </div>
+
+    <div id="emision-panel" style="display:none;">
+      <div class="puerta-chart-wrap">
+        <p class="pd-eyebrow" style="margin-bottom:14px;">Cortesía manual</p>
+        <div class="toolbar">
+          <input type="text" id="manual-free-nombre" placeholder="Nombre completo" />
+          <input type="email" id="manual-free-email" placeholder="Email" />
+          <button class="btn btn-pink" id="manual-free-issue-btn">Emitir y enviar QR</button>
+        </div>
+        <div class="hint">Válida hasta las 12:00 a.m. la noche del evento, igual que una cortesía normal. Ignora el cupo (FREE_CAP) y cualquier cierre, manual o automático — esta emisión es una decisión tuya.</div>
+        <div class="table-scroll" style="margin-top:14px;">
+          <table>
+            <thead><tr><th>Código</th><th>Nombre</th><th>Email</th><th>Emitido</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="manual-free-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="puerta-chart-wrap">
+        <p class="pd-eyebrow" style="margin-bottom:14px;">Lista VIP</p>
+        <div class="toolbar">
+          <input type="text" id="manual-vip-nombre" placeholder="Nombre completo" />
+          <input type="email" id="manual-vip-email" placeholder="Email" />
+          <button class="btn btn-pink" id="manual-vip-issue-btn">Emitir y enviar QR</button>
+        </div>
+        <div class="hint">No expira a medianoche — entra a cualquier hora. No cuenta contra FREE_CAP ni PAID_CAP.</div>
+        <div class="table-scroll" style="margin-top:14px;">
+          <table>
+            <thead><tr><th>Código</th><th>Nombre</th><th>Email</th><th>Emitido</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="manual-vip-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -351,6 +386,7 @@
       document.getElementById('dashboard-area').style.display = 'block';
       renderStats(d.counters, allTickets);
       renderCortesiaCard(d.cortesia, allTickets);
+      renderManualIssueLists(allTickets);
       renderCurrentView(allTickets);
       renderPuertaEnVivo(d.tickets, d.counters);
     } catch(e){
@@ -360,7 +396,10 @@
 
   function renderStats(c, tickets){
     const el = document.getElementById('stats');
-    const generados = (c.free||0) + (c.paid||0);
+    // counters.free already includes manually-issued cortesías (see
+    // api/admin-issue-ticket.js) -- counters.vip is added here too so a VIP
+    // shows up in "QRs vigentes" the same way a Cortesía or paid ticket does.
+    const generados = (c.free||0) + (c.paid||0) + (c.vip||0);
     const anulados = tickets.filter(t => t.voided).length;
     // A bounced QR never reached anyone, so it's not a real expected attendee either —
     // same treatment as an anulada, without double-counting a ticket that's both.
@@ -456,6 +495,80 @@
       await loadData();
     } catch(e){
       alert('Error de conexión al resincronizar');
+    }
+  };
+
+  // Manual issuance (Cortesía manual + VIP tab). Both lists are just a filter
+  // over the same allTickets array already loaded for the Tickets tab -- no
+  // separate fetch. type:'free' + manualIssue:true is the Cortesía manual
+  // list; type:'vip' is the VIP list.
+  function ticketRowSimple(t){
+    const date = new Date(t.createdAt).toLocaleString('es-PE', { dateStyle:'short', timeStyle:'short' });
+    let statusBadge = t.checkedIn ? '<span class="badge badge-in">En puerta</span>' : '<span class="badge badge-out">Pendiente</span>';
+    if (t.voided) statusBadge = '<span class="badge badge-void">Anulada</span>';
+    return `<tr>
+      <td style="font-family:monospace;">${t.id}</td>
+      <td>${escapeHtml(t.name)}</td>
+      <td>${escapeHtml(t.email||'')}</td>
+      <td>${date}</td>
+      <td>${statusBadge}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="resendTicketQr('${t.id}')">Reenviar QR</button></td>
+    </tr>`;
+  }
+
+  function renderManualIssueLists(tickets){
+    const manualFree = tickets.filter(t => t.type === 'free' && t.manualIssue);
+    const vipList = tickets.filter(t => t.type === 'vip');
+    document.getElementById('manual-free-table-body').innerHTML = manualFree.length
+      ? manualFree.map(ticketRowSimple).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:#666;">Sin emisiones manuales todavía</td></tr>';
+    document.getElementById('manual-vip-table-body').innerHTML = vipList.length
+      ? vipList.map(ticketRowSimple).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:#666;">Sin VIPs todavía</td></tr>';
+  }
+
+  async function issueManualTicket(kind, nombreElId, emailElId, btnEl){
+    const nombre = document.getElementById(nombreElId).value.trim();
+    const email = document.getElementById(emailElId).value.trim();
+    if (!nombre || !email) { alert('Completa nombre y email.'); return; }
+    btnEl.disabled = true;
+    try {
+      const r = await fetch('/api/admin-issue-ticket', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, nombre, email, kind })
+      });
+      if (r.status === 401) { alert('Clave incorrecta'); return; }
+      const d = await r.json();
+      if (!d.ok) { alert('No se pudo emitir: ' + (d.error || 'error desconocido')); return; }
+      document.getElementById(nombreElId).value = '';
+      document.getElementById(emailElId).value = '';
+      await loadData();
+    } catch(e){
+      alert('Error de conexión al emitir el ticket');
+    } finally {
+      btnEl.disabled = false;
+    }
+  }
+
+  document.getElementById('manual-free-issue-btn').onclick = function(){
+    issueManualTicket('free', 'manual-free-nombre', 'manual-free-email', this);
+  };
+  document.getElementById('manual-vip-issue-btn').onclick = function(){
+    issueManualTicket('vip', 'manual-vip-nombre', 'manual-vip-email', this);
+  };
+
+  window.resendTicketQr = async function(ticketId){
+    try {
+      const r = await fetch('/api/admin-resend-ticket', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, ticketId })
+      });
+      if (r.status === 401) { alert('Clave incorrecta'); return; }
+      const d = await r.json();
+      if (!d.ok) { alert('No se pudo reenviar: ' + (d.error || 'error desconocido')); return; }
+      alert('QR reenviado.');
+    } catch(e){
+      alert('Error de conexión al reenviar');
     }
   };
 
@@ -772,7 +885,7 @@
   let allReclamos = [];
   let reclamosLoaded = false;
 
-  const TABS = ['tickets', 'reclamos', 'puerta', 'promotores'];
+  const TABS = ['tickets', 'reclamos', 'puerta', 'promotores', 'emision'];
   let activeTab = 'tickets';
   function switchTab(name){
     activeTab = name;
@@ -793,6 +906,7 @@
   document.getElementById('tab-reclamos').onclick = function(){ switchTab('reclamos'); };
   document.getElementById('tab-puerta').onclick = function(){ switchTab('puerta'); };
   document.getElementById('tab-promotores').onclick = function(){ switchTab('promotores'); };
+  document.getElementById('tab-emision').onclick = function(){ switchTab('emision'); };
 
   // Only polls while the Puerta en vivo tab is actually the one on screen --
   // it used to run unconditionally the moment anyone logged in, regardless

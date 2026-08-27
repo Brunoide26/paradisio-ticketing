@@ -396,7 +396,10 @@
 
   function renderStats(c, tickets){
     const el = document.getElementById('stats');
-    const generados = (c.free||0) + (c.paid||0);
+    // counters.free already includes manually-issued cortesías (see
+    // api/admin-issue-ticket.js) -- counters.vip is added here too so a VIP
+    // shows up in "QRs vigentes" the same way a Cortesía or paid ticket does.
+    const generados = (c.free||0) + (c.paid||0) + (c.vip||0);
     const anulados = tickets.filter(t => t.voided).length;
     // A bounced QR never reached anyone, so it's not a real expected attendee either —
     // same treatment as an anulada, without double-counting a ticket that's both.

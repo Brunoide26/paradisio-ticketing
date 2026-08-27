@@ -201,7 +201,7 @@
         }
         return;
       }
-      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : 'CORTESÍA';
+      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : 'CORTESÍA';
       showOverlay('ok', typeLabel, 'VÁLIDO', d.ticket.name + ' — ' + docLabel(d.ticket));
       document.getElementById('ticket-id').value = '';
       refreshStats();

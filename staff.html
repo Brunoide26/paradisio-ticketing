@@ -52,6 +52,11 @@
   .result-overlay-headline { font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.8rem, 9vw, 3rem); line-height:1.05; text-transform:uppercase; }
   .result-overlay-detail { font-size:16px; font-weight:600; line-height:1.5; max-width:340px; }
   .result-overlay-hint { margin-top:10px; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; opacity:0.7; }
+  /* Deliberately styled as a secondary, outlined action rather than a big
+     inviting button -- letting an expired Cortesia in is the exception, so
+     it should never be the thing a thumb hits by reflex. */
+  .result-overlay-action { margin-top:18px; padding:16px 26px; background:transparent; color:inherit; border:2px solid currentColor; border-radius:12px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.18em; text-transform:uppercase; cursor:pointer; }
+  .result-overlay-action[hidden] { display:none; }
 
   /* ---- shared site footer ---- */
   .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:48px 24px; margin:48px -16px -40px; }
@@ -91,7 +96,8 @@
     <p class="result-overlay-type" id="result-overlay-type"></p>
     <p class="result-overlay-headline" id="result-overlay-headline"></p>
     <p class="result-overlay-detail" id="result-overlay-detail"></p>
-    <p class="result-overlay-hint">Toca para cerrar</p>
+    <button class="result-overlay-action" id="result-overlay-action" hidden></button>
+    <p class="result-overlay-hint" id="result-overlay-hint">Toca para cerrar</p>
   </div>
 
   <footer class="pd-footer">
@@ -147,28 +153,68 @@
   const overlayTypeEl = document.getElementById('result-overlay-type');
   const overlayHeadlineEl = document.getElementById('result-overlay-headline');
   const overlayDetailEl = document.getElementById('result-overlay-detail');
+  const overlayActionEl = document.getElementById('result-overlay-action');
+  const overlayHintEl = document.getElementById('result-overlay-hint');
   let overlayTimer = null;
+  let overlayAction = null;
 
-  function showOverlay(kind, type, headline, detail){
+  // `action` is optional: {label, onConfirm}. When present the overlay is a
+  // decision, not a notification -- it stays up until staff choose, instead
+  // of auto-hiding after 4s, so nobody is racing a timer with a person in
+  // front of them. It also holds the camera paused (see awaitingDecision).
+  function showOverlay(kind, type, headline, detail, action){
     overlayEl.className = 'result-overlay is-' + kind;
     overlayTypeEl.textContent = type;
     overlayHeadlineEl.textContent = headline;
     overlayDetailEl.textContent = detail || '';
+    overlayAction = action || null;
+    if(overlayAction){
+      overlayActionEl.textContent = overlayAction.label;
+      overlayActionEl.hidden = false;
+      overlayHintEl.textContent = 'Toca el fondo para rechazar';
+    } else {
+      overlayActionEl.hidden = true;
+      overlayHintEl.textContent = 'Toca para cerrar';
+    }
     overlayEl.hidden = false;
     clearTimeout(overlayTimer);
-    overlayTimer = setTimeout(hideOverlay, 4000);
+    if(!overlayAction) overlayTimer = setTimeout(hideOverlay, 4000);
   }
   function hideOverlay(){
     overlayEl.hidden = true;
+    overlayActionEl.hidden = true;
+    overlayAction = null;
     clearTimeout(overlayTimer);
+    resumeScanning();
   }
   overlayEl.addEventListener('click', hideOverlay);
+  // Stop the tap from bubbling to the overlay's own click-to-dismiss, which
+  // would otherwise close the screen out from under the action.
+  overlayActionEl.addEventListener('click', function(ev){
+    ev.stopPropagation();
+    const action = overlayAction;
+    if(!action) return;
+    overlayAction = null;
+    overlayActionEl.hidden = true;
+    action.onConfirm();
+  });
+
+  // The camera is paused while a result is on screen. A decision overlay
+  // ("DEJAR ENTRAR IGUAL") keeps it paused for as long as it takes, so the
+  // same QR still in frame can't re-scan and wipe the decision away; this
+  // resumes it once the overlay is gone, either way staff answered.
+  function resumeScanning(){
+    if(!scanning || !scanner) return;
+    try { scanner.resume(); } catch(e){}
+  }
 
   function docLabel(ticket){
     return (ticket.docType || 'DNI') + ' ' + (ticket.dni || '—');
   }
 
-  async function doCheckin(ticketId){
+  // allowExpiredCortesia is never set on the first scan of a QR -- it is only
+  // ever passed on the second call, the one the "DEJAR ENTRAR IGUAL" tap makes.
+  async function doCheckin(ticketId, allowExpiredCortesia){
     const passcode = document.getElementById('passcode').value;
     const resultEl = document.getElementById('result');
     if(!ticketId) return;
@@ -176,7 +222,7 @@
     try {
       const r = await fetch('/api/checkin', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ ticketId, passcode })
+        body: JSON.stringify({ ticketId, passcode, allowExpiredCortesia: allowExpiredCortesia === true })
       });
       const d = await r.json();
       resultEl.innerHTML = '';
@@ -195,14 +241,23 @@
         } else if(d.reason === 'voided'){
           showOverlay('bad', 'Anulado', 'ANULADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — NO debe ingresar');
         } else if(d.reason === 'cortesia_expired'){
-          showOverlay('bad', 'Cortesía', 'QR EXPIRADO', 'Pasar a caja para pagar ingreso');
+          // Still the same red screen -- the default answer is "no". The
+          // override is an extra tap staff have to choose to make, per person.
+          showOverlay('bad', 'Cortesía', 'QR EXPIRADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — pasar a caja, o dejar entrar igual', {
+            label: 'Dejar entrar igual',
+            onConfirm: function(){ doCheckin(ticketId, true); }
+          });
         } else {
           showOverlay('bad', 'Error', 'NO SE PUDO VALIDAR', '');
         }
         return;
       }
       const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : 'CORTESÍA';
-      showOverlay('ok', typeLabel, 'VÁLIDO', d.ticket.name + ' — ' + docLabel(d.ticket));
+      if(d.ticket.lateEntry){
+        showOverlay('ok', 'CORTESÍA VENCIDA', 'INGRESO REGISTRADO', d.ticket.name + ' — ' + docLabel(d.ticket) + ' (ingreso tardío)');
+      } else {
+        showOverlay('ok', typeLabel, 'VÁLIDO', d.ticket.name + ' — ' + docLabel(d.ticket));
+      }
       document.getElementById('ticket-id').value = '';
       refreshStats();
     } catch(e){
@@ -238,7 +293,11 @@
         doCheckin(decodedText.trim().toUpperCase());
         // brief pause so staff can see the result before scanning the next person
         scanner.pause(true);
-        setTimeout(function(){ if(scanning) scanner.resume(); }, 2000);
+        setTimeout(function(){
+          // Don't resume under a pending decision -- hideOverlay resumes it
+          // once staff have answered.
+          if(scanning && !overlayAction) resumeScanning();
+        }, 2000);
       },
       function(){ /* ignore per-frame scan errors */ }
     ).catch(function(err){

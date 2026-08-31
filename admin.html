@@ -53,6 +53,7 @@
   .badge-mail-pending { background:#2a2a2a; color:#999; }
   .badge-suspicious { background:#2a2200; color:#e0c87f; cursor:help; }
   .badge-age-watch { background:#2a2200; color:#e0c87f; cursor:help; }
+  .badge-late { background:#1a1a3a; color:#9f9fe0; cursor:help; }
   tr.row-flag { background:#1a1600; }
   tr.row-flag:hover { background:#241d00; }
   .badge-void { background:#2a0a0a; color:#e07f7f; }
@@ -410,6 +411,19 @@
     const cortesiasVigentes = tickets.filter(t => t.type === 'free' && !t.voided && t.emailStatus !== 'bounced').length;
     const pagadasVigentes = tickets.filter(t => t.type === 'paid' && !t.voided && t.emailStatus !== 'bounced').length;
     const ingresados = c.checkedin || 0;
+    // Ingresos tardíos: cortesías admitidas después del corte de puerta con el
+    // override del scanner (lateEntry, ver checkInTicket). Se cuenta sobre los
+    // tickets y no sobre counters porque no hay contador propio en Redis --
+    // el flag vive en el ticket. Deliberadamente NO excluye anuladas ni
+    // rebotadas como hacen los "vigentes" de arriba: esto no es una previsión
+    // de asistentes sino el registro de quién cruzó la puerta, y anular el QR
+    // después no deshace que la persona entró.
+    const tardios = tickets.filter(t => t.lateEntry).length;
+    // Sólo las cortesías se comparan entre sí: las pagadas nunca vencen en
+    // puerta, así que meterlas en el denominador diluiría la proporción que
+    // interesa para elegir el horario de corte.
+    const cortesiasIngresadas = tickets.filter(t => t.type === 'free' && t.checkedIn).length;
+    const cortesiasATiempo = cortesiasIngresadas - tardios;
 
     const cards = [
       [generados, 'QRs generados', false],
@@ -418,13 +432,15 @@
       [cortesiasVigentes, 'Cortesías vigentes', false],
       [pagadasVigentes, 'Pagadas vigentes', false],
       [ingresados, 'Ingresados', false],
+      [tardios, 'Ingresos tardíos', false],
     ];
     el.innerHTML = cards.map(([num, label, featured]) =>
       `<div class="stat${featured ? ' stat-featured' : ''}"><div class="stat-num">${num}</div><div class="stat-label">${label}</div></div>`
     ).join('');
 
     document.getElementById('stats-subline').textContent =
-      `Gratis: ${c.free||0} · Pagadas: ${c.paid||0} · En puerta: ${ingresados} · Correo rebotado: ${bounced}`;
+      `Gratis: ${c.free||0} · Pagadas: ${c.paid||0} · En puerta: ${ingresados} · Correo rebotado: ${bounced}` +
+      ` · Cortesías en puerta: ${cortesiasIngresadas} (${cortesiasATiempo} a tiempo · ${tardios} tardías)`;
   }
 
   // Manual open/closed control for Cortesía registration -- shown regardless
@@ -712,6 +728,11 @@
     const ageWatchBadge = turns18BeforeEvent(t.dob)
       ? ` <span class="badge badge-age-watch" title="Cumple 18 años entre hoy y el evento — verificar el documento con atención en puerta">🎂 Cumple 18 pronto</span>`
       : '';
+    // Va junto al estado y no reemplazándolo: "En puerta" sigue siendo cierto,
+    // el badge sólo dice que ese ingreso fue después del corte.
+    const lateBadge = t.lateEntry
+      ? ` <span class="badge badge-late" title="Cortesía vencida admitida en puerta con el botón &quot;Dejar entrar igual&quot; del scanner">🌙 Tardío</span>`
+      : '';
     return `<tr${rowClass}>
       <td style="font-family:monospace;">${t.id}</td>
       <td>${escapeHtml(t.name)}${suspiciousBadge}</td>
@@ -723,7 +744,7 @@
       <td>${t.amount ? 'S/'+t.amount : '—'}</td>
       <td style="font-family:monospace;">${escapeHtml(t.orderId||'—')}</td>
       <td>${date}</td>
-      <td>${statusBadge}</td>
+      <td>${statusBadge}${lateBadge}</td>
       <td>${emailStatusBadge(t)}</td>
       <td>${voidBtn}</td>
     </tr>`;
@@ -834,10 +855,14 @@
   document.getElementById('refresh-btn').onclick = loadData;
 
   document.getElementById('export-btn').onclick = function(){
-    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','Anulado','EstadoCorreo','Sospechoso'];
+    // IngresoTardio y HoraIngreso van pegadas a CheckedIn porque lo califican:
+    // si entró, cuándo entró y si fue después del corte. Ojo que insertarlas
+    // ahí corre las columnas posteriores respecto de exports anteriores.
+    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso'];
     const rows = allTickets.map(t => [
       t.id, t.name, t.dni, t.dob, t.phone, t.email, t.type, t.amount, t.orderId || '',
-      t.createdAt, t.checkedIn ? 'si' : 'no', t.voided ? 'si' : 'no', t.emailStatus || 'pending',
+      t.createdAt, t.checkedIn ? 'si' : 'no', t.checkedInAt || '', t.lateEntry ? 'si' : 'no',
+      t.voided ? 'si' : 'no', t.emailStatus || 'pending',
       suspiciousFlags.has(t.id) ? [...suspiciousFlags.get(t.id)].join('; ') : ''
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');

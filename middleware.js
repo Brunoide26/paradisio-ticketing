@@ -99,8 +99,14 @@ const HTML = `<!doctype html>
 //
 // El `$` ancla las exclusiones a la ruta exacta, así que /admin y /admin.html
 // pasan pero un /administracion inventado seguiría mostrando la espera.
+//
+// Los grupos internos van SIEMPRE como (?: ... ) y nunca como ( ... ): Vercel
+// rechaza los grupos de captura al compilar el matcher y el build falla con
+// "Capturing groups are not allowed". Sólo admite no-capturantes y lookaheads.
+// Los paréntesis de afuera no son un grupo de regex sino el parámetro de
+// path-to-regexp que envuelve al patrón, y por eso sí van tal cual.
 export const config = {
-  matcher: ['/((?!api/|admin(\\.html)?$|staff(\\.html)?$|paradisio-logo\\.png|favicon|apple-touch-icon|android-chrome|site\\.webmanifest).*)'],
+  matcher: ['/((?!api/|admin(?:\\.html)?$|staff(?:\\.html)?$|paradisio-logo\\.png|favicon|apple-touch-icon|android-chrome|site\\.webmanifest).*)'],
 };
 
 export default function middleware() {

@@ -82,16 +82,25 @@ const HTML = `<!doctype html>
 </html>
 `;
 
-// Todo menos: las funciones de /api (ver nota abajo), el logo que esta misma
-// pantalla necesita, y los iconos/manifest que pide el navegador solo. Sin
-// excluir el logo, la pantalla se pediría a sí misma en lugar del PNG.
+// Todo menos las herramientas internas y lo que la propia pantalla necesita:
 //
-// /api queda en pie a propósito: mandarle HTML a un endpoint JSON rompería el
-// webhook de Culqi y dejaría sin salida a los datos del panel (admin.html sí
-// queda tapado, como el resto de las páginas). Para apagar las APIs también,
-// sacar `api/|` del matcher.
+//   - /admin y /staff siguen en pie para poder seguir operando con la web
+//     cerrada al público: mirar tickets, anular, exportar, escanear.
+//   - /api va con ellos por necesidad -- el panel y el scanner no son más que
+//     una fachada sobre esos endpoints, así que taparlos dejaría las dos
+//     páginas abiertas pero inertes. También es lo que mantiene vivo el
+//     webhook de Culqi.
+//   - paradisio-logo.png, que esta misma pantalla carga: sin excluirlo, se
+//     pediría a sí misma en lugar del PNG.
+//   - iconos y manifest, que el navegador pide por su cuenta.
+//
+// Ojo que ninguna de las dos páginas gana protección por estar acá: siguen
+// tan expuestas (o tan protegidas por STAFF_PASSCODE) como antes de esto.
+//
+// El `$` ancla las exclusiones a la ruta exacta, así que /admin y /admin.html
+// pasan pero un /administracion inventado seguiría mostrando la espera.
 export const config = {
-  matcher: ['/((?!api/|paradisio-logo\\.png|favicon|apple-touch-icon|android-chrome|site\\.webmanifest).*)'],
+  matcher: ['/((?!api/|admin(\\.html)?$|staff(\\.html)?$|paradisio-logo\\.png|favicon|apple-touch-icon|android-chrome|site\\.webmanifest).*)'],
 };
 
 export default function middleware() {

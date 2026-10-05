@@ -254,6 +254,8 @@
           showOverlay('bad', 'Inválido', 'QR NO ENCONTRADO', 'Código: ' + ticketId);
         } else if(d.reason === 'already_used'){
           showOverlay('bad', 'Ya ingresó', 'YA INGRESÓ', d.ticket.name + ' (' + docLabel(d.ticket) + ') — a las ' + new Date(d.ticket.checkedInAt).toLocaleTimeString());
+        } else if(d.reason === 'other_event'){
+          showOverlay('bad', 'Otra fecha', 'QR DE OTRA FECHA', d.ticket.name + ' (' + docLabel(d.ticket) + ') — este QR no es para hoy');
         } else if(d.reason === 'voided'){
           showOverlay('bad', 'Anulado', 'ANULADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — NO debe ingresar');
         } else if(d.reason === 'cortesia_expired'){

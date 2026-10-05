@@ -1,6 +1,7 @@
 const { listAllTickets } = require('../lib/tickets');
 const { listPromoters, addPromoter } = require('../lib/promoters');
 const { listInvites } = require('../lib/invites');
+const { CURRENT_EVENT_ID, eventIdOfTicket, eventIdOfInvite } = require('../lib/events');
 
 // Per-promoter rollup for the admin "Promotores" tab. Voided tickets never
 // count toward any promoter's numbers — a voided ticket isn't a real sale
@@ -24,7 +25,12 @@ module.exports = async (req, res) => {
       return res.status(200).json({ ok: true, promoter: result.promoter });
     }
 
-    const [tickets, promoters, invites] = await Promise.all([listAllTickets(), listPromoters(), listInvites()]);
+    // Todo por fecha: sólo los tickets y códigos del evento pedido (por
+    // defecto, el vigente).
+    const eventId = (req.body && req.body.eventId) || (req.query && req.query.eventId) || CURRENT_EVENT_ID;
+    const [allT, promoters, allI] = await Promise.all([listAllTickets(), listPromoters(), listInvites()]);
+    const tickets = allT.filter((t) => eventIdOfTicket(t) === eventId);
+    const invites = allI.filter((i) => eventIdOfInvite(i) === eventId);
 
     const stats = promoters.map((p) => {
       const own = tickets.filter((t) => t.promoterCode === p.code && !t.voided);
@@ -63,7 +69,7 @@ module.exports = async (req, res) => {
       };
     });
 
-    return res.status(200).json({ promoters: stats });
+    return res.status(200).json({ promoters: stats, eventId });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'server_error' });

@@ -18,6 +18,9 @@ Ya no hay venta ni landing. `paradisioclub.com` abre directo la pantalla de **in
 - Fecha actual (por defecto en código): sábado 17 de octubre, 10 PM, Catalino Miranda 162 - Barranco (`EVENT_ADDRESS`, con link a Google Maps). Para la próxima fecha se pisan con variables en Vercel: `EVENT_NAME`, `EVENT_DATE_LABEL`, `EVENT_SHORT_DATE`, `EVENT_DATE_ISO` (filtro +18), `EMAIL_SUBJECT`, `PROMO_VALIDITY_LABEL` y `PROMO_ENTRY_CUTOFF` (ISO con offset, ej. `2026-10-17T23:00:00-05:00`).
 - Estética: script blanco (`logo-script-white.png`) + CLUB en rojo, Bodoni Moda + Jost autoalojadas en `/fonts`. Portada, `/entrada` y correo del QR comparten este estilo.
 - Los links viejos `/p/NOMBRE` redirigen a la portada.
+- **Todo va por fecha.** Cada ticket y código se guarda con su fecha (`eventId` = `EVENT_DATE_ISO`). El admin tiene un selector de fecha arriba: tickets, promotores, códigos, puerta y CSV muestran solo esa fecha. La fecha actual es donde entran los QRs nuevos; las pasadas quedan de consulta.
+- **Nueva fecha:** cambiar `EVENT_DATE_ISO`, `EVENT_NAME` (y textos de fecha/dirección/horario) en Vercel o en los defaults de `lib/events.js` + `lib/tickets.js`. Todo arranca en cero; los códigos sobrantes de la fecha anterior dejan de servir.
+- **En puerta** se rechaza cualquier QR de otra fecha ("QR DE OTRA FECHA"), aunque esté vigente y sin usar.
 
 ---
 

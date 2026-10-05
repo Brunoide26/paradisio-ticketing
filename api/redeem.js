@@ -5,6 +5,7 @@ const {
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 const { cleanCode, getInvite, claimInvite, releaseInvite, markInviteUsed } = require('../lib/invites');
+const { CURRENT_EVENT_ID, eventIdOfInvite } = require('../lib/events');
 
 // "@usuario", "usuario", "instagram.com/usuario/" -> "usuario"
 function cleanInstagram(raw) {
@@ -62,6 +63,7 @@ module.exports = async (req, res) => {
     if (!invite) return res.status(404).json({ error: 'code_not_found' });
     if (invite.revoked) return res.status(410).json({ error: 'code_revoked' });
     if (invite.ticketId) return res.status(409).json({ error: 'code_used' });
+    if (eventIdOfInvite(invite) !== CURRENT_EVENT_ID) return res.status(410).json({ error: 'code_revoked' });
 
     // Una entrada por persona: el mismo DNI o correo no puede juntar varios
     // códigos. Se compara sólo contra invitaciones vigentes.

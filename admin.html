@@ -31,6 +31,11 @@
   .btn-ghost { background:transparent; border:1px solid var(--line); color:#ccc; }
   .btn-sm { padding:6px 12px; font-size:12px; }
   .stat-row { display:flex; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+  .event-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px; padding:16px 20px; background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  .event-bar label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px; }
+  .event-bar select { background:#000; color:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-family:'Unbounded',sans-serif; font-size:13px; min-width:300px; }
+  .event-bar .event-note { font-size:12px; color:#888; }
+  .event-bar .event-note.is-past { color:#e0c87f; }
   .stat { flex:1; min-width:100px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px; text-align:center; }
   .stat-num { font-family:'Unbounded',sans-serif; font-size:24px; }
   .stat-label { font-size:10px; color:#777; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
@@ -146,6 +151,11 @@
   </div>
 
   <div id="dashboard-area" style="display:none;">
+    <div class="event-bar">
+      <label for="event-select">Fecha</label>
+      <select id="event-select"></select>
+      <span class="event-note" id="event-note"></span>
+    </div>
     <div class="cortesia-card" id="cortesia-card">
       <div class="cortesia-row">
         <div class="cortesia-status">
@@ -428,7 +438,48 @@
 
 <script>
   let PASSCODE = '';
-  let allTickets = [];
+  let allTickets = [];      // tickets de la fecha seleccionada
+  let rawTickets = [];      // todos, de todas las fechas
+  let allEvents = [];
+  let currentEventId = '';
+  let selectedEventId = '';
+  let lastCortesiaStatus = null;
+
+  function isCurrentEvent(){ return selectedEventId === currentEventId; }
+  function selectedEvent(){ return allEvents.find(e => e.id === selectedEventId) || { id: selectedEventId, name: selectedEventId }; }
+  function eventLabel(e){
+    const d = new Date(e.id + 'T12:00:00');
+    const date = isNaN(d) ? e.id : d.toLocaleDateString('es-PE', { day:'numeric', month:'short', year:'numeric' });
+    return `${date} · ${e.name}${e.current ? '  (actual)' : ''}`;
+  }
+
+  function fillEventSelect(){
+    const sel = document.getElementById('event-select');
+    sel.innerHTML = allEvents.map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(eventLabel(e))}</option>`).join('');
+    sel.value = selectedEventId;
+  }
+
+  // Re-dibuja todo con los tickets de la fecha elegida. No vuelve a pedir
+  // datos al servidor: rawTickets ya tiene todas las fechas.
+  function applyEventView(){
+    allTickets = rawTickets.filter(t => t.eventId === selectedEventId);
+    suspiciousFlags = computeSuspiciousFlags(allTickets);
+    const ev = selectedEvent();
+    const note = document.getElementById('event-note');
+    note.textContent = isCurrentEvent() ? 'Fecha actual: aquí entran los QRs nuevos.' : 'Fecha pasada: solo consulta.';
+    note.className = 'event-note' + (isCurrentEvent() ? '' : ' is-past');
+    // La caja de cortesías solo tiene sentido en la fecha que las usó.
+    const hasCortesia = !!ev.legacy || allTickets.some(t => t.type === 'free' && !t.manualIssue);
+    document.getElementById('cortesia-card').style.display = hasCortesia ? '' : 'none';
+    renderStats(null, allTickets);
+    if (hasCortesia) renderCortesiaCard(lastCortesiaStatus, allTickets);
+    renderManualIssueLists(allTickets);
+    renderCurrentView(getSearchFilteredTickets());
+    renderPuertaEnVivo(allTickets);
+    document.getElementById('promo-give-card').style.display = isCurrentEvent() ? '' : 'none';
+    if (activeTab === 'promotores') loadPromoters();
+    if (activeTab === 'codigos') renderCodigos();
+  }
 
   document.getElementById('login-btn').onclick = async function(){
     PASSCODE = document.getElementById('passcode-input').value;
@@ -449,68 +500,51 @@
         return;
       }
       const d = await r.json();
-      allTickets = d.tickets;
-      suspiciousFlags = computeSuspiciousFlags(allTickets);
+      rawTickets = d.tickets || [];
+      allEvents = d.events || [];
+      currentEventId = d.currentEventId || '';
+      if (!selectedEventId || !allEvents.some(e => e.id === selectedEventId)) selectedEventId = currentEventId;
+      lastCortesiaStatus = d.cortesia;
       document.getElementById('login-area').style.display = 'none';
       document.getElementById('dashboard-area').style.display = 'block';
-      renderStats(d.counters, allTickets);
-      renderCortesiaCard(d.cortesia, allTickets);
-      renderManualIssueLists(allTickets);
-      renderCurrentView(allTickets);
-      renderPuertaEnVivo(d.tickets, d.counters);
+      fillEventSelect();
+      applyEventView();
     } catch(e){
       alert('Error de conexión');
     }
   }
 
-  function renderStats(c, tickets){
+  // Todo se cuenta sobre los tickets de la fecha elegida (los contadores de
+  // Redis son globales y mezclan fechas).
+  function renderStats(_c, tickets){
     const el = document.getElementById('stats');
-    // counters.free already includes manually-issued cortesías (see
-    // api/admin-issue-ticket.js) -- counters.vip is added here too so a VIP
-    // shows up in "QRs vigentes" the same way a Cortesía or paid ticket does.
-    const generados = (c.free||0) + (c.paid||0) + (c.vip||0) + (c.promo||0);
+    const generados = tickets.length;
     const anulados = tickets.filter(t => t.voided).length;
-    // A bounced QR never reached anyone, so it's not a real expected attendee either —
-    // same treatment as an anulada, without double-counting a ticket that's both.
     const bounced = tickets.filter(t => !t.voided && t.emailStatus === 'bounced').length;
     const vigentes = generados - anulados - bounced;
-    // Same "vigente" definition (not voided, not bounced), split by ticket type so
-    // cortesía capacity and paid sales can be watched independently.
-    const cortesiasVigentes = tickets.filter(t => t.type === 'free' && !t.voided && t.emailStatus !== 'bounced').length;
-    const pagadasVigentes = tickets.filter(t => t.type === 'paid' && !t.voided && t.emailStatus !== 'bounced').length;
-    const invitacionesVigentes = tickets.filter(t => t.type === 'promo' && !t.voided && t.emailStatus !== 'bounced').length;
-    const ingresados = c.checkedin || 0;
-    // Ingresos tardíos: cortesías admitidas después del corte de puerta con el
-    // override del scanner (lateEntry, ver checkInTicket). Se cuenta sobre los
-    // tickets y no sobre counters porque no hay contador propio en Redis --
-    // el flag vive en el ticket. Deliberadamente NO excluye anuladas ni
-    // rebotadas como hacen los "vigentes" de arriba: esto no es una previsión
-    // de asistentes sino el registro de quién cruzó la puerta, y anular el QR
-    // después no deshace que la persona entró.
-    const tardios = tickets.filter(t => t.lateEntry).length;
-    // Sólo las cortesías se comparan entre sí: las pagadas nunca vencen en
-    // puerta, así que meterlas en el denominador diluiría la proporción que
-    // interesa para elegir el horario de corte.
-    const cortesiasIngresadas = tickets.filter(t => t.type === 'free' && t.checkedIn).length;
-    const cortesiasATiempo = cortesiasIngresadas - tardios;
+    const vig = (type) => tickets.filter(t => t.type === type && !t.voided && t.emailStatus !== 'bounced').length;
+    const has = (type) => tickets.some(t => t.type === type);
+    const ingresados = tickets.filter(t => t.checkedIn).length;
+    const tardios = tickets.filter(t => t.checkedIn && t.lateEntry);
+    const tardePago = tardios.filter(t => t.lateCharged).length;
 
     const cards = [
       [generados, 'QRs generados', false],
       [anulados, 'QRs anulados', false],
       [vigentes, 'QRs vigentes', true],
-      [invitacionesVigentes, 'Invitaciones vigentes', false],
-      [cortesiasVigentes, 'Cortesías vigentes', false],
-      [pagadasVigentes, 'Pagadas vigentes', false],
-      [ingresados, 'Ingresados', false],
-      [tardios, 'Ingresos tardíos', false],
     ];
+    if (has('promo')) cards.push([vig('promo'), 'Invitaciones vigentes', false]);
+    if (has('free')) cards.push([vig('free'), 'Cortesías vigentes', false]);
+    if (has('paid')) cards.push([vig('paid'), 'Pagadas vigentes', false]);
+    if (has('vip')) cards.push([vig('vip'), 'VIP vigentes', false]);
+    cards.push([ingresados, 'Ingresados', true]);
+    cards.push([tardios.length, 'Después de hora', false]);
     el.innerHTML = cards.map(([num, label, featured]) =>
       `<div class="stat${featured ? ' stat-featured' : ''}"><div class="stat-num">${num}</div><div class="stat-label">${label}</div></div>`
     ).join('');
 
     document.getElementById('stats-subline').textContent =
-      `Invitaciones: ${c.promo||0} · Gratis: ${c.free||0} · Pagadas: ${c.paid||0} · En puerta: ${ingresados} · Correo rebotado: ${bounced}` +
-      ` · Cortesías en puerta: ${cortesiasIngresadas} (${cortesiasATiempo} a tiempo · ${tardios} tardías)`;
+      `En puerta: ${ingresados} (${ingresados - tardios.length} a tiempo · ${tardios.length} después de hora: ${tardePago} pagó, ${tardios.length - tardePago} gratis) · Correo rebotado: ${bounced}`;
   }
 
   // Manual open/closed control for Cortesía registration -- shown regardless
@@ -956,7 +990,7 @@
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'paradisio-tickets.csv';
+    a.download = 'paradisio-tickets-' + selectedEventId + '.csv';
     a.click();
   };
 
@@ -1044,9 +1078,9 @@
     return tickets.filter(t => !t.voided && t.emailStatus !== 'bounced');
   }
 
-  function renderPuertaEnVivo(tickets, counters){
+  function renderPuertaEnVivo(tickets){
     const vigentes = puertaVigentes(tickets);
-    const ingresados = counters.checkedin || 0;
+    const ingresados = tickets.filter(t => t.checkedIn).length;
     const pct = vigentes.length ? Math.round((ingresados / vigentes.length) * 100) : 0;
 
     document.getElementById('puerta-pct').textContent = pct + '%';
@@ -1055,7 +1089,7 @@
 
     // Midnight is the Cortesía cutoff (Club stays valid until 3am), so that's the
     // segment with a real deadline door staff need to watch.
-    const freeVigentes = vigentes.filter(t => t.type === 'free');
+    const freeVigentes = vigentes.filter(t => t.type === 'free' || t.type === 'promo');
     const freeIngresados = freeVigentes.filter(t => t.checkedIn).length;
     document.getElementById('puerta-remaining').textContent = freeVigentes.length - freeIngresados;
 
@@ -1102,7 +1136,9 @@
       });
       if (!r.ok) return;
       const d = await r.json();
-      renderPuertaEnVivo(d.tickets, d.counters);
+      rawTickets = d.tickets || rawTickets;
+      allTickets = rawTickets.filter(t => t.eventId === selectedEventId);
+      renderPuertaEnVivo(allTickets);
     } catch (e) {}
   }
 
@@ -1274,7 +1310,7 @@
     try {
       const r = await fetch('/api/admin-promoters', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ passcode: PASSCODE })
+        body: JSON.stringify({ passcode: PASSCODE, eventId: selectedEventId })
       });
       if (r.status === 401) { alert('Clave incorrecta'); return; }
       const d = await r.json();
@@ -1479,7 +1515,7 @@
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'paradisio-promotores.csv';
+    a.download = 'paradisio-promotores-' + selectedEventId + '.csv';
     a.click();
   };
 
@@ -1525,11 +1561,13 @@
 
   function inviteStatus(i){ return i.revoked ? 'revoked' : (i.ticketId ? 'used' : 'free'); }
 
+  function eventInvites(){ return allInvites.filter(i => i.eventId === selectedEventId); }
+
   function filteredInvites(){
     const q = document.getElementById('codes-search').value.trim().toUpperCase();
     const pf = document.getElementById('codes-filter-promoter').value;
     const sf = document.getElementById('codes-filter-status').value;
-    return allInvites.filter(i =>
+    return eventInvites().filter(i =>
       (!pf || i.promoterCode === pf) &&
       (!sf || inviteStatus(i) === sf) &&
       (!q || i.code.includes(q) || (i.promoterCode||'').includes(q) || (i.ticketId||'').includes(q))
@@ -1537,15 +1575,16 @@
   }
 
   function renderCodigos(){
-    const total = allInvites.length;
-    const used = allInvites.filter(i => inviteStatus(i) === 'used').length;
-    const revoked = allInvites.filter(i => inviteStatus(i) === 'revoked').length;
+    const evInv = eventInvites();
+    const total = evInv.length;
+    const used = evInv.filter(i => inviteStatus(i) === 'used').length;
+    const revoked = evInv.filter(i => inviteStatus(i) === 'revoked').length;
     const free = total - used - revoked;
     document.getElementById('codes-stats').innerHTML = [
       [total, 'Códigos generados', false], [used, 'Canjeados', true], [free, 'Libres', false], [revoked, 'Revocados', false],
     ].map(([n, l, f]) => `<div class="stat${f ? ' stat-featured' : ''}"><div class="stat-num">${n}</div><div class="stat-label">${l}</div></div>`).join('');
 
-    const ticketsById = new Map(allTickets.map(t => [t.id, t]));
+    const ticketsById = new Map(rawTickets.map(t => [t.id, t]));
     const list = filteredInvites();
     const body = document.getElementById('codes-table-body');
     if (!list.length) {
@@ -1607,6 +1646,7 @@
   };
 
   document.getElementById('codes-generate-btn').onclick = async function(){
+    if (!isCurrentEvent()) { alert('Solo se generan códigos para la fecha actual. Cambia la fecha arriba.'); return; }
     const promoterCode = document.getElementById('codes-promoter').value;
     const count = parseInt(document.getElementById('codes-count').value, 10);
     if (!promoterCode) { alert('Elige un promotor.'); return; }
@@ -1644,9 +1684,14 @@
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'paradisio-codigos.csv';
+    a.download = 'paradisio-codigos-' + selectedEventId + '.csv';
     a.click();
   };
+
+  document.getElementById('event-select').addEventListener('change', function(){
+    selectedEventId = this.value;
+    applyEventView();
+  });
 </script>
 </body>
 </html>

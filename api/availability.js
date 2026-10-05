@@ -1,15 +1,18 @@
-const { getCounters, FREE_CAP, PAID_CAP } = require('../lib/tickets');
+const { listAllTickets } = require('../lib/tickets');
+const { CURRENT_EVENT_ID, eventIdOfTicket } = require('../lib/events');
 
+// Números del scanner de puerta, sólo de la fecha vigente (los contadores
+// globales de Redis mezclan todas las fechas).
 module.exports = async (req, res) => {
   try {
-    const c = await getCounters();
+    const tickets = (await listAllTickets()).filter((t) => eventIdOfTicket(t) === CURRENT_EVENT_ID && !t.voided);
+    const count = (type) => tickets.filter((t) => t.type === type).length;
     return res.status(200).json({
-      free: c.free || 0,
-      promo: c.promo || 0,
-      paid: c.paid || 0,
-      checkedin: c.checkedin || 0,
-      freeLeft: Math.max(0, FREE_CAP - (c.free || 0)),
-      paidLeft: Math.max(0, PAID_CAP - (c.paid || 0)),
+      eventId: CURRENT_EVENT_ID,
+      free: count('free'),
+      paid: count('paid'),
+      promo: count('promo'),
+      checkedin: tickets.filter((t) => t.checkedIn).length,
     });
   } catch (err) {
     console.error(err);

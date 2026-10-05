@@ -91,6 +91,7 @@
       <p class="en-code" id="en-code"></p>
       <div class="en-details">
         <p class="cap" id="en-event-date"></p>
+        <p class="cap"><a id="en-address" href="#" target="_blank" rel="noopener" style="text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--faint);"></a></p>
         <p class="cap" id="en-validity"></p>
       </div>
       <p class="cap" id="en-event-name" style="display:none;"></p>
@@ -142,6 +143,9 @@
       document.getElementById('en-code').textContent = d.code;
       document.getElementById('en-event-name').textContent = d.eventName;
       document.getElementById('en-event-date').textContent = d.eventDateLabel;
+      const addr = document.getElementById('en-address');
+      addr.textContent = d.eventAddress || ''; addr.href = d.eventMapsUrl || '#';
+      addr.parentNode.style.display = d.eventAddress ? '' : 'none';
       const validityEl = document.getElementById('en-validity');
       if (d.validityLabel) validityEl.textContent = 'QR válido ' + d.validityLabel;
       else validityEl.style.display = 'none';

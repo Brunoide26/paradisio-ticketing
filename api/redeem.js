@@ -1,6 +1,6 @@
 const {
   createTicket, sendTicketEmail, qrDataUrl, calcAge, findConflictingFreeTicket, getClientIp,
-  EVENT_NAME, EVENT_DATE_LABEL, ticketTypeLabel, ticketValidityLabel, genTicketId,
+  EVENT_NAME, EVENT_DATE_LABEL, EVENT_ADDRESS, EVENT_MAPS_URL, ticketTypeLabel, ticketValidityLabel, genTicketId,
 } = require('../lib/tickets');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
@@ -110,7 +110,7 @@ module.exports = async (req, res) => {
         tierLabel: ticketTypeLabel(ticket), validityLabel: ticketValidityLabel(ticket),
       },
       qr,
-      event: { name: EVENT_NAME, dateLabel: EVENT_DATE_LABEL },
+      event: { name: EVENT_NAME, dateLabel: EVENT_DATE_LABEL, address: EVENT_ADDRESS, mapsUrl: EVENT_MAPS_URL },
     });
   } catch (err) {
     console.error(err);

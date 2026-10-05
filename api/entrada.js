@@ -1,4 +1,4 @@
-const { getTicketByToken, qrDataUrl, EVENT_NAME, EVENT_DATE_LABEL, ticketTypeLabel, ticketValidityLabel } = require('../lib/tickets');
+const { getTicketByToken, qrDataUrl, EVENT_NAME, EVENT_DATE_LABEL, EVENT_ADDRESS, EVENT_MAPS_URL, ticketTypeLabel, ticketValidityLabel } = require('../lib/tickets');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
@@ -19,6 +19,8 @@ module.exports = async (req, res) => {
       tierLabel: ticketTypeLabel(ticket),
       eventName: EVENT_NAME,
       eventDateLabel: EVENT_DATE_LABEL,
+      eventAddress: EVENT_ADDRESS,
+      eventMapsUrl: EVENT_MAPS_URL,
       validityLabel: ticketValidityLabel(ticket),
       qr,
     });

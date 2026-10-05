@@ -268,6 +268,7 @@
       <p class="pd-ticket-code" id="ticket-code"></p>
       <div class="pd-validity">
         <p class="pd-cap" id="ticket-date"></p>
+        <p class="pd-cap"><a id="ticket-address" href="#" target="_blank" rel="noopener" style="text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--faint);"></a></p>
         <p class="pd-cap is-red" id="ticket-validity"></p>
       </div>
       <p class="pd-note" id="ticket-lead">También te lo enviamos por correo. Preséntalo con tu documento de identidad físico. Solo mayores de 18.</p>
@@ -480,6 +481,9 @@
     $('ticket-qr').src = res.qr;
     $('ticket-code').textContent = t.id;
     $('ticket-date').textContent = ev.dateLabel || '';
+    $('ticket-address').textContent = ev.address || '';
+    $('ticket-address').href = ev.mapsUrl || '#';
+    $('ticket-address').parentNode.style.display = ev.address ? '' : 'none';
     $('ticket-validity').textContent = t.validityLabel ? 'QR válido ' + t.validityLabel : '';
     $('ticket-validity').style.display = t.validityLabel ? '' : 'none';
     $('ticket-lead').textContent = 'También te lo enviamos a ' + email + '. Preséntalo con tu documento de identidad físico. Solo mayores de 18.';

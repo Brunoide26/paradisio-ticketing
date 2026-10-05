@@ -78,7 +78,7 @@
   <h1>Paradisio · Check-in de puerta</h1>
   <div class="card">
     <div class="stat-row">
-      <div class="stat"><div class="stat-num" id="s-free">–</div><div class="stat-label">Gratis</div></div>
+      <div class="stat"><div class="stat-num" id="s-free">–</div><div class="stat-label">Invitaciones</div></div>
       <div class="stat"><div class="stat-num" id="s-paid">–</div><div class="stat-label">Pagadas</div></div>
       <div class="stat"><div class="stat-num" id="s-in">–</div><div class="stat-label">En puerta</div></div>
     </div>
@@ -137,7 +137,7 @@
     try {
       const r = await fetch('/api/availability');
       const d = await r.json();
-      document.getElementById('s-free').textContent = d.free;
+      document.getElementById('s-free').textContent = d.promo || 0;
       document.getElementById('s-paid').textContent = d.paid;
       document.getElementById('s-in').textContent = d.checkedin;
     } catch(e){}
@@ -252,7 +252,7 @@
         }
         return;
       }
-      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : 'CORTESÍA';
+      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : d.ticket.type === 'promo' ? 'INVITACIÓN' : 'CORTESÍA';
       if(d.ticket.lateEntry){
         showOverlay('ok', 'CORTESÍA VENCIDA', 'INGRESO REGISTRADO', d.ticket.name + ' — ' + docLabel(d.ticket) + ' (ingreso tardío)');
       } else {

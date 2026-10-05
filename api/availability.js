@@ -5,6 +5,7 @@ module.exports = async (req, res) => {
     const c = await getCounters();
     return res.status(200).json({
       free: c.free || 0,
+      promo: c.promo || 0,
       paid: c.paid || 0,
       checkedin: c.checkedin || 0,
       freeLeft: Math.max(0, FREE_CAP - (c.free || 0)),

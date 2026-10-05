@@ -1,5 +1,22 @@
 # Paradisio — sistema de tickets
 
+## Modo actual: solo promotoría (códigos de un solo uso)
+
+Ya no hay venta ni landing. `paradisioclub.com` abre directo la pantalla de **ingresar código**:
+
+1. El invitado escribe el código que le pasó su promotor (o entra por `paradisioclub.com/?c=CODIGO`, que lo trae puesto).
+2. Llena: nombre, apellido, DNI, fecha de nacimiento, correo, número e Instagram (+ casilla de 18+ y términos/privacidad).
+3. Recibe su QR en pantalla y por correo. El código queda quemado.
+
+- **Generar códigos:** `/admin` → pestaña **Códigos** → elegir promotor + cantidad → Generar. Se copian como lista de códigos o lista de links.
+- Cada código es de **una sola persona** y queda atribuido al promotor. Un mismo DNI o correo no puede sacar dos entradas.
+- Códigos libres se pueden **revocar**; para invalidar una entrada ya canjeada, se anula el ticket como siempre.
+- Las entradas salen como tipo `promo` ("Invitación"): sin corte de medianoche en puerta.
+- Datos de la fecha por variables de entorno en Vercel (sin tocar código): `EVENT_NAME`, `EVENT_DATE_LABEL`, `EVENT_DATE_ISO` (para el filtro de +18), `EMAIL_SUBJECT`, y opcional `PROMO_VALIDITY_LABEL` (ej. `hasta la 1:00 a.m.`).
+- Los links viejos `/p/NOMBRE` redirigen a la portada.
+
+---
+
 Landing + registro gratis + pago con tarjeta (Culqi) + QR automático en pantalla y por correo + panel de check-in en puerta.
 
 ## Qué necesitas crear (todo gratis para este volumen de gente)

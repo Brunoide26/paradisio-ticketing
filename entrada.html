@@ -241,7 +241,9 @@
       document.getElementById('en-code').textContent = d.code;
       document.getElementById('en-event-name').textContent = d.eventName;
       document.getElementById('en-event-date').textContent = d.eventDateLabel;
-      document.getElementById('en-validity').textContent = 'Válida ' + d.validityLabel;
+      const validityEl = document.getElementById('en-validity');
+      if (d.validityLabel) validityEl.textContent = 'Válida ' + d.validityLabel;
+      else validityEl.style.display = 'none';
       document.title = 'Tu entrada — ' + d.name;
 
       showState('en-ticket');

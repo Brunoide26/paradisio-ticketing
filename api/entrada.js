@@ -1,4 +1,4 @@
-const { getTicketByToken, qrDataUrl, EVENT_NAME, EVENT_DATE_LABEL, tierTypeLabel, tierValidityLabel } = require('../lib/tickets');
+const { getTicketByToken, qrDataUrl, EVENT_NAME, EVENT_DATE_LABEL, ticketTypeLabel, ticketValidityLabel } = require('../lib/tickets');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
@@ -10,17 +10,16 @@ module.exports = async (req, res) => {
     const ticket = await getTicketByToken(token);
     if (!ticket) return res.status(404).json({ error: 'not_found' });
 
-    const isFree = ticket.type === 'free';
     const qr = await qrDataUrl(ticket.id);
 
     return res.status(200).json({
       name: ticket.name,
       dni: ticket.dni,
       code: ticket.id,
-      tierLabel: ticket.skuLabel || tierTypeLabel(isFree),
+      tierLabel: ticketTypeLabel(ticket),
       eventName: EVENT_NAME,
       eventDateLabel: EVENT_DATE_LABEL,
-      validityLabel: tierValidityLabel(isFree),
+      validityLabel: ticketValidityLabel(ticket),
       qr,
     });
   } catch (err) {

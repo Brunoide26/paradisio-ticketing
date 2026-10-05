@@ -78,7 +78,7 @@
   <h1>Paradisio · Check-in de puerta</h1>
   <div class="card">
     <div class="stat-row">
-      <div class="stat"><div class="stat-num" id="s-free">–</div><div class="stat-label">Gratis</div></div>
+      <div class="stat"><div class="stat-num" id="s-free">–</div><div class="stat-label">Invitaciones</div></div>
       <div class="stat"><div class="stat-num" id="s-paid">–</div><div class="stat-label">Pagadas</div></div>
       <div class="stat"><div class="stat-num" id="s-in">–</div><div class="stat-label">En puerta</div></div>
     </div>
@@ -97,6 +97,7 @@
     <p class="result-overlay-headline" id="result-overlay-headline"></p>
     <p class="result-overlay-detail" id="result-overlay-detail"></p>
     <button class="result-overlay-action" id="result-overlay-action" hidden></button>
+    <button class="result-overlay-action" id="result-overlay-action2" hidden></button>
     <p class="result-overlay-hint" id="result-overlay-hint">Toca para cerrar</p>
   </div>
 
@@ -137,7 +138,7 @@
     try {
       const r = await fetch('/api/availability');
       const d = await r.json();
-      document.getElementById('s-free').textContent = d.free;
+      document.getElementById('s-free').textContent = d.promo || 0;
       document.getElementById('s-paid').textContent = d.paid;
       document.getElementById('s-in').textContent = d.checkedin;
     } catch(e){}
@@ -154,6 +155,8 @@
   const overlayHeadlineEl = document.getElementById('result-overlay-headline');
   const overlayDetailEl = document.getElementById('result-overlay-detail');
   const overlayActionEl = document.getElementById('result-overlay-action');
+  const overlayAction2El = document.getElementById('result-overlay-action2');
+  let overlayAction2 = null;
   const overlayHintEl = document.getElementById('result-overlay-hint');
   let overlayTimer = null;
   let overlayAction = null;
@@ -162,12 +165,15 @@
   // decision, not a notification -- it stays up until staff choose, instead
   // of auto-hiding after 4s, so nobody is racing a timer with a person in
   // front of them. It also holds the camera paused (see awaitingDecision).
-  function showOverlay(kind, type, headline, detail, action){
+  function showOverlay(kind, type, headline, detail, action, action2){
     overlayEl.className = 'result-overlay is-' + kind;
     overlayTypeEl.textContent = type;
     overlayHeadlineEl.textContent = headline;
     overlayDetailEl.textContent = detail || '';
     overlayAction = action || null;
+    overlayAction2 = action2 || null;
+    overlayAction2El.hidden = !overlayAction2;
+    if(overlayAction2) overlayAction2El.textContent = overlayAction2.label;
     if(overlayAction){
       overlayActionEl.textContent = overlayAction.label;
       overlayActionEl.hidden = false;
@@ -183,7 +189,9 @@
   function hideOverlay(){
     overlayEl.hidden = true;
     overlayActionEl.hidden = true;
+    overlayAction2El.hidden = true;
     overlayAction = null;
+    overlayAction2 = null;
     clearTimeout(overlayTimer);
     resumeScanning();
   }
@@ -194,8 +202,16 @@
     ev.stopPropagation();
     const action = overlayAction;
     if(!action) return;
-    overlayAction = null;
-    overlayActionEl.hidden = true;
+    overlayAction = null; overlayAction2 = null;
+    overlayActionEl.hidden = true; overlayAction2El.hidden = true;
+    action.onConfirm();
+  });
+  overlayAction2El.addEventListener('click', function(ev){
+    ev.stopPropagation();
+    const action = overlayAction2;
+    if(!action) return;
+    overlayAction = null; overlayAction2 = null;
+    overlayActionEl.hidden = true; overlayAction2El.hidden = true;
     action.onConfirm();
   });
 
@@ -214,7 +230,7 @@
 
   // allowExpiredCortesia is never set on the first scan of a QR -- it is only
   // ever passed on the second call, the one the "DEJAR ENTRAR IGUAL" tap makes.
-  async function doCheckin(ticketId, allowExpiredCortesia){
+  async function doCheckin(ticketId, allowExpiredCortesia, lateCharged){
     const passcode = document.getElementById('passcode').value;
     const resultEl = document.getElementById('result');
     if(!ticketId) return;
@@ -222,7 +238,7 @@
     try {
       const r = await fetch('/api/checkin', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ ticketId, passcode, allowExpiredCortesia: allowExpiredCortesia === true })
+        body: JSON.stringify({ ticketId, passcode, allowExpiredCortesia: allowExpiredCortesia === true, lateCharged: lateCharged === true })
       });
       const d = await r.json();
       resultEl.innerHTML = '';
@@ -243,18 +259,24 @@
         } else if(d.reason === 'cortesia_expired'){
           // Still the same red screen -- the default answer is "no". The
           // override is an extra tap staff have to choose to make, per person.
-          showOverlay('bad', 'Cortesía', 'QR EXPIRADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — pasar a caja, o dejar entrar igual', {
-            label: 'Dejar entrar igual',
-            onConfirm: function(){ doCheckin(ticketId, true); }
+          // Pasado el corte el QR igual sirve para entrar: staff decide si
+          // esta persona paga o entra gratis. Las dos opciones registran el
+          // ingreso (cuenta como entrada para el promotor).
+          showOverlay('bad', d.ticket.type === 'promo' ? 'Invitación' : 'Cortesía', 'DESPUÉS DE HORA', d.ticket.name + ' (' + docLabel(d.ticket) + ') — ¿pagó entrada o entra gratis?', {
+            label: 'Pagó entrada',
+            onConfirm: function(){ doCheckin(ticketId, true, true); }
+          }, {
+            label: 'Entra gratis',
+            onConfirm: function(){ doCheckin(ticketId, true, false); }
           });
         } else {
           showOverlay('bad', 'Error', 'NO SE PUDO VALIDAR', '');
         }
         return;
       }
-      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : 'CORTESÍA';
+      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : d.ticket.type === 'promo' ? 'INVITACIÓN' : 'CORTESÍA';
       if(d.ticket.lateEntry){
-        showOverlay('ok', 'CORTESÍA VENCIDA', 'INGRESO REGISTRADO', d.ticket.name + ' — ' + docLabel(d.ticket) + ' (ingreso tardío)');
+        showOverlay('ok', d.ticket.lateCharged ? 'DESPUÉS DE HORA · PAGÓ' : 'DESPUÉS DE HORA · GRATIS', 'INGRESO REGISTRADO', d.ticket.name + ' — ' + docLabel(d.ticket));
       } else {
         showOverlay('ok', typeLabel, 'VÁLIDO', d.ticket.name + ' — ' + docLabel(d.ticket));
       }

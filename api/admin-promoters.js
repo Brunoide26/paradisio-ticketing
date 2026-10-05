@@ -1,5 +1,6 @@
 const { listAllTickets } = require('../lib/tickets');
-const { listPromoters } = require('../lib/promoters');
+const { listPromoters, addPromoter } = require('../lib/promoters');
+const { listInvites } = require('../lib/invites');
 
 // Per-promoter rollup for the admin "Promotores" tab. Voided tickets never
 // count toward any promoter's numbers — a voided ticket isn't a real sale
@@ -15,13 +16,25 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'unauthorized' });
     }
 
-    const [tickets, promoters] = await Promise.all([listAllTickets(), listPromoters()]);
+    // Agregar un promotor nuevo desde el admin (queda activo y listo para
+    // recibir códigos, sin redeploy).
+    if (req.method === 'POST' && (req.body || {}).action === 'add') {
+      const result = await addPromoter(req.body.name);
+      if (!result.ok) return res.status(400).json({ error: result.reason });
+      return res.status(200).json({ ok: true, promoter: result.promoter });
+    }
+
+    const [tickets, promoters, invites] = await Promise.all([listAllTickets(), listPromoters(), listInvites()]);
 
     const stats = promoters.map((p) => {
       const own = tickets.filter((t) => t.promoterCode === p.code && !t.voided);
       const cortesias = own.filter((t) => t.type === 'free').length;
       const pagadas = own.filter((t) => t.type === 'paid').length;
-      const personas = cortesias + pagadas;
+      const invitaciones = own.filter((t) => t.type === 'promo').length;
+      const personas = cortesias + pagadas + invitaciones;
+      const ownCodes = invites.filter((i) => i.promoterCode === p.code && !i.revoked);
+      const codigos = ownCodes.length;
+      const codigosLibres = ownCodes.filter((i) => !i.ticketId).length;
       // Revenue is per ORDER, not per ticket: a Duo/Trio charges once (see
       // api/charge.js) and stores that same order total as `amount` on
       // EVERY ticket in the order, so summing amount per ticket would
@@ -34,11 +47,19 @@ module.exports = async (req, res) => {
         if (!paidOrderAmounts.has(key)) paidOrderAmounts.set(key, t.amount || 0);
       });
       const ingreso = [...paidOrderAmounts.values()].reduce((sum, a) => sum + a, 0);
+      // Todo el que cruzó la puerta cuenta como ingreso, haya llegado a tiempo
+      // o después del corte. Los tardíos se separan en cobrados y gratis
+      // según lo que marcó el staff en el scanner.
       const ingresaron = own.filter((t) => t.checkedIn).length;
+      const late = own.filter((t) => t.checkedIn && t.lateEntry);
+      const tardeCobrado = late.filter((t) => t.lateCharged).length;
+      const tardeGratis = late.length - tardeCobrado;
+      const aTiempo = ingresaron - late.length;
       const conversion = personas > 0 ? Math.round((ingresaron / personas) * 1000) / 10 : 0;
       return {
         code: p.code, name: p.name, active: p.active,
-        cortesias, pagadas, personas, ingreso, ingresaron, conversion,
+        cortesias, pagadas, invitaciones, codigos, codigosLibres, personas, ingreso, ingresaron, conversion,
+        aTiempo, tardeCobrado, tardeGratis, custom: !!p.custom,
       };
     });
 

@@ -1,5 +1,26 @@
 # Paradisio — sistema de tickets
 
+## Modo actual: solo promotoría (códigos de un solo uso)
+
+Ya no hay venta ni landing. `paradisioclub.com` abre directo la pantalla de **ingresar código**:
+
+1. El invitado escribe el código que le pasó su promotor (o entra por `paradisioclub.com/?c=CODIGO`, que lo trae puesto).
+2. Llena: nombre, apellido, DNI, fecha de nacimiento, correo, número e Instagram (+ casilla de 18+ y términos/privacidad).
+3. Recibe su QR en pantalla y por correo. El código queda quemado.
+
+- **Dar códigos:** `/admin` → pestaña **Promotores** → "Dar códigos" en la fila del promotor (o elegirlo arriba) + cantidad → Generar. Se copian como códigos, links, o un mensaje por invitado listo para WhatsApp.
+- **Promotores nuevos:** se agregan desde esa misma pestaña ("Agregar promotor"), sin redeploy. El código del promotor sale de su primer nombre.
+- **Por promotor se ve:** códigos dados, QRs sacados, sin usar, ingresaron, antes de las 11, después de las 11 (pagó / gratis) y % de asistencia. La pestaña **Códigos** lista cada código con su estado.
+- **Puerta después de las 11:** el scanner muestra "DESPUÉS DE HORA" con dos botones, **Pagó entrada** o **Entra gratis**. Los dos registran el ingreso y cuentan para el promotor.
+- Cada código es de **una sola persona** y queda atribuido al promotor. Un mismo DNI o correo no puede sacar dos entradas.
+- Códigos libres se pueden **revocar**; para invalidar una entrada ya canjeada, se anula el ticket como siempre.
+- Las entradas salen como tipo `promo` ("Invitación"). **QR válido hasta las 11:00 p.m.**: después de esa hora el scanner las rechaza como QR EXPIRADO, con el mismo botón "Dejar entrar igual" de la cortesía.
+- Fecha actual (por defecto en código): sábado 17 de octubre, 10 PM, Catalino Miranda 162 - Barranco (`EVENT_ADDRESS`, con link a Google Maps). Para la próxima fecha se pisan con variables en Vercel: `EVENT_NAME`, `EVENT_DATE_LABEL`, `EVENT_SHORT_DATE`, `EVENT_DATE_ISO` (filtro +18), `EMAIL_SUBJECT`, `PROMO_VALIDITY_LABEL` y `PROMO_ENTRY_CUTOFF` (ISO con offset, ej. `2026-10-17T23:00:00-05:00`).
+- Estética: script blanco (`logo-script-white.png`) + CLUB en rojo, Bodoni Moda + Jost autoalojadas en `/fonts`. Portada, `/entrada` y correo del QR comparten este estilo.
+- Los links viejos `/p/NOMBRE` redirigen a la portada.
+
+---
+
 Landing + registro gratis + pago con tarjeta (Culqi) + QR automático en pantalla y por correo + panel de check-in en puerta.
 
 ## Qué necesitas crear (todo gratis para este volumen de gente)

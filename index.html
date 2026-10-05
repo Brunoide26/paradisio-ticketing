@@ -2,20 +2,18 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Paradisio — Apertura 28 de agosto</title>
-<meta name="description" content="Paradisio — house y disco subterráneo en Barranco, Lima. Viernes 28 de agosto, Espacio NHN." />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Paradisio</title>
+<meta name="description" content="Paradisio Club — Latin after disco, after hours. 17 de octubre, Barranco." />
 
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paradisioclub.com/" />
-<meta property="og:title" content="Paradisio — Apertura 28 de agosto" />
-<meta property="og:description" content="Paradisio — house y disco subterráneo en Barranco, Lima. Viernes 28 de agosto, Espacio NHN." />
+<meta property="og:title" content="Paradisio" />
+<meta property="og:description" content="Ingresa tu código y obtén tu QR." />
 <meta property="og:image" content="https://paradisioclub.com/og-image.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Paradisio — Apertura 28 de agosto" />
-<meta name="twitter:description" content="Paradisio — house y disco subterráneo en Barranco, Lima. Viernes 28 de agosto, Espacio NHN." />
 <meta name="twitter:image" content="https://paradisioclub.com/og-image.png" />
 
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -24,1495 +22,498 @@
 <link rel="shortcut icon" href="/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
-<meta name="theme-color" content="#FF2800" />
+<meta name="theme-color" content="#0A0909" />
 
+<link rel="preload" href="/fonts/Jost.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/BodoniModa.woff2" as="font" type="font/woff2" crossorigin />
 <style>
-  @font-face { font-family:'Unbounded'; src:url('/fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
-  @font-face { font-family:'DM Sans'; src:url('/fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
-
+  @font-face { font-family:'Bodoni Moda'; src:url('/fonts/BodoniModa.woff2') format('woff2'); font-weight:400 900; font-style:normal; font-display:swap; }
+  @font-face { font-family:'Bodoni Moda'; src:url('/fonts/BodoniModa-Italic.woff2') format('woff2'); font-weight:400 900; font-style:italic; font-display:swap; }
+  @font-face { font-family:'Jost'; src:url('/fonts/Jost.woff2') format('woff2'); font-weight:100 900; font-style:normal; font-display:swap; }
   :root {
-    --bg:#090909; --ink:#F2EDE4; --primary:#FF2800; --primary-hover:#FF9A00;
-    --muted:#888880; --line:rgba(255,40,0,0.18); --card:#141414; --field:#1A1A1A;
+    --bg:#000000; --ink:#F4F0EA; --muted:#A9A39A; --faint:#4A4643;
+    --red:#E2361F; --line:rgba(244,240,234,0.26);
+    --serif:'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
+    --sans:'Jost', 'Futura', system-ui, sans-serif;
   }
-  * { box-sizing:border-box; }
-  html { scroll-behavior:smooth; background:var(--bg); }
-  body { margin:0; background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; overflow-x:hidden; }
-  a { color:var(--primary); text-decoration:none; }
-  a:hover { color:var(--primary-hover); }
-  input::placeholder { color:#55554f; }
-  ::selection { background:var(--primary); color:#0A0A0A; }
-  button { font-family:inherit; }
-
-  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-
-  .pd-pad { padding-left:40px; padding-right:40px; }
-  @media (max-width:860px) {
-    .pd-split { grid-template-columns:1fr !important; }
-    .pd-hide-sm { display:none !important; }
-    .pd-row { flex-direction:column !important; align-items:flex-start !important; gap:20px !important; }
-    .pd-pad { padding-left:22px !important; padding-right:22px !important; }
-    .pd-cd { grid-template-columns:repeat(2,1fr) !important; }
-    .pd-form { grid-template-columns:1fr !important; }
+  *, *::before, *::after { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; min-height:100vh; min-height:100svh;
+    background:var(--bg); color:var(--ink);
+    font-family:var(--sans); font-weight:400; font-size:15px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column;
   }
+  a { color:inherit; }
+  button, input { font:inherit; }
 
-  /* ---- header ---- */
-  .pd-header {
-    position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:space-between;
-    height:64px; background:transparent; border-bottom:1px solid transparent;
-    transition:background 300ms ease, border-color 300ms ease;
+  /* Etiquetas: sans fino, mayúsculas, muy espaciado -- como el flyer. */
+  .pd-cap {
+    font-family:var(--sans); font-weight:500; font-size:11px;
+    letter-spacing:.3em; text-transform:uppercase; margin:0;
   }
-  .pd-header.is-scrolled { background:rgba(9,9,9,0.95); backdrop-filter:blur(12px); border-bottom-color:var(--line); }
-  .pd-header .logo-link { display:block; flex:none; line-height:0; }
-  .pd-header .logo-link img { display:block; width:142px; height:28px; transition:filter 240ms ease; filter:invert(1); }
-  .pd-header.is-scrolled .logo-link img { filter:none; }
-  .pd-nav { display:flex; align-items:center; gap:30px; }
-  .pd-nav-link { font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:500; transition:color 240ms ease; color:rgba(0,0,0,0.62); }
-  .pd-header.is-scrolled .pd-nav-link { color:rgba(242,237,228,0.5); }
-  .pd-nav-cta { padding:11px 20px; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; transition:background 240ms ease, color 240ms ease; background:#000; color:var(--ink); }
-  .pd-header.is-scrolled .pd-nav-cta { background:var(--primary); color:#0A0A0A; }
+  .pd-cap.is-muted { color:var(--muted); }
 
-  /* ---- hero ---- */
-  .pd-hero { position:relative; min-height:100vh; background:var(--primary); display:flex; flex-direction:column; overflow:hidden; }
-  .pd-hero[hidden] { display:none; }
-  .pd-hero-photo { position:absolute; inset:0; width:100%; height:110%; object-fit:cover; mix-blend-mode:multiply; opacity:0.5; }
-  .pd-hero-gradient { position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,40,0,0.28) 0%, rgba(255,40,0,0) 34%); }
-  .pd-hero-content { position:relative; z-index:10; flex:1; display:flex; flex-direction:column; justify-content:center; padding:140px 40px 54px; }
-  .pd-hero-title { font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(3.6rem, 17.5vw, 15rem); line-height:0.84; letter-spacing:-0.035em; text-transform:uppercase; color:#000; margin:0; user-select:none; }
-  .pd-hero-actions { display:flex; flex-direction:column; align-items:flex-start; gap:30px; margin-top:42px; }
-  .pd-btn-dark { display:inline-flex; align-items:center; gap:12px; padding:17px 32px; background:#000; color:var(--ink); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; flex:none; border:none; cursor:pointer; transition:background 180ms ease, color 180ms ease; }
-  .pd-btn-dark:hover { background:#141414; color:var(--primary-hover); }
-  .pd-marquee-wrap { position:relative; z-index:10; border-top:1px solid rgba(0,0,0,0.22); background:rgba(0,0,0,0.1); overflow:hidden; white-space:nowrap; padding:12px 0; }
-  .pd-marquee { display:inline-block; animation:pdmarquee 26s linear infinite; font-size:11px; letter-spacing:0.32em; text-transform:uppercase; font-weight:700; color:rgba(0,0,0,0.7); }
-  @keyframes pdmarquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+  /* ---------- marca ---------- */
+  /* Igual que la pantalla de coming soon: logo rojo sobre negro puro. */
+  .pd-brand { padding:clamp(40px, 8vh, 72px) 24px 0; text-align:center; }
+  .pd-logo { width:min(56vw, 300px); height:auto; display:inline-block; }
+  body.is-landing { justify-content:center; }
+  body.is-landing .pd-brand { padding-top:0; }
+  body.is-landing .pd-logo { width:min(72vw, 620px); }
+  body.is-landing main { flex:0; padding-top:clamp(30px, 6vh, 56px); }
 
-  /* ---- countdown ---- */
-  .pd-cd-section { border-bottom:1px solid var(--line); background:var(--bg); }
-  .pd-cd-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:26px 40px 22px; }
-  .pd-eyebrow { margin:0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
-  .pd-cd-date { margin:0; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
-  .pd-cd { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); }
-  .pd-cd-unit { padding:34px 40px; border-right:1px solid var(--line); }
-  .pd-cd-unit:last-child { border-right:none; }
-  .pd-cd-num { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(2.4rem, 6vw, 4.6rem); line-height:1; font-variant-numeric:tabular-nums; color:var(--ink); }
-  .pd-cd-unit.is-seconds .pd-cd-num { color:var(--primary-hover); }
-  .pd-cd-label { margin:12px 0 0; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--primary); font-weight:500; }
+  main { flex:1; display:flex; justify-content:center; padding:clamp(36px, 6vh, 64px) 24px 72px; }
+  .pd-step { width:100%; max-width:460px; display:none; text-align:center; }
+  .pd-step.is-active { display:block; }
+  #step-form { max-width:560px; }
 
-  /* ---- la noche ---- */
-  .pd-noche { display:grid; grid-template-columns:1fr 1fr; min-height:70vh; border-bottom:1px solid var(--line); }
-  .pd-noche[hidden] { display:none; }
-  .pd-noche-text { display:flex; flex-direction:column; justify-content:center; padding:96px 64px; border-right:1px solid var(--line); }
-  .pd-noche-title { margin:0 0 14px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.9rem, 3.4vw, 2.6rem); line-height:1.06; text-transform:uppercase; letter-spacing:-0.02em; color:var(--ink); }
-  .pd-noche-sub { margin:0 0 30px; font-family:'Unbounded',sans-serif; font-weight:400; font-size:13px; line-height:1.5; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); }
-  .pd-noche-copy { margin:0; max-width:400px; font-size:15px; line-height:1.7; color:var(--muted); }
-  .pd-badge18 { margin-top:44px; border-left:2px solid var(--primary); padding-left:16px; }
-  .pd-badge18 strong { margin:0; display:block; font-family:'Unbounded',sans-serif; font-weight:900; font-size:20px; color:var(--ink); }
-  .pd-badge18 span { display:block; margin-top:5px; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
-  .pd-noche-photo-wrap { position:relative; overflow:hidden; min-height:460px; background:#141414; }
-  .pd-noche-photo { position:absolute; inset:0; width:100%; height:108%; object-fit:cover; }
-  .pd-noche-photo-shade { position:absolute; inset:0; background:linear-gradient(0deg, rgba(9,9,9,0.7) 0%, rgba(9,9,9,0) 55%); }
-  .pd-noche-caption { position:absolute; left:28px; bottom:24px; margin:0; font-size:10px; letter-spacing:0.32em; text-transform:uppercase; color:rgba(242,237,228,0.72); }
+  .pd-title {
+    font-family:var(--serif); font-weight:500; font-size:clamp(34px, 7vw, 46px);
+    line-height:1.08; letter-spacing:-.005em; margin:0;
+  }
+  .pd-title em { font-style:italic; }
+  .pd-title .pd-sub { display:inline-block; font-size:.56em; margin-top:6px; }
+  .pd-lead { color:var(--muted); margin:14px auto 0; max-width:400px; font-size:13.5px; line-height:1.45; text-wrap:balance; }
 
-  /* ---- /p/{codigo} promoter landing: shown instead of the hero/countdown/
-     noche sections, so a promoter's link gets straight to the point. ---- */
-  .pd-promo-banner { padding-top:56px; padding-bottom:36px; text-align:center; }
-  .pd-promo-eyebrow { margin:0 0 10px; font-size:10px; letter-spacing:0.35em; text-transform:uppercase; color:var(--muted); }
-  .pd-promo-name { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.4rem, 4vw, 2rem); text-transform:uppercase; color:var(--primary); }
-  .pd-promo-meta { margin:0; font-size:13px; color:var(--muted); }
+  /* ---------- código ---------- */
+  #step-code { max-width:340px; }
+  .pd-code-form { margin:0; }
+  .pd-code-input {
+    width:100%; background:transparent; color:var(--ink); text-align:center;
+    border:1px solid rgba(255,255,255,.34); border-radius:0; outline:none;
+    font-family:var(--sans); font-weight:300; text-transform:uppercase;
+    font-size:15px; letter-spacing:.42em; text-indent:.42em;
+    padding:18px 12px; transition:border-color .25s;
+  }
+  .pd-code-input::placeholder { color:rgba(255,255,255,.34); font-size:11px; letter-spacing:.42em; }
+  .pd-code-input:focus { border-color:rgba(255,255,255,.75); }
+  .pd-code-input.has-error { border-color:var(--red); }
+  #step-code .pd-btn { margin-top:14px; border-color:transparent; color:rgba(255,255,255,.55); font-weight:300; }
+  #step-code .pd-btn:hover:not(:disabled) { background:transparent; color:var(--ink); border-color:transparent; }
 
-  /* ---- entradas ---- */
-  .pd-entradas-head { background:var(--primary); padding:56px 48px; }
-  .pd-entradas-eyebrow { margin:0 0 12px; font-size:10px; letter-spacing:0.4em; text-transform:uppercase; color:rgba(0,0,0,0.6); font-weight:500; }
-  .pd-entradas-title { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(2.5rem, 7vw, 4.6rem); line-height:0.95; text-transform:uppercase; letter-spacing:-0.03em; color:#000; }
+  /* ---------- botones ---------- */
+  .pd-btn {
+    appearance:none; display:block; width:100%; margin-top:34px; cursor:pointer;
+    background:transparent; color:var(--ink); border:1px solid rgba(244,240,234,.55); border-radius:0;
+    font-family:var(--sans); font-weight:500; font-size:12px; letter-spacing:.32em; text-indent:.32em; text-transform:uppercase;
+    padding:18px 24px; text-align:center; text-decoration:none;
+    transition:background .25s, color .25s, border-color .25s;
+  }
+  .pd-btn:hover:not(:disabled) { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .pd-btn:focus-visible { outline:1px solid var(--ink); outline-offset:4px; }
+  .pd-btn:disabled { opacity:.4; cursor:default; }
+  .pd-btn-quiet { border-color:transparent; color:var(--muted); margin-top:6px; }
+  .pd-btn-quiet:hover:not(:disabled) { background:transparent; color:var(--ink); border-color:transparent; }
+  .pd-link-btn {
+    background:none; border:none; padding:0; cursor:pointer; color:var(--muted);
+    font-size:11px; font-weight:500; letter-spacing:.24em; text-transform:uppercase;
+  }
+  .pd-link-btn:hover { color:var(--ink); }
 
-  .pd-sales-closed { padding-top:38px; padding-bottom:38px; margin:0; font-size:15px; font-weight:700; color:var(--ink); border-bottom:1px solid var(--line); }
+  .pd-msg { min-height:20px; margin:16px 0 0; font-size:13px; color:var(--red); }
+  .pd-msg:empty { min-height:0; margin:0; }
 
-  /* ---- the wizard itself is capped and centered, unlike the rest of the
-     page's full-bleed sections: past ~640px the form fields stretch out
-     and the flow reads as sparse rather than focused, so this is a
-     deliberate, explicit exception. ---- */
-  #pd-flow { max-width:640px; margin:0 auto; }
+  /* ---------- formulario ---------- */
+  .pd-code-chip { display:inline-flex; align-items:center; gap:16px; margin-top:22px; }
+  .pd-code-chip span { font-weight:500; letter-spacing:.38em; font-size:13px; }
+  .pd-code-chip i { width:1px; height:12px; background:var(--faint); display:block; }
 
-  /* ---- step indicator: sticky under the fixed header, always visible while
-     the flow is on screen ---- */
-  .pd-steps { display:flex; align-items:center; justify-content:center; gap:10px; background:var(--card); border-bottom:1px solid var(--line); padding:20px 40px; position:sticky; top:64px; z-index:40; }
-  @media (max-width:860px) { .pd-steps { padding-left:22px; padding-right:22px; } }
-  .pd-step { display:inline-flex; background:none; border:none; padding:0; cursor:default; font-family:inherit; }
-  .pd-step-num { display:flex; align-items:center; justify-content:center; width:30px; height:30px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; border:1px solid var(--line); color:var(--muted); transition:border-color 180ms, color 180ms, background 180ms; }
-  .pd-step.is-active .pd-step-num { border-color:var(--primary); color:var(--primary); }
-  .pd-step.is-done .pd-step-num { border-color:var(--primary); background:var(--primary); color:#0A0A0A; }
-  .pd-step.is-done { cursor:pointer; }
-  .pd-step-sep { color:var(--line); font-size:13px; }
-
-  .pd-step-panel { padding-top:36px; padding-bottom:48px; }
-  .pd-step-panel[hidden] { display:none; }
-
-  /* ---- step 1: sku cards, fully tappable, no separate select button ---- */
-  .pd-sku-grid { display:grid; grid-template-columns:1fr; gap:16px; }
-  @media (min-width:560px) { .pd-sku-grid { grid-template-columns:repeat(2, 1fr); } }
-  .pd-sku-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; background:var(--card); border:1px solid var(--line); padding:28px 24px; cursor:pointer; font-family:inherit; color:inherit; transition:border-color 180ms, background 180ms; }
-  .pd-sku-card:hover, .pd-sku-card:focus-visible { border-color:rgba(255,40,0,0.45); }
-  .pd-sku-card.is-selected { border-color:var(--primary); background:rgba(255,40,0,0.08); }
-  .pd-sku-card.is-cortesia { border-color:var(--primary); }
-  .pd-sku-card[disabled] { opacity:0.5; cursor:default; }
-  .pd-sku-card[disabled]:hover { border-color:var(--line); }
-  .pd-sku-card.is-cortesia[disabled] { border-color:var(--line); }
-  .pd-sku-check { position:absolute; top:16px; right:16px; width:22px; height:22px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px; color:transparent; }
-  .pd-sku-card.is-selected .pd-sku-check { border-color:var(--primary); background:var(--primary); color:#0A0A0A; }
-  .pd-sku-price { margin:0; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.7rem, 4vw, 2.4rem); font-variant-numeric:tabular-nums; }
-  .pd-sku-price.is-free { color:var(--primary); }
-  .pd-sku-price.is-paid { color:var(--ink); }
-  .pd-sku-name { margin:6px 0 0; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink); }
-  .pd-sku-people { margin:4px 0 0; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--primary); font-weight:700; }
-  .pd-sku-note { margin:10px 0 0; font-size:12.5px; line-height:1.5; color:var(--muted); }
-  .pd-sku-badge { margin-top:12px; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary-hover); }
-
-  /* ---- step 2/3 shared form pieces ---- */
-  .pd-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
-  .pd-field { display:flex; flex-direction:column; gap:6px; }
-  .pd-field label.pd-microlabel { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); }
+  form.pd-fields {
+    display:grid; grid-template-columns:1fr 1fr; gap:30px 28px;
+    margin-top:46px; text-align:left;
+  }
+  @media (max-width:520px){ form.pd-fields { grid-template-columns:1fr; gap:26px; } }
+  .pd-field { display:flex; flex-direction:column; gap:4px; }
+  .pd-field.is-wide { grid-column:1 / -1; }
+  .pd-field label { font-size:11px; font-weight:500; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); }
   .pd-input {
-    background:var(--field); border:1px solid var(--line); padding:15px 16px; font-family:'DM Sans',sans-serif;
-    font-size:14px; color:var(--ink); outline:none; width:100%;
+    width:100%; background:transparent; color:var(--ink);
+    border:none; border-bottom:1px solid var(--line); border-radius:0;
+    padding:10px 0 9px; font-size:17px; font-weight:400; outline:none;
+    transition:border-color .25s; -webkit-appearance:none; appearance:none;
   }
-  .pd-input:focus { border-color:var(--primary); }
-  .pd-input.has-error { border-color:var(--primary-hover); }
-  .pd-field-error { margin:2px 0 0; font-size:11px; color:var(--primary-hover); }
-  .pd-field-promo { margin-bottom:18px; }
-  .pd-promo-msg { margin:6px 0 0; font-size:11px; }
-  .pd-promo-msg.is-ok { color:var(--primary); }
-  .pd-promo-msg.is-bad { color:var(--muted); }
-  .pd-declare { display:flex; align-items:flex-start; gap:10px; margin-bottom:22px; }
-  .pd-declare input { margin-top:3px; width:16px; height:16px; accent-color:var(--primary); flex-shrink:0; }
-  .pd-declare label { font-size:12.5px; color:var(--muted); line-height:1.5; }
+  .pd-input:focus { border-bottom-color:var(--ink); }
+  .pd-input.has-error { border-bottom-color:var(--red); }
+  .pd-input::placeholder { color:var(--faint); }
+  input[type="date"].pd-input { color-scheme:dark; min-height:42px; }
+  .pd-prefix { position:relative; }
+  .pd-prefix > span { position:absolute; left:0; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+  .pd-prefix .pd-input { padding-left:16px; }
+  .pd-err { font-size:12px; color:var(--red); margin:2px 0 0; }
+  .pd-err:empty { display:none; }
 
-  .pd-assistant { padding:22px 0; border-bottom:1px solid var(--line); }
-  .pd-assistant:first-of-type { padding-top:0; }
-  .pd-assistant:last-of-type { border-bottom:none; }
-  .pd-assistant-label { margin:0 0 14px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary); font-weight:700; }
-
-  /* ---- step 3: summary ---- */
-  .pd-summary-line { margin:0 0 20px; font-size:16px; font-weight:700; color:var(--ink); }
-  .pd-summary-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; border-top:1px solid var(--line); font-size:14px; color:var(--muted); }
-  .pd-summary-row[hidden] { display:none; }
-  .pd-summary-row.pd-summary-total { color:var(--ink); font-weight:700; margin-bottom:22px; }
-  .pd-summary-row.pd-summary-total .pd-summary-value { font-family:'Unbounded',sans-serif; font-weight:900; font-size:24px; font-variant-numeric:tabular-nums; }
-
-  .pd-form-error { margin:0 0 16px; font-size:12px; letter-spacing:0.02em; color:var(--primary-hover); }
-
-  /* ---- sticky bottom action bar: never lost in scroll, mobile or desktop ---- */
-  .pd-step-bar { position:sticky; bottom:0; z-index:30; display:flex; gap:12px; padding:16px 40px; background:rgba(20,20,20,0.97); backdrop-filter:blur(8px); border-top:1px solid var(--line); }
-  @media (max-width:860px) { .pd-step-bar { padding-left:22px; padding-right:22px; } }
-  .pd-step-back { flex:none; padding:17px 22px; background:transparent; border:1px solid rgba(242,237,228,0.3); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.25em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:border-color 180ms; }
-  .pd-step-back:hover { border-color:var(--ink); }
-  .pd-step-continue, .pd-step-bar .pd-pay-btn { flex:1; }
-  .pd-step-continue { padding:17px 32px; background:var(--primary); border:none; color:#0A0A0A; font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:background 180ms; }
-  .pd-step-continue:disabled { opacity:0.4; cursor:not-allowed; }
-  .pd-pay-btn { padding:17px 46px; background:var(--primary); border:none; color:#0A0A0A; font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:background 180ms; }
-  .pd-pay-btn:disabled { opacity:0.5; cursor:not-allowed; }
-  /* Hover-tint only on devices that truly hover with a precise pointer —
-     otherwise a tap leaves touch/coarse-pointer browsers stuck showing the
-     :hover background (amber) instead of the resting brand red. */
-  @media (hover:hover) and (pointer:fine) {
-    .pd-step-continue:hover { background:var(--primary-hover); }
-    .pd-pay-btn:hover { background:var(--primary-hover); }
+  .pd-check { grid-column:1 / -1; display:flex; gap:14px; align-items:flex-start; font-size:14px; color:var(--muted); line-height:1.6; cursor:pointer; }
+  .pd-check input {
+    appearance:none; -webkit-appearance:none; flex:none; margin:3px 0 0;
+    width:15px; height:15px; border:1px solid var(--muted); background:transparent; cursor:pointer; border-radius:0;
   }
+  .pd-check input:checked { background:var(--ink); border-color:var(--ink); }
+  .pd-check input:checked::after { content:''; display:block; width:4px; height:8px; margin:1px 0 0 4.5px; border:solid var(--bg); border-width:0 1.5px 1.5px 0; transform:rotate(45deg); }
+  .pd-check input:focus-visible { outline:1px solid var(--ink); outline-offset:3px; }
+  .pd-check a { text-underline-offset:3px; }
+  .pd-check a:hover { color:var(--ink); }
+  .pd-form-actions { grid-column:1 / -1; text-align:center; }
+  .pd-form-actions .pd-btn { margin-top:14px; }
 
-  .pd-confirm { border-top:1px solid var(--primary); background:var(--primary); padding:48px; text-align:center; scroll-margin-top:64px; }
-  .pd-confirm-headline { margin:0 0 6px; font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.6rem, 4vw, 2.6rem); line-height:1; text-transform:uppercase; color:#000; }
-  .pd-confirm-line { margin:0 0 28px; font-size:15px; color:rgba(0,0,0,0.72); }
-
-  .pd-confirm-single { display:flex; flex-direction:column; align-items:center; margin-bottom:24px; }
-  .pd-confirm-single[hidden] { display:none; }
-  .pd-confirm-qr-wrap { background:#F2EDE4; display:inline-block; padding:18px; margin-bottom:18px; }
-  .pd-confirm-qr-wrap img { display:block; width:220px; height:220px; }
-  .pd-confirm-name { margin:0 0 4px; font-size:18px; font-weight:800; color:#000; }
-  .pd-confirm-code { margin:0 0 6px; font-family:monospace; font-size:14px; letter-spacing:1px; color:#000; }
-  .pd-confirm-meta { margin:0; font-size:13px; color:rgba(0,0,0,0.65); }
-
-  .pd-confirm-carousel { margin-bottom:24px; }
-  .pd-confirm-count { margin:0 0 16px; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:rgba(0,0,0,0.65); }
-  .pd-confirm-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; cursor:grab; margin:0 -48px; padding:0 48px; }
-  .pd-confirm-track::-webkit-scrollbar { display:none; }
-  .pd-confirm-track.is-dragging { cursor:grabbing; scroll-snap-type:none; }
-  .pd-confirm-slide { flex:0 0 100%; scroll-snap-align:center; display:flex; justify-content:center; padding:0 8px; }
-  .pd-confirm-card { background:#000; padding:28px 24px; text-align:center; width:100%; max-width:340px; }
-  .pd-confirm-card .pd-confirm-tier { margin:0 0 6px; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary-hover); font-weight:700; }
-  .pd-confirm-card .pd-confirm-qr-wrap { padding:14px; margin-bottom:14px; }
-  .pd-confirm-card .pd-confirm-qr-wrap img { width:160px; height:160px; }
-  .pd-confirm-card .pd-confirm-name { color:var(--ink); font-size:16px; }
-  .pd-confirm-card .pd-confirm-dni { margin:0 0 14px; font-size:12px; color:var(--muted); }
-  .pd-confirm-card .pd-confirm-code { color:var(--ink); }
-  .pd-confirm-card .pd-confirm-meta { color:var(--muted); margin-bottom:18px; }
-  .pd-confirm-share-btn { display:inline-flex; align-items:center; gap:8px; padding:11px 20px; background:var(--ink); color:#000; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; border:1px solid var(--ink); cursor:pointer; transition:background 180ms ease, color 180ms ease; }
-  .pd-confirm-share-btn:hover { background:transparent; color:var(--ink); }
-  .pd-confirm-share-btn.is-copied { background:var(--primary-hover); border-color:var(--primary-hover); color:#000; }
-
-  .pd-confirm-arrows { display:flex; align-items:center; justify-content:center; gap:16px; margin-top:18px; }
-  .pd-confirm-arrow { width:38px; height:38px; background:#000; border:1px solid rgba(0,0,0,0.2); color:var(--ink); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity 180ms; }
-  .pd-confirm-arrow:disabled { opacity:0.3; cursor:default; }
-  @media (max-width:600px) { .pd-confirm-arrows { display:none; } }
-
-  .pd-confirm-spam { margin:0 0 6px; font-size:12.5px; line-height:1.6; color:rgba(0,0,0,0.6); max-width:60ch; margin-left:auto; margin-right:auto; }
-  .pd-confirm-spam strong { color:#000; }
-  .pd-confirm-legal { margin:0 0 22px; font-size:12px; line-height:1.6; color:rgba(0,0,0,0.55); max-width:60ch; margin-left:auto; margin-right:auto; }
-  .pd-confirm-legal strong { color:rgba(0,0,0,0.75); }
-  .pd-confirm-secondary { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:#000; text-decoration:underline; text-underline-offset:3px; }
-  .pd-confirm-secondary:hover { color:rgba(0,0,0,0.65); }
-
-  .pd-legal { padding:24px 48px; border-top:1px solid var(--line); }
-  .pd-legal p { margin:0; font-size:12px; color:rgba(136,136,128,0.55); line-height:1.6; }
-
-  /* ---- footer ---- */
-  .pd-footer { background:var(--card); border-top:1px solid var(--line); padding:64px 48px; }
-  .pd-footer-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:48px; margin-bottom:52px; }
-  .pd-footer-brand { max-width:300px; }
-  .pd-footer-brand img { display:block; width:170px; height:34px; margin-bottom:20px; }
-  .pd-footer-brand p { margin:0; font-size:14px; line-height:1.7; color:var(--muted); }
-  .pd-footer-cols { display:flex; flex-wrap:wrap; gap:56px; }
-  .pd-footer-col p.pd-eyebrow { margin-bottom:16px; }
-  .pd-footer-col a { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); transition:color 180ms; }
-  .pd-footer-col a:hover { color:var(--ink); }
-  .pd-footer-col p.pd-addr { margin:8px 0 0; font-size:14px; line-height:1.7; color:var(--muted); }
-  .pd-social { display:inline-flex; align-items:center; gap:8px; }
-  .pd-libro-notice { border-top:1px solid var(--primary); padding-top:28px; margin-bottom:28px; }
-  .pd-libro-title { margin:0 0 8px; font-family:'Unbounded',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink); }
-  .pd-libro-text { margin:0 0 12px; max-width:520px; font-size:13px; line-height:1.6; color:var(--muted); }
-  .pd-libro-link { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; font-weight:700; color:var(--primary); }
-  .pd-libro-link:hover { color:var(--primary-hover); }
-  .pd-footer-bottom { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding-top:26px; border-top:1px solid var(--line); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(136,136,128,0.42); }
-  .pd-footer-bottom a { color:inherit; }
-  .pd-footer-bottom a:hover { color:var(--primary); }
-
-  /* ---- scroll reveal ---- */
-  [data-reveal] { opacity:0; transform:translateY(20px); transition:opacity 600ms ease, transform 600ms cubic-bezier(.2,.7,.3,1); }
-  [data-reveal].is-visible { opacity:1; transform:none; }
-
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior:auto; }
-    .pd-marquee { animation:none; }
-    [data-reveal] { transition:opacity 400ms ease; transform:none !important; }
-    .pd-hero-photo, .pd-noche-photo { transform:none !important; }
+  /* ---------- entrada ---------- */
+  .pd-ticket-name { font-family:var(--serif); font-size:clamp(28px, 6vw, 36px); line-height:1.1; margin:14px 0 0; }
+  .pd-qr-frame { display:inline-block; margin-top:34px; padding:14px; background:var(--ink); }
+  .pd-qr-frame img { display:block; width:236px; height:236px; image-rendering:pixelated; }
+  .pd-ticket-code { margin:18px 0 0; font-size:12px; letter-spacing:.38em; text-indent:.38em; color:var(--muted); }
+  .pd-validity {
+    margin:30px auto 0; padding:16px 0; max-width:320px;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
   }
+  .pd-validity .pd-cap + .pd-cap { margin-top:8px; }
+  .pd-validity .is-red { color:var(--red); }
+  .pd-note { color:var(--muted); font-size:13px; margin:22px auto 0; max-width:330px; }
+
+  /* ---------- footer ---------- */
+  footer {
+    padding:28px 24px calc(28px + env(safe-area-inset-bottom)); text-align:center;
+    color:var(--faint); font-size:10px; letter-spacing:.28em; text-transform:uppercase;
+  }
+  footer nav { display:flex; justify-content:center; flex-wrap:wrap; gap:8px 26px; margin-bottom:14px; }
+  footer a { text-decoration:none; color:var(--muted); }
+  footer a:hover { color:var(--ink); }
+
+  @keyframes pd-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  .pd-step.is-active { animation:pd-in .7s cubic-bezier(.2,.7,.2,1) both; }
+  .pd-brand { animation:pd-in 1s cubic-bezier(.2,.7,.2,1) both; }
+  @media (prefers-reduced-motion: reduce) { .pd-step.is-active, .pd-brand { animation:none; } }
 </style>
 </head>
-<body>
+<body class="is-landing">
+  <header class="pd-brand">
+    <img class="pd-logo" src="/paradisio-logo.png" alt="Paradisio" width="1200" height="388" />
+  </header>
 
-<header class="pd-header pd-pad" id="pd-header">
-  <a href="#top" class="logo-link"><img src="/logo-white.png" alt="Paradisio" /></a>
-  <nav class="pd-nav">
-    <a href="#entradas" class="pd-nav-link pd-hide-sm">Entradas</a>
-    <a href="#entradas" class="pd-nav-cta js-copy" data-off="Generar" data-on="Comprar">Generar</a>
-  </nav>
-</header>
+  <main>
+    <!-- Paso 1: código -->
+    <section class="pd-step is-active" id="step-code" aria-label="Ingresa tu código">
+      <form class="pd-code-form" id="code-form" novalidate>
+        <input class="pd-code-input" id="code-input" name="code" type="text"
+               placeholder="Ingresa tu código" aria-label="Ingresa tu código" maxlength="16"
+               autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="code-msg" />
+        <p class="pd-msg" id="code-msg" role="alert"></p>
+        <button class="pd-btn" type="submit" id="code-btn">Continuar</button>
+      </form>
+    </section>
 
-<div class="pd-promo-banner pd-pad" id="pd-promo-banner" hidden>
-  <p class="pd-promo-eyebrow">Código de promotor</p>
-  <p class="pd-promo-name" id="promo-banner-name"></p>
-  <p class="pd-promo-meta">Viernes 28 de agosto · Espacio NHN, Barranco, Lima</p>
-</div>
-
-<section id="top" class="pd-hero">
-  <img class="pd-hero-photo" src="/hero-photo.jpg" alt="" aria-hidden="true" data-parallax="0.22" />
-  <div class="pd-hero-gradient" aria-hidden="true"></div>
-
-  <div class="pd-hero-content pd-pad">
-    <h1 class="pd-hero-title">Para<br>disio</h1>
-    <div class="pd-hero-actions">
-      <a href="#entradas" class="pd-btn-dark"><span class="js-copy" data-off="Generar entrada" data-on="Entradas">Generar entrada</span><span aria-hidden="true" style="font-size:15px;line-height:1;">↓</span></a>
-    </div>
-  </div>
-
-  <div class="pd-marquee-wrap" aria-hidden="true">
-    <div class="pd-marquee">PARADISIO · HOUSE · DISCO · TODA LA NOCHE · PARADISIO · BARRANCO · 28 AGO · PARADISIO · HOUSE · DISCO · TODA LA NOCHE · PARADISIO · BARRANCO · 28 AGO · PARADISIO · HOUSE · DISCO · TODA LA NOCHE · PARADISIO · BARRANCO · 28 AGO · PARADISIO · HOUSE · DISCO · TODA LA NOCHE · PARADISIO · BARRANCO · 28 AGO · </div>
-  </div>
-</section>
-
-<section class="pd-cd-section">
-  <div class="pd-cd-head pd-pad">
-    <p class="pd-eyebrow">Faltan</p>
-    <p class="pd-cd-date pd-hide-sm">Viernes 28 de Agosto</p>
-  </div>
-  <div class="pd-cd pd-pad" aria-hidden="true">
-    <div class="pd-cd-unit pd-pad">
-      <p class="pd-cd-num" id="cd-days">00</p>
-      <p class="pd-cd-label">Días / Days</p>
-    </div>
-    <div class="pd-cd-unit pd-pad">
-      <p class="pd-cd-num" id="cd-hours">00</p>
-      <p class="pd-cd-label">Horas / Hours</p>
-    </div>
-    <div class="pd-cd-unit pd-pad">
-      <p class="pd-cd-num" id="cd-mins">00</p>
-      <p class="pd-cd-label">Minutos / Min</p>
-    </div>
-    <div class="pd-cd-unit is-seconds pd-pad">
-      <p class="pd-cd-num" id="cd-secs">00</p>
-      <p class="pd-cd-label">Segundos / Sec</p>
-    </div>
-  </div>
-</section>
-
-<section id="la-noche" class="pd-noche pd-split">
-  <div class="pd-noche-text pd-pad">
-    <p class="pd-eyebrow">La Noche / About the Night</p>
-    <h2 class="pd-noche-title">Una sala.<br>Un sentimiento.<br>Toda la noche.</h2>
-    <p class="pd-noche-sub">One room. One feeling. All night.</p>
-    <p class="pd-noche-copy" data-reveal>Paradisio trae la energía del disco y el house a Barranco en una sala hecha para bailar y dejarte llevar.</p>
-    <div class="pd-badge18" data-reveal>
-      <strong>18+</strong>
-      <span>Solo con DNI</span>
-    </div>
-  </div>
-  <div class="pd-noche-photo-wrap">
-    <img class="pd-noche-photo" src="/dancefloor-photo.jpg" alt="Pista de baile en Paradisio" data-parallax="0.08" />
-    <div class="pd-noche-photo-shade" aria-hidden="true"></div>
-    <p class="pd-noche-caption">Espacio NHN · Barranco, Lima</p>
-  </div>
-</section>
-
-<section id="entradas">
-  <div class="pd-entradas-head pd-pad">
-    <p class="pd-entradas-eyebrow">Asegura tu lugar / Secure your spot</p>
-    <h2 class="pd-entradas-title">Entradas</h2>
-  </div>
-
-  <p class="pd-sales-closed pd-pad" id="sales-closed-notice" hidden></p>
-
-  <div id="pd-flow">
-    <div class="pd-steps" id="pd-steps">
-      <button type="button" class="pd-step" data-step="1"><span class="pd-step-num">1</span></button>
-      <span class="pd-step-sep" aria-hidden="true">—</span>
-      <button type="button" class="pd-step" data-step="2"><span class="pd-step-num">2</span></button>
-      <span class="pd-step-sep" aria-hidden="true">—</span>
-      <button type="button" class="pd-step" data-step="3"><span class="pd-step-num">3</span></button>
-      <span class="pd-step-sep" aria-hidden="true">—</span>
-      <button type="button" class="pd-step" data-step="4"><span class="pd-step-num">4</span></button>
-    </div>
-
-    <div class="pd-step-panel pd-pad" id="step-panel-1">
-      <div class="pd-sku-grid" id="sku-grid" aria-live="polite"></div>
-    </div>
-
-    <div class="pd-step-panel pd-pad" id="step-panel-2" hidden>
-      <p class="pd-eyebrow" style="margin-bottom:26px;">Tus datos</p>
-
-      <div id="free-fields">
-        <div class="pd-form-grid pd-form">
-          <div class="pd-field">
-            <input class="pd-input" type="text" id="f-nombre" placeholder="Nombre" aria-label="Nombre" autocomplete="given-name" />
-          </div>
-          <div class="pd-field">
-            <input class="pd-input" type="text" id="f-apellido" placeholder="Apellido" aria-label="Apellido" autocomplete="family-name" />
-          </div>
-          <div class="pd-field">
-            <input class="pd-input" type="email" id="f-email" placeholder="Email" aria-label="Email" autocomplete="email" />
-          </div>
-          <div class="pd-field">
-            <select class="pd-input" id="f-tipo-documento" aria-label="Tipo de documento">
-              <option value="DNI">DNI</option>
-              <option value="CE">Carné de Extranjería</option>
-              <option value="Pasaporte">Pasaporte</option>
-            </select>
-          </div>
-          <div class="pd-field">
-            <input class="pd-input" type="text" id="f-dni" placeholder="Número de documento" aria-label="Número de documento" autocomplete="off" />
-          </div>
-          <div class="pd-field">
-            <input class="pd-input" type="text" id="f-phone" placeholder="Teléfono / WhatsApp" aria-label="Teléfono" inputmode="tel" autocomplete="tel" />
-          </div>
-          <div class="pd-field">
-            <label class="pd-microlabel" for="f-dob">Fecha de nacimiento</label>
-            <input class="pd-input" type="date" id="f-dob" aria-label="Fecha de nacimiento" autocomplete="bday" />
-          </div>
+    <!-- Paso 2: datos -->
+    <section class="pd-step" id="step-form" aria-labelledby="form-title">
+      <h2 class="pd-title" id="form-title">After Hours<br><em class="pd-sub">by Jägermeister</em></h2>
+      <p class="pd-lead">Completa tus datos tal como figuran en tu documento. Te lo pedirán en la puerta junto con el QR.</p>
+      <div class="pd-code-chip">
+        <span id="code-chip"></span><i></i>
+        <button type="button" class="pd-link-btn" id="change-code-btn">Cambiar</button>
+      </div>
+      <form class="pd-fields" id="data-form" novalidate>
+        <div class="pd-field">
+          <label for="f-nombre">Nombre</label>
+          <input class="pd-input" id="f-nombre" name="nombre" type="text" autocomplete="given-name" autocapitalize="words" required />
+          <p class="pd-err" data-for="f-nombre"></p>
         </div>
-
-        <div class="pd-field pd-field-promo">
-          <input class="pd-input" type="text" id="f-promo" placeholder="Código de promotor (opcional)" aria-label="Código de promotor" autocomplete="off" />
+        <div class="pd-field">
+          <label for="f-apellido">Apellidos</label>
+          <input class="pd-input" id="f-apellido" name="apellido" type="text" autocomplete="family-name" autocapitalize="words" required />
+          <p class="pd-err" data-for="f-apellido"></p>
         </div>
-
-        <div class="pd-declare">
-          <input type="checkbox" id="f-declare" />
-          <label for="f-declare">Declaro bajo mi responsabilidad que seré mayor de 18 años el día del evento (28 de agosto de 2026) y que la información brindada es correcta. · I declare I will be 18 or older on the day of the event (August 28, 2026) and that this information is accurate.</label>
+        <div class="pd-field">
+          <label for="f-dni">DNI</label>
+          <input class="pd-input" id="f-dni" name="dni" type="text" inputmode="numeric" autocomplete="off" maxlength="12" required />
+          <p class="pd-err" data-for="f-dni"></p>
         </div>
-      </div>
-
-      <div id="paid-fields" hidden>
-        <div id="assistants-wrap"></div>
-
-        <div class="pd-field pd-field-promo">
-          <input class="pd-input" type="text" id="f-promo-paid" placeholder="Código de descuento (opcional)" aria-label="Código de descuento" autocomplete="off" />
+        <div class="pd-field">
+          <label for="f-dob">Fecha de nacimiento</label>
+          <input class="pd-input" id="f-dob" name="dob" type="date" autocomplete="bday" required />
+          <p class="pd-err" data-for="f-dob"></p>
         </div>
-
-        <div class="pd-declare">
-          <input type="checkbox" id="f-declare-paid" />
-          <label for="f-declare-paid">Declaro bajo mi responsabilidad que todos los asistentes serán mayores de 18 años el día del evento (28 de agosto de 2026) y que la información brindada es correcta. · I declare all attendees will be 18 or older on the day of the event (August 28, 2026) and that this information is accurate.</label>
+        <div class="pd-field is-wide">
+          <label for="f-email">Correo</label>
+          <input class="pd-input" id="f-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required />
+          <p class="pd-err" data-for="f-email"></p>
         </div>
+        <div class="pd-field">
+          <label for="f-phone">Número</label>
+          <input class="pd-input" id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required />
+          <p class="pd-err" data-for="f-phone"></p>
+        </div>
+        <div class="pd-field">
+          <label for="f-ig">Instagram</label>
+          <div class="pd-prefix">
+            <span aria-hidden="true">@</span>
+            <input class="pd-input" id="f-ig" name="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+          </div>
+          <p class="pd-err" data-for="f-ig"></p>
+        </div>
+        <label class="pd-check">
+          <input type="checkbox" id="f-accept" />
+          <span>Soy mayor de 18 años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a> y la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>.</span>
+        </label>
+        <div class="pd-form-actions">
+          <p class="pd-msg" id="form-msg" role="alert"></p>
+          <button class="pd-btn" type="submit" id="form-btn">Generar mi QR</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Paso 3: QR -->
+    <section class="pd-step" id="step-ticket" aria-labelledby="ticket-name">
+      <p class="pd-cap" style="color:var(--red);" id="ticket-tier">Invitación</p>
+      <p class="pd-ticket-name" id="ticket-name"></p>
+      <div class="pd-qr-frame"><img id="ticket-qr" alt="Código QR de tu entrada" width="236" height="236" /></div>
+      <p class="pd-ticket-code" id="ticket-code"></p>
+      <div class="pd-validity">
+        <p class="pd-cap" id="ticket-date"></p>
+        <p class="pd-cap"><a id="ticket-address" href="#" target="_blank" rel="noopener" style="text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--faint);"></a></p>
+        <p class="pd-cap is-red" id="ticket-validity"></p>
       </div>
+      <p class="pd-note" id="ticket-lead">También te lo enviamos por correo. Preséntalo con tu documento de identidad físico. Solo mayores de 18.</p>
+      <a class="pd-btn" id="ticket-link" href="#">Ver mi entrada</a>
+      <button class="pd-btn pd-btn-quiet" type="button" id="another-btn">Canjear otro código</button>
+    </section>
+  </main>
 
-      <p class="pd-form-error" id="step2-error" hidden></p>
-    </div>
-
-    <div class="pd-step-panel pd-pad" id="step-panel-3" hidden>
-      <p class="pd-eyebrow" style="margin-bottom:26px;">Resumen y pago</p>
-
-      <p class="pd-summary-line" id="summary-line"></p>
-      <div class="pd-summary-row" id="summary-subtotal-row" hidden>
-        <span>Subtotal</span>
-        <span class="pd-summary-value" id="summary-subtotal"></span>
-      </div>
-      <div class="pd-summary-row" id="summary-discount-row" hidden>
-        <span id="summary-discount-label">Descuento</span>
-        <span class="pd-summary-value" id="summary-discount"></span>
-      </div>
-      <div class="pd-summary-row pd-summary-total">
-        <span>Total</span>
-        <span class="pd-summary-value" id="summary-total"></span>
-      </div>
-
-      <div class="pd-declare">
-        <input type="checkbox" id="f-legal" />
-        <label for="f-legal">He leído y acepto los <a href="/terminos.html" target="_blank" rel="noopener">Términos y Condiciones</a>, la <a href="/devoluciones.html" target="_blank" rel="noopener">Política de Cambios y Devoluciones</a> y la <a href="/privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a>.</label>
-      </div>
-
-      <p class="pd-form-error" id="form-error" hidden></p>
-    </div>
-
-    <div class="pd-step-bar pd-pad" id="pd-step-bar">
-      <button type="button" class="pd-step-back" id="step-back-btn" hidden>← Atrás</button>
-      <button type="button" class="pd-step-continue" id="step-continue-btn" disabled>Continuar</button>
-      <button type="button" class="pd-pay-btn" id="pay-btn" hidden>Generar mi entrada</button>
-    </div>
-  </div>
-
-  <div class="pd-confirm pd-pad" id="pd-confirm" hidden>
-    <p class="pd-confirm-headline">Nos vemos en la pista</p>
-    <p class="pd-confirm-line" id="confirm-line"></p>
-
-    <div class="pd-confirm-single" id="confirm-single" hidden>
-      <div class="pd-confirm-qr-wrap"><img id="confirm-qr-img" alt="Código QR de tu entrada" /></div>
-      <p class="pd-confirm-name" id="confirm-name"></p>
-      <p class="pd-confirm-code" id="confirm-code"></p>
-      <p class="pd-confirm-meta" id="confirm-meta"></p>
-    </div>
-
-    <div class="pd-confirm-carousel" id="confirm-carousel" hidden>
-      <p class="pd-confirm-count" id="confirm-count"></p>
-      <div class="pd-confirm-track" id="confirm-track"></div>
-      <div class="pd-confirm-arrows">
-        <button class="pd-confirm-arrow" id="confirm-prev" type="button" aria-label="Entrada anterior">←</button>
-        <button class="pd-confirm-arrow" id="confirm-next" type="button" aria-label="Siguiente entrada">→</button>
-      </div>
-    </div>
-
-    <p class="pd-confirm-spam" id="confirm-spam"></p>
-    <p class="pd-confirm-legal">Presenta este QR junto con tu <strong>documento de identidad físico y original</strong> en la puerta. Evento exclusivo para <strong>mayores de 18 años</strong>.</p>
-    <a class="pd-confirm-secondary" id="confirm-secondary-link" href="#" target="_blank" rel="noopener"></a>
-  </div>
-
-  <div class="pd-legal pd-pad">
-    <p>Entradas no reembolsables. Reventa prohibida. Solo mayores de 18 con documento válido en puerta. · Non-refundable. Resale prohibited. 18+ only, valid ID required at the door.</p>
-  </div>
-</section>
-
-<footer class="pd-footer pd-pad">
-  <div class="pd-footer-top">
-    <div class="pd-footer-brand">
-      <img src="/logo-white.png" alt="Paradisio" />
-      <p>House y disco subterráneo. Barranco, Lima.<br>Cada fiesta una noche distinta. La misma devoción.</p>
-    </div>
-    <div class="pd-footer-cols">
-      <div class="pd-footer-col">
-        <p class="pd-eyebrow">Contacto</p>
-        <a href="mailto:info@paradisioclub.com">info@paradisioclub.com</a>
-        <a href="tel:+51970457825">970 457 825</a>
-        <p class="pd-addr">Jr. 28 de Julio 277<br>Barranco, Lima</p>
-      </div>
-      <div class="pd-footer-col">
-        <p class="pd-eyebrow">Síguenos</p>
-        <a class="pd-social" href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
-          Instagram
-        </a>
-      </div>
-      <div class="pd-footer-col">
-        <p class="pd-eyebrow">Ubicación del evento</p>
-        <p class="pd-addr">Espacio NHN<br>Barranco, Lima<br>Perú</p>
-      </div>
-      <div class="pd-footer-col">
-        <p class="pd-eyebrow">Legal</p>
-        <a href="/terminos.html">Términos y condiciones</a>
-        <a href="/devoluciones.html">Cambios y devoluciones</a>
-        <a href="/privacidad.html">Privacidad</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="pd-libro-notice">
-    <p class="pd-libro-title">Libro de Reclamaciones</p>
-    <p class="pd-libro-text">Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este establecimiento cuenta con un Libro de Reclamaciones a tu disposición.</p>
-    <a class="pd-libro-link" href="/libro-reclamaciones.html">Ir al Libro de Reclamaciones →</a>
-  </div>
-
-  <div class="pd-footer-bottom">
-    <span>© 2026 Paradisio</span>
-    <span>Lima, Perú</span>
-  </div>
-</footer>
 
 <script>
-  let culqiPublicKey = '';
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const steps = ['step-code', 'step-form', 'step-ticket'];
+  let currentCode = '';
+  let eventInfo = { name: '', dateLabel: '', dateIso: '' };
 
-  /* ---- header scroll state ---- */
-  const headerEl = document.getElementById('pd-header');
-  function onScroll() {
-    const on = (window.scrollY || 0) > 60;
-    headerEl.classList.toggle('is-scrolled', on);
-    if (!reduceMotion) {
-      document.querySelectorAll('[data-parallax]').forEach((el) => {
-        const f = parseFloat(el.getAttribute('data-parallax')) || 0;
-        const r = el.parentElement.getBoundingClientRect();
-        el.style.transform = 'translateY(' + (r.top * -1 * f).toFixed(1) + 'px)';
-      });
-    }
-  }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
-
-  /* ---- scroll reveal ---- */
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e, i) => {
-      if (e.isIntersecting) {
-        setTimeout(() => e.target.classList.add('is-visible'), reduceMotion ? 0 : i * 70);
-        io.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.15 });
-  document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
-  setTimeout(() => document.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-visible')), 2500);
-
-  /* ---- countdown ---- */
-  const EVENT_DATE = new Date('2026-08-28T22:00:00-05:00');
-  function fmt2(n){ return String(n).padStart(2,'0'); }
-  function renderCountdown(){
-    const diff = Math.max(0, EVENT_DATE - new Date());
-    document.getElementById('cd-days').textContent = fmt2(Math.floor(diff/86400000));
-    document.getElementById('cd-hours').textContent = fmt2(Math.floor(diff/3600000) % 24);
-    document.getElementById('cd-mins').textContent = fmt2(Math.floor(diff/60000) % 60);
-    document.getElementById('cd-secs').textContent = fmt2(Math.floor(diff/1000) % 60);
-  }
-  renderCountdown();
-  setInterval(renderCountdown, 1000);
-
-  /* ---- ticket tiers + checkout ---- */
-  const skuGridEl = document.getElementById('sku-grid');
-  const closedNoticeEl = document.getElementById('sales-closed-notice');
-  let skuCards = [];
-
-  const pdFlowEl = document.getElementById('pd-flow');
-  const confirmEl = document.getElementById('pd-confirm');
-  const errorEl = document.getElementById('form-error');
-  const step2ErrorEl = document.getElementById('step2-error');
-  const freeFieldsEl = document.getElementById('free-fields');
-  const paidFieldsEl = document.getElementById('paid-fields');
-  const assistantsWrap = document.getElementById('assistants-wrap');
-  let selectedTier = null; // { name, price, qty, sku }
-  let appliedPromoterFree = null; // { code, name } or null — attribution only, no discount
-  let appliedPromoterPaid = null; // { code, name } or null — drives the 10% discount preview
-
-  // The catalog (which SKUs are on sale, Cortesía open/soldout/closed, prices) is
-  // entirely time-windowed server-side — lib/catalog.js is the single source of
-  // truth. This just renders whatever /api/config returns; nothing here decides
-  // prices or availability. Fails closed: if this request errors, no tier renders
-  // and a visible retry notice shows instead of silently offering nothing.
-  //
-  // ?qa=1 asks the server for the hidden S/1 test SKU (see lib/catalog.js) —
-  // it's only ever included in the response when that param AND the server's
-  // TEST_SKU_ENABLED flag are both on, so a plain page load never triggers or
-  // reveals it, in the page or in the network tab.
-  /* ---- /p/{codigo} promoter landing: a distinct, stripped-down entry point,
-     no marketing sections — logo, date/venue, "Código de X aplicado", and
-     the step wizard starting at step 1. An unknown or deactivated code just
-     redirects to the normal landing, silently. ---- */
-  const promoPathMatch = location.pathname.match(/^\/p\/([A-Za-z]+)\/?$/);
-  if (promoPathMatch) {
-    fetch('/api/promoter?code=' + encodeURIComponent(promoPathMatch[1]))
-      .then((r) => r.json())
-      .then((d) => {
-        if (!d || !d.ok) { window.location.replace('/'); return; }
-        document.getElementById('top').hidden = true;
-        document.querySelector('.pd-cd-section').hidden = true;
-        document.getElementById('la-noche').hidden = true;
-        document.getElementById('promo-banner-name').textContent = 'Código de ' + d.name + ' aplicado';
-        document.getElementById('pd-promo-banner').hidden = false;
-        // Pre-filled but still editable — someone might receive the code by
-        // voice and type a different one over it.
-        document.getElementById('f-promo').value = d.code;
-        document.getElementById('f-promo-paid').value = d.code;
-        appliedPromoterFree = d;
-        appliedPromoterPaid = d;
-      })
-      .catch(() => { /* lookup failed — leave the normal landing visible */ });
+  function show(id){
+    steps.forEach((s) => $(s).classList.toggle('is-active', s === id));
+    document.body.classList.toggle('is-landing', id === 'step-code');
+    window.scrollTo(0, 0);
   }
 
-  const qaRequested = new URLSearchParams(location.search).get('qa') === '1';
-  fetch('/api/config' + (qaRequested ? '?qa=1' : '')).then((r) => r.json()).then((d) => {
-    if (!d) return;
-    if (d.eventDateIso) eventDateIso = d.eventDateIso;
-    culqiPublicKey = d.culqiPublicKey || '';
-    if (d.paymentsEnabled) {
-      document.querySelectorAll('.js-copy').forEach((el) => { el.textContent = el.dataset.on; });
-    }
-    renderCatalog(d);
-  }).catch(() => {
-    closedNoticeEl.textContent = 'No pudimos cargar las entradas. Actualiza la página. · We couldn\'t load tickets, please refresh.';
-    closedNoticeEl.hidden = false;
-  });
+  function cleanCode(v){ return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16); }
 
-  function renderSkuCard(opts){
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'pd-sku-card' + (opts.cortesia ? ' is-cortesia' : '');
-    btn.dataset.tier = opts.tierId;
-    btn.dataset.price = opts.price;
-    btn.dataset.qty = opts.qty;
-    btn.dataset.sku = opts.sku;
-    if (opts.disabled) btn.disabled = true;
-    btn.innerHTML =
-      '<span class="pd-sku-check" aria-hidden="true">✓</span>' +
-      '<p class="pd-sku-price ' + (opts.price === 0 ? 'is-free' : 'is-paid') + '">' + (opts.price === 0 ? 'FREE' : 'S/' + opts.price) + '</p>' +
-      '<p class="pd-sku-name">' + escapeHtmlIndex(opts.name) + '</p>' +
-      '<p class="pd-sku-people">' + opts.qty + (opts.qty > 1 ? ' personas' : ' persona') + '</p>' +
-      '<p class="pd-sku-note">' + escapeHtmlIndex(opts.note) + '</p>' +
-      (opts.disabled ? '<p class="pd-sku-badge">' + escapeHtmlIndex(opts.badge) + '</p>' : '');
-    return btn;
+  function setEvent(ev){
+    if (!ev) return;
+    eventInfo = ev;
   }
 
-  function renderCatalog(cfg){
-    skuGridEl.innerHTML = '';
-    skuCards = [];
-    selectedTier = null;
+  /* ---------------- Paso 1 ---------------- */
+  const CODE_ERRORS = {
+    not_found: 'Ese código no existe. Revisa que esté bien escrito.',
+    used: 'Ese código ya fue utilizado.',
+    revoked: 'Ese código ya no es válido.',
+  };
 
-    if (cfg.salesWindow === 'closed') {
-      closedNoticeEl.textContent = 'Venta cerrada. Entrada en puerta S/50';
-      closedNoticeEl.hidden = false;
-      // The hidden QA sku still needs the full flow to rehearse a purchase —
-      // only show it when that sku is actually present (server-gated).
-      pdFlowEl.hidden = !cfg.testSku;
-      appendTestSkuCard(cfg);
-      if (cfg.testSku) goToStep(1, { scroll: false });
+  async function submitCode(e){
+    if (e) e.preventDefault();
+    const code = cleanCode($('code-input').value);
+    $('code-input').value = code;
+    const msg = $('code-msg');
+    if (code.length < 4) {
+      msg.textContent = 'Ingresa tu código.';
+      $('code-input').classList.add('has-error');
+      $('code-input').focus();
       return;
     }
-    closedNoticeEl.hidden = true;
-    pdFlowEl.hidden = false;
-
-    // 'soldout' and 'closed' both mean the Cortesía card doesn't render at
-    // all -- not grayed out, no "agotadas" badge, just absent. The grid
-    // (auto-fit/explicit columns) reflows on its own around the paid cards.
-    if (cfg.cortesiaState === 'open') {
-      const btn = renderSkuCard({
-        tierId: 'Cortesía Opening', price: 0, qty: 1, sku: 'cortesia', name: 'Cortesía Opening', cortesia: true,
-        note: 'Ingreso desde las 9 p.m. hasta las 12:00 a.m. · Sujeto a aforo',
-      });
-      btn.addEventListener('click', () => selectSkuCard(btn));
-      skuGridEl.appendChild(btn);
-      skuCards.push(btn);
-    }
-
-    (cfg.paidSkus || []).forEach((sku) => {
-      const btn = renderSkuCard({
-        tierId: sku.tier + ' ' + sku.name, price: sku.price, qty: sku.qty, sku: sku.sku,
-        name: sku.tier + ' ' + sku.name,
-        note: 'Ingreso desde las 9 p.m.',
-      });
-      btn.addEventListener('click', () => selectSkuCard(btn));
-      skuGridEl.appendChild(btn);
-      skuCards.push(btn);
-    });
-
-    appendTestSkuCard(cfg);
-    // Initial render, not a user-driven step transition — set the panel/step
-    // state but don't scroll. This used to always scroll, which could fire
-    // while the user was still scrolling to #entradas themselves (or before
-    // images/layout settled) and leave the first card cut off at the top.
-    goToStep(1, { scroll: false });
-  }
-
-  function appendTestSkuCard(cfg){
-    if (!cfg.testSku) return;
-    const sku = cfg.testSku;
-    const btn = renderSkuCard({
-      tierId: sku.tier + ' ' + sku.name, price: sku.price, qty: sku.qty, sku: sku.sku,
-      name: sku.tier + ' ' + sku.name,
-      note: 'Solo pruebas internas — no válido para el evento.',
-    });
-    btn.addEventListener('click', () => selectSkuCard(btn));
-    skuGridEl.appendChild(btn);
-    skuCards.push(btn);
-  }
-
-  /* ---- step navigation ---- */
-  const stepsEl = document.getElementById('pd-steps');
-  const stepPanels = { 1: document.getElementById('step-panel-1'), 2: document.getElementById('step-panel-2'), 3: document.getElementById('step-panel-3') };
-  const stepBackBtn = document.getElementById('step-back-btn');
-  const stepContinueBtn = document.getElementById('step-continue-btn');
-  let currentStep = 1;
-
-  function goToStep(n, opts){
-    if (n < 1 || n > 3) return;
-    currentStep = n;
-    Object.keys(stepPanels).forEach((k) => { stepPanels[k].hidden = Number(k) !== n; });
-    stepsEl.querySelectorAll('.pd-step').forEach((el) => {
-      const s = Number(el.dataset.step);
-      el.classList.toggle('is-active', s === n);
-      el.classList.toggle('is-done', s < n);
-    });
-    stepBackBtn.hidden = n === 1;
-    stepContinueBtn.hidden = n === 3;
-    payBtn.hidden = n !== 3;
-    if (n === 1) stepContinueBtn.disabled = !selectedTier;
-    step2ErrorEl.hidden = true;
-    showError('');
-    // Initial/automatic renders (page load, sales-closed QA path) pass
-    // scroll:false — there's no user-driven transition to animate to, and
-    // scrolling on load can race the user's own scroll to #entradas or fire
-    // before layout/images settle, leaving the first card cut off.
-    if (opts && opts.scroll === false) return;
-    // #pd-steps is position:sticky, so once it's already pinned to the top
-    // (from a previous step), the browser's scrollIntoView considers it
-    // "already visible" and won't actually move the page — even though the
-    // new panel underneath is shorter and the viewport is left scrolled past
-    // it. Scrolling the non-sticky #pd-flow container by measured offset
-    // avoids that trap.
-    const headerHeight = 64;
-    const rect = pdFlowEl.getBoundingClientRect();
-    const target = window.scrollY + rect.top - headerHeight;
-    window.scrollTo({ top: Math.max(0, target), behavior: reduceMotion ? 'auto' : 'smooth' });
-  }
-
-  // Only completed steps (1–3) are clickable to jump back to; step 4 is the
-  // confirmation and isn't part of this panel-based navigation.
-  stepsEl.querySelectorAll('.pd-step').forEach((el) => {
-    el.addEventListener('click', () => {
-      const s = Number(el.dataset.step);
-      if (s >= 1 && s <= 3 && s < currentStep) goToStep(s);
-    });
-  });
-  stepBackBtn.addEventListener('click', () => { if (currentStep > 1) goToStep(currentStep - 1); });
-
-  stepContinueBtn.addEventListener('click', async () => {
-    if (currentStep === 1) {
-      if (!selectedTier) return;
-      goToStep(2);
-    } else if (currentStep === 2) {
-      const err = selectedTier.price === 0 ? validateFreeData(readFreeForm()) : validatePaidData(readAssistants());
-      if (err) {
-        step2ErrorEl.textContent = err;
-        step2ErrorEl.hidden = false;
+    const btn = $('code-btn');
+    btn.disabled = true; btn.textContent = 'Verificando…'; msg.textContent = '';
+    try {
+      const r = await fetch('/api/invite?code=' + encodeURIComponent(code));
+      const d = await r.json();
+      setEvent(d.event);
+      if (!d.ok) {
+        msg.textContent = CODE_ERRORS[d.reason] || 'No pudimos validar el código.';
+        $('code-input').classList.add('has-error');
         return;
       }
-      step2ErrorEl.hidden = true;
-      // Re-check whatever's in the promo field right now — someone can type a
-      // code and hit Continuar without ever blurring the field first, and the
-      // step 3 breakdown needs to reflect it.
-      const isFree = selectedTier.price === 0;
-      await checkPromoCode(isFree ? freePromoInput : paidPromoInput, isFree);
-      updateSummary();
-      goToStep(3);
+      currentCode = code;
+      $('code-chip').textContent = code;
+      show('step-form');
+      $('f-nombre').focus({ preventScroll: true });
+    } catch (err) {
+      msg.textContent = 'Error de conexión. Intenta de nuevo.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Continuar';
     }
+  }
+  $('code-form').addEventListener('submit', submitCode);
+  $('code-input').addEventListener('input', () => {
+    $('code-input').classList.remove('has-error');
+    $('code-msg').textContent = '';
+  });
+  $('change-code-btn').addEventListener('click', () => {
+    show('step-code');
+    $('code-input').focus();
+    $('code-input').select();
   });
 
-  // Mirrors lib/tickets.js's calcAge: the 18+ gate checks age as of the event
-  // date, not today — someone who's 17 now but turns 18 before the event can
-  // still register. Falls back to the hardcoded date if /api/config hasn't
-  // resolved yet; the server is the authoritative check either way.
-  let eventDateIso = '2026-08-28';
-  function calcAge(dobStr){
+  /* ---------------- Paso 2 ---------------- */
+  const NAME_RE = /^[a-zA-ZñÑüÜáéíóúÁÉÍÓÚ' -]{2,}$/;
+  const DOC_RE = /^(\d{8}|[a-zA-Z0-9]{8,12})$/;
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const IG_RE = /^[a-z0-9._]{1,30}$/;
+
+  function cleanIg(v){
+    return String(v || '').trim()
+      .replace(/^https?:\/\//i, '').replace(/^(www\.)?instagram\.com\//i, '')
+      .split(/[/?#]/)[0].replace(/^@+/, '').toLowerCase();
+  }
+
+  function ageAsOf(dobStr, asOf){
     const dob = new Date(dobStr + 'T00:00:00');
     if (isNaN(dob.getTime())) return null;
-    const asOf = new Date(eventDateIso + 'T00:00:00');
     let age = asOf.getFullYear() - dob.getFullYear();
     const m = asOf.getMonth() - dob.getMonth();
     if (m < 0 || (m === 0 && asOf.getDate() < dob.getDate())) age--;
     return age;
   }
 
-  function showError(msg){
-    errorEl.textContent = msg;
-    errorEl.hidden = !msg;
-  }
-
-  function escapeHtmlIndex(s){
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-
-  // cents -> "S/35" or "S/3.50" — only shows decimals when there actually are some,
-  // since every price and every 10% discount off it lands on a whole or half sol.
-  function formatSoles(cents){
-    const sign = cents < 0 ? '-' : '';
-    const abs = Math.abs(cents);
-    return sign + 'S/' + (abs % 100 === 0 ? String(abs / 100) : (abs / 100).toFixed(2));
-  }
-
-  function computeChargeCents(){
-    const subtotalCents = Math.round(selectedTier.price * 100);
-    if (!appliedPromoterPaid) return { subtotalCents, discountCents: 0, totalCents: subtotalCents };
-    const discountCents = Math.round(subtotalCents * 0.10);
-    return { subtotalCents, discountCents, totalCents: subtotalCents - discountCents };
-  }
-
-  function updateSummary(){
-    if (!selectedTier) return;
-    document.getElementById('summary-line').textContent = selectedTier.name + (selectedTier.qty > 1 ? ' × ' + selectedTier.qty : '');
-    const subtotalRow = document.getElementById('summary-subtotal-row');
-    const discountRow = document.getElementById('summary-discount-row');
-    const totalEl = document.getElementById('summary-total');
-
-    if (selectedTier.price === 0) {
-      subtotalRow.hidden = true;
-      discountRow.hidden = true;
-      totalEl.textContent = 'Gratis';
-      payBtn.textContent = 'Generar mi QR gratis';
-      return;
-    }
-
-    const { subtotalCents, discountCents, totalCents } = computeChargeCents();
-    if (appliedPromoterPaid) {
-      subtotalRow.hidden = false;
-      discountRow.hidden = false;
-      document.getElementById('summary-subtotal').textContent = formatSoles(subtotalCents);
-      document.getElementById('summary-discount-label').textContent = 'Descuento (' + appliedPromoterPaid.name + ')';
-      document.getElementById('summary-discount').textContent = '-' + formatSoles(discountCents);
-    } else {
-      subtotalRow.hidden = true;
-      discountRow.hidden = true;
-    }
-    totalEl.textContent = formatSoles(totalCents);
-    payBtn.textContent = 'Pagar ' + formatSoles(totalCents);
-  }
-
-  function renderAssistantBlock(index){
-    const isBuyer = index === 0;
-    const label = isBuyer ? 'Tú (comprador)' : 'Asistente ' + (index + 1);
-    const emailPlaceholder = isBuyer ? 'Email' : 'Email (opcional)';
-    const div = document.createElement('div');
-    div.className = 'pd-assistant';
-    div.dataset.index = index;
-    div.innerHTML =
-      '<p class="pd-assistant-label">' + label + '</p>' +
-      '<div class="pd-form-grid pd-form">' +
-        '<div class="pd-field"><input class="pd-input" data-field="nombre" placeholder="Nombre" aria-label="Nombre — ' + label + '" autocomplete="given-name" /></div>' +
-        '<div class="pd-field"><input class="pd-input" data-field="apellido" placeholder="Apellido" aria-label="Apellido — ' + label + '" autocomplete="family-name" /></div>' +
-        '<div class="pd-field"><select class="pd-input" data-field="tipoDocumento" aria-label="Tipo de documento — ' + label + '">' +
-          '<option value="DNI">DNI</option><option value="CE">Carné de Extranjería</option><option value="Pasaporte">Pasaporte</option>' +
-        '</select></div>' +
-        '<div class="pd-field"><input class="pd-input" data-field="numeroDocumento" placeholder="Número de documento" aria-label="Número de documento — ' + label + '" autocomplete="off" /></div>' +
-        '<div class="pd-field"><label class="pd-microlabel">Fecha de nacimiento</label><input class="pd-input" type="date" data-field="dob" aria-label="Fecha de nacimiento — ' + label + '" autocomplete="bday" /></div>' +
-        '<div class="pd-field"><input class="pd-input" type="email" data-field="email" placeholder="' + emailPlaceholder + '" aria-label="Email — ' + label + '" autocomplete="email" /></div>' +
-      '</div>';
-    return div;
-  }
-
-  function selectSkuCard(btn){
-    const tier = btn.getAttribute('data-tier');
-    const price = parseInt(btn.getAttribute('data-price'), 10);
-    const qty = parseInt(btn.getAttribute('data-qty'), 10);
-    const sku = btn.getAttribute('data-sku');
-    const sameSkuAsBefore = selectedTier && selectedTier.sku === sku;
-
-    skuCards.forEach((c) => c.classList.remove('is-selected'));
-    btn.classList.add('is-selected');
-    confirmEl.hidden = true;
-    showError('');
-
-    selectedTier = { name: tier, price, qty, sku };
-    stepContinueBtn.disabled = false;
-
-    const isFree = price === 0;
-    freeFieldsEl.hidden = !isFree;
-    paidFieldsEl.hidden = isFree;
-    // Re-picking the same sku (e.g. after tapping "1" to look back) keeps
-    // whatever was already typed — only a genuinely different sku (different
-    // headcount) needs fresh assistant blocks.
-    if (!isFree && !sameSkuAsBefore) {
-      assistantsWrap.innerHTML = '';
-      for (let i = 0; i < qty; i++) assistantsWrap.appendChild(renderAssistantBlock(i));
-    }
-  }
-
-  function readFreeForm(){
+  function readForm(){
     return {
-      nombre: document.getElementById('f-nombre').value.trim(),
-      apellido: document.getElementById('f-apellido').value.trim(),
-      email: document.getElementById('f-email').value.trim(),
-      tipoDocumento: document.getElementById('f-tipo-documento').value,
-      dni: document.getElementById('f-dni').value.trim(),
-      phone: document.getElementById('f-phone').value.trim(),
-      dob: document.getElementById('f-dob').value,
-      declared: document.getElementById('f-declare').checked,
-      legalAccepted: document.getElementById('f-legal').checked,
+      nombre: $('f-nombre').value.trim(),
+      apellido: $('f-apellido').value.trim(),
+      dni: $('f-dni').value.trim().toUpperCase(),
+      dob: $('f-dob').value,
+      email: $('f-email').value.trim().toLowerCase(),
+      phone: $('f-phone').value.trim(),
+      instagram: cleanIg($('f-ig').value),
+      accepted: $('f-accept').checked,
     };
   }
 
-  // Mirrors lib/identity-validation.js — quick client-side feedback; the server
-  // re-validates everything and is the real gate.
-  const NAME_CHARS_RE = /^[a-zA-ZñÑüÜáéíóúÁÉÍÓÚ' -]+$/;
-  const VOWEL_RE = /[aeiouáéíóúAEIOUÁÉÍÓÚ]/;
-  const REPEATED_CHAR_RE = /(.)\1{2,}/;
-  function isValidNamePart(v){
-    v = (v || '').trim();
-    return v.length >= 2 && NAME_CHARS_RE.test(v) && VOWEL_RE.test(v) && !REPEATED_CHAR_RE.test(v);
-  }
-  function isValidDocumentGeneric(v){
-    v = (v || '').trim();
-    return /^\d{8}$/.test(v) || /^[a-zA-Z0-9]{8,12}$/.test(v);
-  }
-  function isValidDocumentTyped(v, tipo){
-    v = (v || '').trim();
-    if (tipo === 'DNI') return /^\d{8}$/.test(v);
-    if (tipo === 'CE' || tipo === 'Pasaporte') return /^[a-zA-Z0-9]{8,12}$/.test(v);
-    return isValidDocumentGeneric(v);
-  }
-
-  // Split so step 2 ("Continuar") only gates on the person's own data, and
-  // the Terms/Devoluciones/Privacidad checkbox — now physically in step 3 —
-  // is gated separately at final submit. validateFree stays the full check,
-  // used as a defense-in-depth belt-and-suspenders re-check right before
-  // sending the request.
-  function validateFreeData(data){
-    if (!isValidNamePart(data.nombre) || !isValidNamePart(data.apellido)) {
-      return 'Ingresa un nombre y apellido válidos. · Please enter a valid first and last name.';
-    }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
-      return 'Ingresa un email válido. · Please enter a valid email.';
-    }
-    if (!isValidDocumentTyped(data.dni, data.tipoDocumento)) {
-      return 'Ingresa un documento válido para el tipo seleccionado. · Please enter a valid ID number for the selected document type.';
-    }
-    if (!data.phone) {
-      return 'Ingresa tu número de teléfono. · Please enter your phone number.';
-    }
-    const age = calcAge(data.dob);
-    if (age === null) {
-      return 'Ingresa tu fecha de nacimiento. · Please enter your date of birth.';
-    }
-    if (age < 18) {
-      return 'Debes tener 18 años cumplidos para el 28 de agosto de 2026. · You must turn 18 by August 28, 2026.';
-    }
-    if (!data.declared) {
-      return 'Debes marcar la declaración de mayoría de edad para continuar. · Please confirm the 18+ declaration.';
-    }
-    return null;
-  }
-
-  function validateFree(data){
-    return validateFreeData(data) || (!data.legalAccepted
-      ? 'Debes aceptar los Términos, Devoluciones y Privacidad para continuar. · You must accept the Terms, Returns and Privacy policies.'
-      : null);
-  }
-
-  function readAssistants(){
-    return [...assistantsWrap.querySelectorAll('.pd-assistant')].map((block) => ({
-      nombre: block.querySelector('[data-field="nombre"]').value.trim(),
-      apellido: block.querySelector('[data-field="apellido"]').value.trim(),
-      tipoDocumento: block.querySelector('[data-field="tipoDocumento"]').value,
-      numeroDocumento: block.querySelector('[data-field="numeroDocumento"]').value.trim(),
-      dob: block.querySelector('[data-field="dob"]').value,
-      email: block.querySelector('[data-field="email"]').value.trim(),
-    }));
-  }
-
-  function validatePaidData(assistants){
-    for (let i = 0; i < assistants.length; i++) {
-      const a = assistants[i];
-      const label = i === 0 ? 'Tú (comprador)' : 'Asistente ' + (i + 1);
-      if (!isValidNamePart(a.nombre) || !isValidNamePart(a.apellido)) return 'Ingresa un nombre y apellido válidos para ' + label + '. · Please enter a valid first and last name.';
-      if (!isValidDocumentTyped(a.numeroDocumento, a.tipoDocumento)) return 'Ingresa un documento válido para ' + label + '. · Please enter a valid ID number.';
-      if (i === 0 && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) return 'Ingresa un email válido para el comprador. · Please enter a valid email.';
-      if (a.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a.email)) return 'Ingresa un email válido para ' + label + ' o déjalo vacío. · Please enter a valid email or leave it blank.';
-      const age = calcAge(a.dob);
-      if (age === null) return 'Ingresa la fecha de nacimiento de ' + label + '. · Please enter the date of birth.';
-      if (age < 18) return label + ' debe tener 18 años cumplidos para el 28 de agosto de 2026. · ' + label + ' must turn 18 by August 28, 2026.';
-    }
-    const docs = assistants.map((a) => a.numeroDocumento.trim().toLowerCase());
-    if (new Set(docs).size !== docs.length) {
-      return 'Cada asistente debe tener un documento distinto. · Each attendee needs a different ID number.';
-    }
-    if (!document.getElementById('f-declare-paid').checked) {
-      return 'Debes marcar la declaración de mayoría de edad para continuar. · Please confirm the 18+ declaration.';
-    }
-    return null;
-  }
-
-  function validatePaid(assistants){
-    return validatePaidData(assistants) || (!document.getElementById('f-legal').checked
-      ? 'Debes aceptar los Términos, Devoluciones y Privacidad para continuar. · You must accept the Terms, Returns and Privacy policies.'
-      : null);
-  }
-
-  /* ---- inline (on-blur) field validation for step 2 — same validators as
-     the aggregate check, surfaced per-field instead of only at "Continuar". ---- */
-  function setFieldError(inputEl, message){
-    const field = inputEl.closest('.pd-field');
-    if (!field) return;
-    let errEl = field.querySelector('.pd-field-error');
-    if (message) {
-      if (!errEl) { errEl = document.createElement('p'); errEl.className = 'pd-field-error'; field.appendChild(errEl); }
-      errEl.textContent = message;
-      inputEl.classList.add('has-error');
-    } else {
-      if (errEl) errEl.textContent = '';
-      inputEl.classList.remove('has-error');
-    }
-  }
-
-  function inlineFieldKind(el){
-    if (el.dataset.field) return el.dataset.field;
-    const map = { 'f-nombre': 'nombre', 'f-apellido': 'apellido', 'f-email': 'email', 'f-dni': 'numeroDocumento', 'f-phone': 'phone', 'f-dob': 'dob' };
-    return map[el.id] || null;
-  }
-
-  function inlineDocType(el){
-    if (el.dataset.field) {
-      const block = el.closest('.pd-assistant');
-      return block ? block.querySelector('[data-field="tipoDocumento"]').value : 'DNI';
-    }
-    return document.getElementById('f-tipo-documento').value;
-  }
-
-  function validateFieldInline(el){
-    const kind = inlineFieldKind(el);
-    if (!kind) return;
-    const v = el.value.trim();
-    let msg = '';
-    if (kind === 'nombre' || kind === 'apellido') {
-      if (!v) msg = 'Requerido.';
-      else if (!isValidNamePart(v)) msg = 'Nombre inválido.';
-    } else if (kind === 'email') {
-      const isBuyer = !el.dataset.field || (el.closest('.pd-assistant') && el.closest('.pd-assistant').dataset.index === '0');
-      if (!v && isBuyer) msg = 'Requerido.';
-      else if (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) msg = 'Email inválido.';
-    } else if (kind === 'numeroDocumento') {
-      if (!v) msg = 'Requerido.';
-      else if (!isValidDocumentTyped(v, inlineDocType(el))) msg = 'Documento inválido.';
-    } else if (kind === 'dob') {
-      if (!v) {
-        msg = 'Requerido.';
-      } else {
-        const age = calcAge(v);
-        if (age === null) msg = 'Fecha inválida.';
-        else if (age < 18) msg = 'Debes tener 18 años cumplidos para el 28 de agosto.';
+  function validateField(id, d){
+    switch (id) {
+      case 'f-nombre': return !d.nombre ? 'Requerido.' : (!NAME_RE.test(d.nombre) ? 'Solo letras.' : '');
+      case 'f-apellido': return !d.apellido ? 'Requerido.' : (!NAME_RE.test(d.apellido) ? 'Solo letras.' : '');
+      case 'f-dni': return !d.dni ? 'Requerido.' : (!DOC_RE.test(d.dni) ? 'DNI de 8 dígitos (o CE / pasaporte).' : '');
+      case 'f-dob': {
+        if (!d.dob) return 'Requerido.';
+        const asOf = eventInfo.dateIso ? new Date(eventInfo.dateIso + 'T00:00:00') : new Date();
+        const age = ageAsOf(d.dob, asOf);
+        if (age === null || age > 100) return 'Fecha inválida.';
+        if (age < 18) return 'Tienes que ser mayor de 18.';
+        return '';
       }
-    } else if (kind === 'phone') {
-      if (!v) msg = 'Requerido.';
-    }
-    setFieldError(el, msg);
-  }
-
-  freeFieldsEl.addEventListener('focusout', (e) => { if (e.target.classList.contains('pd-input')) validateFieldInline(e.target); });
-  assistantsWrap.addEventListener('focusout', (e) => { if (e.target.classList.contains('pd-input')) validateFieldInline(e.target); });
-
-  /* ---- promoter code field: shared by the free and paid flows. Invalid or
-     unknown codes never block the flow — they just show a quiet message and
-     the field is treated as empty for pricing/attribution purposes. ---- */
-  const freePromoInput = document.getElementById('f-promo');
-  const paidPromoInput = document.getElementById('f-promo-paid');
-
-  function setPromoMessage(el, message, ok){
-    const field = el.closest('.pd-field');
-    let msgEl = field.querySelector('.pd-promo-msg');
-    if (!msgEl) { msgEl = document.createElement('p'); msgEl.className = 'pd-promo-msg'; field.appendChild(msgEl); }
-    msgEl.textContent = message;
-    msgEl.classList.toggle('is-ok', !!ok);
-    msgEl.classList.toggle('is-bad', !!message && !ok);
-  }
-
-  async function checkPromoCode(el, isFree){
-    const code = el.value.trim();
-    if (!code) {
-      setPromoMessage(el, '', false);
-      if (isFree) appliedPromoterFree = null; else appliedPromoterPaid = null;
-      if (!isFree) updateSummary();
-      return;
-    }
-    try {
-      const r = await fetch('/api/promoter?code=' + encodeURIComponent(code));
-      const d = await r.json();
-      if (d && d.ok) {
-        setPromoMessage(el, 'Código de ' + d.name + ' aplicado' + (isFree ? '.' : ' · 10% de descuento.'), true);
-        if (isFree) appliedPromoterFree = d; else appliedPromoterPaid = d;
-      } else {
-        setPromoMessage(el, 'Código no válido. Puedes continuar sin descuento.', false);
-        if (isFree) appliedPromoterFree = null; else appliedPromoterPaid = null;
+      case 'f-email': return !d.email ? 'Requerido.' : (!EMAIL_RE.test(d.email) ? 'Correo inválido.' : '');
+      case 'f-phone': {
+        const digits = d.phone.replace(/\D/g, '');
+        return !digits ? 'Requerido.' : ((digits.length < 7 || digits.length > 15) ? 'Número inválido.' : '');
       }
-    } catch (e) {
-      // A lookup failure isn't a blocking error — the field just stays unconfirmed.
+      case 'f-ig': return !d.instagram ? 'Requerido.' : (!IG_RE.test(d.instagram) ? 'Usuario inválido.' : '');
     }
-    if (!isFree) updateSummary();
+    return '';
   }
 
-  freePromoInput.addEventListener('focusout', () => checkPromoCode(freePromoInput, true));
-  paidPromoInput.addEventListener('focusout', () => checkPromoCode(paidPromoInput, false));
-
-  // Shared by the free (Cortesía) and paid flows — the QR is the whole point
-  // of a confirmation screen, so it renders directly here instead of behind
-  // a "Ver mi entrada/orden" link to another page. entries: [{ name, code,
-  // qr, dni?, tierLabel?, eventDateLabel }]. A single entry gets one large
-  // centered QR; two or more reuse the same swipeable carousel as /orden,
-  // embedded, since that's a tested, familiar component rather than a new one.
-  function renderConfirmation(entries, email, secondaryHref, secondaryLabel){
-    pdFlowEl.hidden = true;
-    confirmEl.hidden = false;
-    document.getElementById('confirm-line').textContent = 'Tu entrada llegó a ' + email;
-    document.getElementById('confirm-spam').innerHTML =
-      'Si no la ves en unos minutos, revisa spam y promociones, y márcala como "No es spam".';
-
-    const singleEl = document.getElementById('confirm-single');
-    const carouselEl = document.getElementById('confirm-carousel');
-
-    if (entries.length === 1) {
-      carouselEl.hidden = true;
-      const e = entries[0];
-      document.getElementById('confirm-qr-img').src = e.qr;
-      document.getElementById('confirm-name').textContent = e.name;
-      document.getElementById('confirm-code').textContent = e.code;
-      document.getElementById('confirm-meta').textContent = e.eventDateLabel || '';
-      singleEl.hidden = false;
-    } else {
-      singleEl.hidden = true;
-      // Unhide before initializing — the carousel reads track.clientWidth to
-      // compute scroll position/index, which is 0 while its ancestor is
-      // still display:none.
-      carouselEl.hidden = false;
-      renderConfirmCarousel(entries);
-    }
-
-    const link = document.getElementById('confirm-secondary-link');
-    link.href = secondaryHref;
-    link.textContent = secondaryLabel;
-
-    // 'start' (not 'nearest') so the headline is always the first thing in
-    // view — this panel is now tall enough (QR or carousel) that 'nearest'
-    // could leave the title scrolled just above the viewport.
-    confirmEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  function setErr(id, msg){
+    $(id).classList.toggle('has-error', !!msg);
+    const el = document.querySelector('.pd-err[data-for="' + id + '"]');
+    if (el) el.textContent = msg || '';
   }
 
-  function renderConfirmCarousel(entries){
-    const track = document.getElementById('confirm-track');
-    track.innerHTML = entries.map((e, i) => `
-      <div class="pd-confirm-slide" data-index="${i}">
-        <div class="pd-confirm-card">
-          ${e.tierLabel ? '<p class="pd-confirm-tier">' + escapeHtmlIndex(e.tierLabel) + '</p>' : ''}
-          <div class="pd-confirm-qr-wrap"><img src="${e.qr}" alt="Código QR de la entrada de ${escapeHtmlIndex(e.name)}" /></div>
-          <p class="pd-confirm-name">${escapeHtmlIndex(e.name)}</p>
-          ${e.dni ? '<p class="pd-confirm-dni">Documento: ' + escapeHtmlIndex(e.dni) + '</p>' : ''}
-          <p class="pd-confirm-code">${escapeHtmlIndex(e.code)}</p>
-          <p class="pd-confirm-meta">${escapeHtmlIndex(e.eventDateLabel || '')}</p>
-          ${e.entradaToken ? '<button type="button" class="pd-confirm-share-btn" data-token="' + e.entradaToken + '">Compartir esta entrada</button>' : ''}
-        </div>
-      </div>
-    `).join('');
+  const FIELD_IDS = ['f-nombre', 'f-apellido', 'f-dni', 'f-dob', 'f-email', 'f-phone', 'f-ig'];
+  FIELD_IDS.forEach((id) => {
+    $(id).addEventListener('blur', () => { if ($(id).value) setErr(id, validateField(id, readForm())); });
+    $(id).addEventListener('input', () => setErr(id, ''));
+  });
 
-    const countEl = document.getElementById('confirm-count');
-    const prevBtn = document.getElementById('confirm-prev');
-    const nextBtn = document.getElementById('confirm-next');
+  const SERVER_ERRORS = {
+    missing_fields: 'Completa todos los campos.',
+    not_accepted: 'Marca la casilla para continuar.',
+    invalid_name: 'Revisa tu nombre y apellidos.',
+    invalid_document: 'Revisa tu DNI.',
+    invalid_phone: 'Revisa tu número.',
+    invalid_instagram: 'Revisa tu usuario de Instagram.',
+    invalid_dob: 'Revisa tu fecha de nacimiento.',
+    underage: 'El evento es solo para mayores de 18.',
+    invalid_email: 'Ese correo no es válido o no recibe mensajes. Usa otro.',
+    code_not_found: 'Ese código no existe.',
+    code_used: 'Ese código ya fue utilizado.',
+    code_revoked: 'Ese código ya no es válido.',
+  };
 
-    function currentIndex(){ return Math.round(track.scrollLeft / track.clientWidth); }
-    function goTo(i){
-      const clamped = Math.max(0, Math.min(entries.length - 1, i));
-      track.scrollTo({ left: clamped * track.clientWidth, behavior: 'smooth' });
-    }
-    function updateUi(){
-      const idx = currentIndex();
-      countEl.textContent = (idx + 1) + ' de ' + entries.length;
-      prevBtn.disabled = idx === 0;
-      nextBtn.disabled = idx === entries.length - 1;
-    }
-
-    prevBtn.onclick = () => goTo(currentIndex() - 1);
-    nextBtn.onclick = () => goTo(currentIndex() + 1);
-    track.onscroll = () => window.requestAnimationFrame(updateUi);
-    updateUi();
-
-    let isDown = false, startX = 0, startScroll = 0, dragged = false;
-    track.onmousedown = (e) => {
-      isDown = true; dragged = false;
-      track.classList.add('is-dragging');
-      startX = e.pageX;
-      startScroll = track.scrollLeft;
-    };
-    window.addEventListener('mouseup', () => {
-      if (!isDown) return;
-      isDown = false;
-      track.classList.remove('is-dragging');
-      if (dragged) goTo(currentIndex());
+  $('data-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const d = readForm();
+    let firstBad = null;
+    FIELD_IDS.forEach((id) => {
+      const m = validateField(id, d);
+      setErr(id, m);
+      if (m && !firstBad) firstBad = id;
     });
-    track.onmousemove = (e) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const dx = e.pageX - startX;
-      if (Math.abs(dx) > 4) dragged = true;
-      track.scrollLeft = startScroll - dx;
-    };
+    const msg = $('form-msg');
+    if (firstBad) { msg.textContent = 'Revisa los campos marcados.'; $(firstBad).focus(); return; }
+    if (!d.accepted) { msg.textContent = 'Marca la casilla para continuar.'; $('f-accept').focus(); return; }
 
-    track.onclick = async (e) => {
-      const btn = e.target.closest('.pd-confirm-share-btn');
-      if (!btn) return;
-      const url = window.location.origin + '/entrada?t=' + btn.dataset.token;
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch (err) {
-        const ta = document.createElement('textarea');
-        ta.value = url;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      }
-      const original = btn.textContent;
-      btn.textContent = 'Enlace copiado ✓';
-      btn.classList.add('is-copied');
-      setTimeout(() => { btn.textContent = original; btn.classList.remove('is-copied'); }, 2000);
-    };
-  }
-
-  function renderConfirmationFree(ticket, qr, eventDateLabel, email){
-    renderConfirmation(
-      [{ name: ticket.name, code: ticket.id, qr, eventDateLabel }],
-      email,
-      '/entrada?t=' + encodeURIComponent(ticket.token),
-      'Ver mi entrada'
-    );
-  }
-
-  function renderConfirmationOrder(order, tickets, eventDateLabel){
-    const entries = tickets.map((t) => ({
-      name: t.name, code: t.id, qr: t.qr, dni: t.dni, tierLabel: t.skuLabel, eventDateLabel, entradaToken: t.token,
-    }));
-    const secondaryHref = entries.length > 1 ? '/orden?t=' + encodeURIComponent(order.token) : '/entrada?t=' + encodeURIComponent(entries[0].entradaToken);
-    const secondaryLabel = entries.length > 1 ? 'Ver mi orden' : 'Ver mi entrada';
-    renderConfirmation(entries, order.buyerEmail, secondaryHref, secondaryLabel);
-  }
-
-  function handleApiError(err, data){
-    if (err === 'underage') return showError('Todos los asistentes deben tener 18 años cumplidos para el 28 de agosto de 2026. · All attendees must turn 18 by August 28, 2026.');
-    if (err === 'sold_out') return showError(selectedTier && selectedTier.price === 0
-      ? 'Cortesías agotadas. · Free tickets sold out.'
-      : 'Esas entradas se agotaron. · Those tickets sold out.');
-    if (err === 'cortesia_closed') return showError('El registro de Cortesía ya cerró. · Free registration is now closed.');
-    if (err === 'sales_closed') return showError('Venta cerrada. Entrada en puerta S/50 · Online sales are closed. S/50 at the door.');
-    if (err === 'payment_failed') return showError((data && data.detail) || 'El pago no pudo procesarse. · Payment could not be processed.');
-    if (err === 'duplicate_document') return showError('Cada asistente debe tener un documento distinto. · Each attendee needs a different ID number.');
-    if (err === 'invalid_name') return showError('Ingresa un nombre y apellido válidos. · Please enter a valid first and last name.');
-    if (err === 'invalid_document') return showError('Ingresa un documento válido (DNI de 8 dígitos, o CE/pasaporte de 8 a 12 caracteres). · Please enter a valid ID number.');
-    if (err === 'invalid_email') {
-      if (data && data.reason === 'disposable') return showError('Usa un correo real, no uno temporal. · Please use a real email, not a disposable one.');
-      if (data && data.reason === 'no_mx') return showError('Ese correo no parece válido, revísalo. · That email doesn\'t look valid, please check it.');
-      return showError('Ingresa un email válido. · Please enter a valid email.');
-    }
-    if (err === 'free_already_claimed') return showError(data && data.field === 'email'
-      ? 'Ya existe una cortesía registrada con este correo. · A free ticket was already claimed with this email.'
-      : 'Ya existe una cortesía registrada con este documento. · A free ticket was already claimed with this ID.');
-    return showError('Ocurrió un error. Revisa los datos ingresados e intenta de nuevo. · Please check your details and try again.');
-  }
-
-  const payBtn = document.getElementById('pay-btn');
-
-  async function submitFree(data){
-    payBtn.disabled = true;
+    const btn = $('form-btn');
+    btn.disabled = true; btn.textContent = 'Generando…'; msg.textContent = '';
     try {
-      const r = await fetch('/api/register-free', {
+      const r = await fetch('/api/redeem', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: data.nombre, apellido: data.apellido, email: data.email, tipoDocumento: data.tipoDocumento, dni: data.dni, phone: data.phone, dob: data.dob, promoterCode: freePromoInput.value.trim() || undefined }),
+        body: JSON.stringify(Object.assign({ code: currentCode }, d)),
       });
-      const d = await r.json();
-      if (!r.ok) { handleApiError(d.error, d); return; }
-      renderConfirmationFree(d.ticket, d.qr, d.eventDateLabel, data.email);
-    } catch (e) {
-      showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
+      const res = await r.json();
+      if (!r.ok) {
+        if (res.error === 'already_has_ticket') {
+          msg.textContent = res.field === 'email'
+            ? 'Ese correo ya tiene una entrada. Revisa tu bandeja.'
+            : 'Ese DNI ya tiene una entrada. Revisa el correo con el que te registraste.';
+        } else {
+          msg.textContent = SERVER_ERRORS[res.error] || 'Algo salió mal. Intenta de nuevo.';
+        }
+        if (res.error === 'invalid_email') setErr('f-email', 'Usa otro correo.');
+        return;
+      }
+      renderTicket(res, d.email);
+    } catch (err) {
+      msg.textContent = 'Error de conexión. Intenta de nuevo.';
     } finally {
-      payBtn.disabled = false;
-    }
-  }
-
-  // The Culqi SDK loads with `defer`, so by the time a real user clicks pay it's
-  // almost always ready — but a slow/blocked/failed load (ad blockers commonly
-  // touch payment-gateway scripts) would leave window.CulqiCheckout undefined
-  // forever, and payWithCulqi's bare use of it would throw a silent, uncaught
-  // ReferenceError: no modal, no visible error. This waits for the deferred
-  // load, and only ever creates a fresh <script> tag if none exists at all —
-  // never a second one alongside the static tag at the end of <body>. Loading
-  // the SDK twice previously crashed it with "Identifier already declared" on
-  // its own internal bindings; even though this is a different script/domain
-  // now, the same discipline applies.
-  function ensureCulqiLoaded(){
-    return new Promise((resolve, reject) => {
-      if (window.CulqiCheckout) return resolve();
-
-      const existing = document.querySelector('script[src="https://js.culqi.com/checkout-js"]');
-      if (!existing) {
-        // No matching tag anywhere in the DOM — shouldn't normally happen,
-        // since one is always at the end of <body>, but guard against it being missing.
-        const s = document.createElement('script');
-        s.src = 'https://js.culqi.com/checkout-js';
-        s.defer = true;
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error('culqi_load_failed'));
-        document.head.appendChild(s);
-        return;
-      }
-
-      let tries = 0;
-      const iv = setInterval(() => {
-        tries++;
-        if (window.CulqiCheckout) { clearInterval(iv); resolve(); }
-        else if (tries > 40) { clearInterval(iv); reject(new Error('culqi_load_timeout')); }
-      }, 250);
-    });
-  }
-
-  // Checkout Custom's `settings` object only accepts title/currency/amount/
-  // order/xculqirsaid/rsapublickey per Culqi's own docs — no "description"
-  // field exists there (it silently did nothing under v4-style settings).
-  // Only `currency` is required; we don't pass `order`, so the widget offers
-  // card payment only — that's intentional, not a bug (see paymentMethods).
-  //
-  // Exactly one CulqiCheckout instance may be in flight at a time —
-  // activeCulqiCheckout guards against a second instance spawning (e.g. a
-  // fast double-click) and each firing its own callback, which is what made
-  // errors appear to repeat per click.
-  let activeCulqiCheckout = null;
-
-  function payWithCulqi(assistants){
-    if (activeCulqiCheckout) return;
-    window.__paradisioPendingAssistants = assistants;
-
-    const settings = {
-      title: 'Paradisio',
-      currency: 'PEN',
-      amount: computeChargeCents().totalCents,
-    };
-    const client = { email: assistants[0].email };
-    const options = {
-      lang: 'es',
-      installments: false,
-      modal: true,
-      paymentMethods: { tarjeta: true, yape: false, billetera: false, bancaMovil: false, agente: false, cuotealo: false },
-    };
-    // Brand the modal per DESIGN.md instead of Culqi's generic default look —
-    // real values from DESIGN.md's colors/typography tokens, not invented ones.
-    const appearance = {
-      theme: 'default',
-      menuType: 'select',
-      buttonCardPayText: 'Pagar',
-      hiddenBanner: false,
-      logo: location.origin + '/logo-white.png',
-      variables: {
-        fontFamily: 'DM Sans, sans-serif',
-        borderRadius: '0px',
-        colorBackground: '#141414',
-        colorPrimary: '#FF2800',
-        colorText: '#F2EDE4',
-      },
-      rules: {
-        '.Culqi-Main-Container': { background: '#141414' },
-        '.Culqi-Button': { background: '#FF2800' },
-        '.Culqi-Input': { background: '#1A1A1A', border: '1px solid rgba(255,40,0,0.18)', color: '#F2EDE4' },
-        '.Culqi-Label': { color: '#888880' },
-      },
-    };
-
-    const checkout = new window.CulqiCheckout(culqiPublicKey, { settings, client, options, appearance });
-    activeCulqiCheckout = checkout;
-    checkout.culqi = function(){ handleCulqiResult(checkout); };
-    checkout.open();
-  }
-
-  async function handleCulqiResult(checkout){
-    activeCulqiCheckout = null;
-
-    if (!checkout.token) {
-      const detail = checkout.error && (checkout.error.user_message || checkout.error.merchant_message);
-      showError((detail || 'El pago no pudo procesarse.') + ' · Payment could not be processed.');
-      return;
-    }
-    const tokenId = checkout.token.id;
-    checkout.close();
-
-    const assistants = window.__paradisioPendingAssistants;
-    payBtn.disabled = true;
-    try {
-      const r = await fetch('/api/charge', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: tokenId, sku: selectedTier.sku, assistants, promoterCode: paidPromoInput.value.trim() || undefined }),
-      });
-      const d = await r.json();
-      if (!r.ok) { handleApiError(d.error, d); return; }
-      renderConfirmationOrder(d.order, d.tickets, d.eventDateLabel);
-    } catch (e) {
-      showError('Error de conexión, intenta de nuevo. · Connection error, please try again.');
-    } finally {
-      payBtn.disabled = false;
-    }
-  }
-
-  payBtn.addEventListener('click', async () => {
-    if (!selectedTier) return;
-    if (selectedTier.price === 0) {
-      const data = readFreeForm();
-      const err = validateFree(data);
-      if (err) { showError(err); return; }
-      showError('');
-      submitFree(data);
-    } else {
-      const assistants = readAssistants();
-      const err = validatePaid(assistants);
-      if (err) { showError(err); return; }
-      showError('');
-      if (!culqiPublicKey) {
-        console.error('[Culqi diag] FALTA CONFIGURACIÓN — culqiPublicKey vino vacío de /api/config. Revisa que CULQI_PUBLIC_KEY esté puesto en Vercel (Production) con ese nombre exacto.');
-        showError('Falta configuración de pago (culqiPublicKey vacío). Escríbenos a info@paradisioclub.com. · Payment configuration missing.');
-        return;
-      }
-      payBtn.disabled = true;
-      try {
-        await ensureCulqiLoaded();
-      } catch (e) {
-        payBtn.disabled = false;
-        console.error(
-          '[Culqi diag] SDK NO DISPONIBLE — window.CulqiCheckout nunca se definió.',
-          '\n  culqiPublicKey presente:', !!culqiPublicKey, culqiPublicKey ? '(largo ' + culqiPublicKey.length + ')' : '',
-          '\n  <script> de Culqi en el DOM:', !!document.querySelector('script[src="https://js.culqi.com/checkout-js"]'),
-          '\n  window.__culqiLoaded:', window.__culqiLoaded,
-          '\n  window.__culqiLoadError:', window.__culqiLoadError,
-          '\n  motivo del timeout/fallo:', e && e.message
-        );
-        showError('SDK de pago no disponible (window.CulqiCheckout no se definió). Abre la consola del navegador para más detalle, o escríbenos a info@paradisioclub.com. · Payment SDK unavailable.');
-        return;
-      }
-      payBtn.disabled = false;
-      payWithCulqi(assistants);
+      btn.disabled = false; btn.textContent = 'Generar mi QR';
     }
   });
+
+  /* ---------------- Paso 3 ---------------- */
+  function renderTicket(res, email){
+    const t = res.ticket;
+    const ev = res.event || eventInfo;
+    $('ticket-tier').textContent = t.tierLabel || 'Invitación';
+    $('ticket-name').textContent = t.name;
+    $('ticket-qr').src = res.qr;
+    $('ticket-code').textContent = t.id;
+    $('ticket-date').textContent = ev.dateLabel || '';
+    $('ticket-address').textContent = ev.address || '';
+    $('ticket-address').href = ev.mapsUrl || '#';
+    $('ticket-address').parentNode.style.display = ev.address ? '' : 'none';
+    $('ticket-validity').textContent = t.validityLabel ? 'QR válido ' + t.validityLabel : '';
+    $('ticket-validity').style.display = t.validityLabel ? '' : 'none';
+    $('ticket-lead').textContent = 'También te lo enviamos a ' + email + '. Preséntalo con tu documento de identidad físico. Solo mayores de 18.';
+    $('ticket-link').href = '/entrada?t=' + encodeURIComponent(t.token);
+    show('step-ticket');
+  }
+
+  $('another-btn').addEventListener('click', () => {
+    $('data-form').reset();
+    FIELD_IDS.forEach((id) => setErr(id, ''));
+    $('form-msg').textContent = '';
+    $('code-input').value = '';
+    currentCode = '';
+    try { history.replaceState(null, '', '/'); } catch (e) {}
+    show('step-code');
+    $('code-input').focus();
+  });
+
+  /* ---------------- Arranque ---------------- */
+  // Link directo del promotor: paradisioclub.com/?c=CODIGO valida y salta al formulario.
+  const params = new URLSearchParams(location.search);
+  const preset = cleanCode(params.get('c') || params.get('code'));
+  if (preset) {
+    $('code-input').value = preset;
+    submitCode();
+  } else {
+    fetch('/api/invite?code=').then((r) => r.json()).then((d) => setEvent(d.event)).catch(() => {});
+    $('code-input').focus({ preventScroll: true });
+  }
+})();
 </script>
-
-<!-- Placed at the end of <body> per Culqi's own Checkout Custom docs, rather
-     than <head>. `defer` is kept anyway (harmless here, execution timing is
-     already equivalent to placement at this point) so ensureCulqiLoaded()'s
-     onload/onerror diagnostics keep working unchanged. This is the ONLY place
-     the SDK is loaded from — ensureCulqiLoaded() waits on this exact tag and
-     must never inject a second one.
-
-     checkout.culqi.com/js/v4 (Checkout v4) was confirmed broken in production:
-     a single tag, a single network request, no CSP/CORS issue, download
-     succeeds — and it still threw "Identifier 'io' has already been declared"
-     from inside its own bundle and never defined window.Culqi. That crash was
-     internal to Culqi's own v4 bundle, unrelated to script placement or
-     defer — fixed by migrating to Checkout Custom below, confirmed against
-     Culqi's own official e-commerce plugins (culqi-woocommerce, culqi-magento,
-     culqi-prestashop all define this exact URL as their production checkout
-     endpoint) plus several independent real integrations using the same
-     window.CulqiCheckout global. -->
-<script src="https://js.culqi.com/checkout-js" defer onload="window.__culqiLoaded=true" onerror="window.__culqiLoadError=true"></script>
 </body>
 </html>

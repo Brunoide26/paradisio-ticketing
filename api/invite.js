@@ -1,5 +1,5 @@
 const { checkInvite } = require('../lib/invites');
-const { EVENT_NAME, EVENT_DATE_LABEL, EVENT_DATE_ISO } = require('../lib/tickets');
+const { EVENT_NAME, EVENT_DATE_LABEL, EVENT_SHORT_DATE, EVENT_DATE_ISO } = require('../lib/tickets');
 
 // Primer paso de la página principal: ¿este código existe y sigue libre?
 // Siempre 200 -- un código malo no es un error del request, es una respuesta.
@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
     const result = await checkInvite(req.query && req.query.code);
     return res.status(200).json({
       ...result,
-      event: { name: EVENT_NAME, dateLabel: EVENT_DATE_LABEL, dateIso: EVENT_DATE_ISO },
+      event: { name: EVENT_NAME, dateLabel: EVENT_DATE_LABEL, shortDate: EVENT_SHORT_DATE, dateIso: EVENT_DATE_ISO },
     });
   } catch (err) {
     console.error(err);

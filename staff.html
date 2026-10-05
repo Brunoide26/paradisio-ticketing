@@ -243,7 +243,7 @@
         } else if(d.reason === 'cortesia_expired'){
           // Still the same red screen -- the default answer is "no". The
           // override is an extra tap staff have to choose to make, per person.
-          showOverlay('bad', 'Cortesía', 'QR EXPIRADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — pasar a caja, o dejar entrar igual', {
+          showOverlay('bad', d.ticket.type === 'promo' ? 'Invitación' : 'Cortesía', 'QR EXPIRADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — pasar a caja, o dejar entrar igual', {
             label: 'Dejar entrar igual',
             onConfirm: function(){ doCheckin(ticketId, true); }
           });
@@ -254,7 +254,7 @@
       }
       const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : d.ticket.type === 'promo' ? 'INVITACIÓN' : 'CORTESÍA';
       if(d.ticket.lateEntry){
-        showOverlay('ok', 'CORTESÍA VENCIDA', 'INGRESO REGISTRADO', d.ticket.name + ' — ' + docLabel(d.ticket) + ' (ingreso tardío)');
+        showOverlay('ok', d.ticket.type === 'promo' ? 'INVITACIÓN VENCIDA' : 'CORTESÍA VENCIDA', 'INGRESO REGISTRADO', d.ticket.name + ' — ' + docLabel(d.ticket) + ' (ingreso tardío)');
       } else {
         showOverlay('ok', typeLabel, 'VÁLIDO', d.ticket.name + ' — ' + docLabel(d.ticket));
       }

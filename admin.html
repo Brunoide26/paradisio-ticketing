@@ -742,7 +742,7 @@
   // The 18+ gate checks age as of event day (2026-08-28), so someone under 18
   // today can register if they'll turn 18 by then. Door staff need a heads-up
   // to look closely at that ID rather than assume a registration mistake.
-  const EVENT_DATE_ISO = '2026-08-28';
+  const EVENT_DATE_ISO = '2026-10-17';
   function ageAsOf(dobStr, asOf){
     const dob = new Date(dobStr + 'T00:00:00');
     if (isNaN(dob.getTime())) return null;

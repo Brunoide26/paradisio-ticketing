@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Paradisio</title>
-<meta name="description" content="Paradisio — house y disco en Barranco, Lima. Ingresa tu código para obtener tu entrada." />
+<meta name="description" content="Paradisio Club — Latin after disco, after hours. 17 de octubre, Barranco." />
 
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paradisioclub.com/" />
@@ -22,315 +22,280 @@
 <link rel="shortcut icon" href="/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
-<meta name="theme-color" content="#090909" />
+<meta name="theme-color" content="#0A0909" />
 
+<link rel="preload" href="/fonts/Jost.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/BodoniModa.woff2" as="font" type="font/woff2" crossorigin />
 <style>
-  @font-face { font-family:'Unbounded'; src:url('/fonts/Unbounded.ttf') format('truetype'); font-weight:200 900; font-display:swap; }
-  @font-face { font-family:'DM Sans'; src:url('/fonts/DMSans.ttf') format('truetype'); font-weight:100 1000; font-display:swap; }
-
+  @font-face { font-family:'Bodoni Moda'; src:url('/fonts/BodoniModa.woff2') format('woff2'); font-weight:400 900; font-style:normal; font-display:swap; }
+  @font-face { font-family:'Bodoni Moda'; src:url('/fonts/BodoniModa-Italic.woff2') format('woff2'); font-weight:400 900; font-style:italic; font-display:swap; }
+  @font-face { font-family:'Jost'; src:url('/fonts/Jost.woff2') format('woff2'); font-weight:100 900; font-style:normal; font-display:swap; }
   :root {
-    --red:#FF2800; --amber:#FF9A00; --bg:#090909; --ink:#F2EDE4; --muted:#888880;
-    --card:#141414; --field:#1A1A1A; --line:rgba(255,40,0,0.18);
-    --gutter:40px;
+    --bg:#0A0909; --ink:#F4F0EA; --muted:#8C877F; --faint:#3A3734;
+    --red:#E2361F; --line:rgba(244,240,234,0.14);
+    --serif:'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
+    --sans:'Jost', 'Futura', system-ui, sans-serif;
   }
-  @media (max-width:860px){ :root { --gutter:22px; } }
-
   *, *::before, *::after { box-sizing:border-box; }
   html { -webkit-text-size-adjust:100%; }
   body {
     margin:0; min-height:100vh; min-height:100svh;
     background:var(--bg); color:var(--ink);
-    font-family:'DM Sans', system-ui, sans-serif; font-size:15px; line-height:1.6;
+    font-family:var(--sans); font-weight:300; font-size:15px; line-height:1.65;
     -webkit-font-smoothing:antialiased;
     display:flex; flex-direction:column;
   }
   a { color:inherit; }
   button, input { font:inherit; }
 
-  /* ---------- frame ---------- */
-  .pd-top { height:4px; background:var(--red); }
-  .pd-head {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:22px var(--gutter); border-bottom:1px solid var(--line);
+  /* Etiquetas: sans fino, mayúsculas, muy espaciado -- como el flyer. */
+  .pd-cap {
+    font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.32em; text-transform:uppercase; margin:0;
   }
-  .pd-head img { height:26px; width:auto; display:block; }
-  .pd-head .pd-eyebrow { margin:0; }
+  .pd-cap.is-muted { color:var(--muted); }
 
-  .pd-eyebrow {
-    font-size:10px; font-weight:500; letter-spacing:.35em; text-transform:uppercase;
-    color:var(--red); margin:0 0 18px;
+  /* ---------- marca ---------- */
+  .pd-brand { padding:clamp(40px, 8vh, 72px) 24px 0; text-align:center; }
+  .pd-mark { display:inline-block; position:relative; width:min(62vw, 300px); }
+  .pd-mark img { width:100%; height:auto; display:block; }
+  .pd-mark .pd-club {
+    position:absolute; right:-1%; bottom:-24%;
+    font-family:var(--serif); font-weight:500; color:var(--red);
+    font-size:clamp(26px, 6.4vw, 38px); line-height:1; letter-spacing:.01em;
+    transform:scaleX(.72); transform-origin:right bottom;
   }
-  .pd-display {
-    font-family:'Unbounded', sans-serif; font-weight:900; text-transform:uppercase;
-    font-size:clamp(2.2rem, 7vw, 4.6rem); line-height:.98; letter-spacing:-.03em; margin:0;
+  .pd-dateline {
+    display:flex; justify-content:center; align-items:center; gap:14px;
+    margin:clamp(40px, 6vh, 56px) 0 0; color:var(--muted);
   }
-  .pd-lead { color:var(--muted); margin:18px 0 0; max-width:420px; }
+  .pd-dateline i { width:3px; height:3px; border-radius:50%; background:var(--faint); display:block; }
 
-  main { flex:1; display:flex; }
-  .pd-step { width:100%; display:none; }
-  .pd-step.is-active { display:grid; }
+  main { flex:1; display:flex; justify-content:center; padding:clamp(36px, 6vh, 64px) 24px 72px; }
+  .pd-step { width:100%; max-width:460px; display:none; text-align:center; }
+  .pd-step.is-active { display:block; }
+  #step-form { max-width:560px; }
 
-  /* Paso 1 y 3: dos columnas en desktop, separadas por hairline */
-  .pd-split { grid-template-columns:1fr 1fr; }
-  .pd-split > div { padding:clamp(48px, 9vh, 120px) var(--gutter); }
-  .pd-split > div + div { border-left:1px solid var(--line); }
-  @media (max-width:860px){
-    .pd-split { grid-template-columns:1fr; }
-    .pd-split > div { padding:44px var(--gutter); }
-    .pd-split > div + div { border-left:none; border-top:1px solid var(--line); }
-    /* En celular el QR va primero: es lo que la persona vino a buscar. */
-    #step-ticket > div:last-child { order:-1; border-top:none; border-bottom:1px solid var(--line); }
+  .pd-title {
+    font-family:var(--serif); font-weight:400; font-size:clamp(34px, 7vw, 46px);
+    line-height:1.08; letter-spacing:-.005em; margin:0;
   }
+  .pd-title em { font-style:italic; }
+  .pd-lead { color:var(--muted); margin:16px auto 0; max-width:340px; font-size:14px; }
 
-  /* ---------- code input ---------- */
-  .pd-code-form { display:flex; flex-direction:column; justify-content:center; height:100%; max-width:520px; }
+  /* ---------- código ---------- */
+  .pd-code-form { margin-top:44px; }
   .pd-code-input {
-    width:100%; background:transparent; color:var(--ink);
-    border:none; border-bottom:2px solid var(--line);
-    font-family:'Unbounded', sans-serif; font-weight:900; text-transform:uppercase;
-    font-size:clamp(2rem, 6vw, 3.4rem); letter-spacing:.12em;
-    padding:6px 0 14px; outline:none; border-radius:0;
-    transition:border-color .15s;
+    width:100%; background:transparent; color:var(--ink); text-align:center;
+    border:none; border-bottom:1px solid var(--line); border-radius:0; outline:none;
+    font-family:var(--sans); font-weight:400; text-transform:uppercase;
+    font-size:clamp(24px, 7vw, 30px); letter-spacing:.42em; text-indent:.42em;
+    padding:8px 0 14px; transition:border-color .25s;
   }
-  .pd-code-input::placeholder { color:#2a2a28; }
-  .pd-code-input:focus { border-bottom-color:var(--red); }
+  .pd-code-input::placeholder { color:var(--faint); }
+  .pd-code-input:focus { border-bottom-color:var(--ink); }
   .pd-code-input.has-error { border-bottom-color:var(--red); }
 
-  /* ---------- buttons ---------- */
+  /* ---------- botones ---------- */
   .pd-btn {
-    appearance:none; border:none; border-radius:0; cursor:pointer;
-    background:var(--red); color:#0A0A0A;
-    font-size:11px; font-weight:700; letter-spacing:.3em; text-transform:uppercase;
-    padding:19px 32px; margin-top:28px; width:100%;
-    transition:background .15s;
+    appearance:none; display:block; width:100%; margin-top:34px; cursor:pointer;
+    background:transparent; color:var(--ink); border:1px solid rgba(244,240,234,.55); border-radius:0;
+    font-family:var(--sans); font-weight:400; font-size:11px; letter-spacing:.36em; text-indent:.36em; text-transform:uppercase;
+    padding:18px 24px; text-align:center; text-decoration:none;
+    transition:background .25s, color .25s, border-color .25s;
   }
-  .pd-btn:hover:not(:disabled), .pd-btn:focus-visible { background:var(--amber); }
-  .pd-btn:focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
-  .pd-btn:disabled { opacity:.45; cursor:default; }
-  .pd-btn-ghost {
-    background:transparent; color:var(--muted); border:1px solid var(--line);
-  }
-  .pd-btn-ghost:hover:not(:disabled) { background:transparent; color:var(--amber); }
+  .pd-btn:hover:not(:disabled) { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .pd-btn:focus-visible { outline:1px solid var(--ink); outline-offset:4px; }
+  .pd-btn:disabled { opacity:.4; cursor:default; }
+  .pd-btn-quiet { border-color:transparent; color:var(--muted); margin-top:6px; }
+  .pd-btn-quiet:hover:not(:disabled) { background:transparent; color:var(--ink); border-color:transparent; }
   .pd-link-btn {
     background:none; border:none; padding:0; cursor:pointer; color:var(--muted);
-    font-size:12px; text-decoration:underline; text-underline-offset:3px;
+    font-size:11px; letter-spacing:.24em; text-transform:uppercase;
   }
-  .pd-link-btn:hover { color:var(--amber); }
+  .pd-link-btn:hover { color:var(--ink); }
 
-  .pd-msg { min-height:22px; margin:14px 0 0; font-size:13px; color:var(--red); }
+  .pd-msg { min-height:20px; margin:16px 0 0; font-size:13px; color:var(--red); }
+  .pd-msg:empty { min-height:0; margin:0; }
 
-  /* ---------- form ---------- */
-  .pd-form-wrap { grid-template-columns:minmax(0, 5fr) minmax(0, 7fr); }
-  .pd-form-wrap > div { padding:clamp(44px, 8vh, 96px) var(--gutter); }
-  .pd-form-wrap > div + div { border-left:1px solid var(--line); background:var(--card); }
-  @media (max-width:860px){
-    .pd-form-wrap { grid-template-columns:1fr; }
-    .pd-form-wrap > div { padding:40px var(--gutter); }
-    .pd-form-wrap > div + div { border-left:none; border-top:1px solid var(--line); }
-  }
-  .pd-code-chip {
-    display:inline-flex; align-items:center; gap:14px; margin-top:26px;
-    border:1px solid var(--line); padding:10px 14px;
-  }
-  .pd-code-chip span {
-    font-family:'Unbounded', sans-serif; font-weight:900; letter-spacing:.14em; font-size:15px;
-  }
+  /* ---------- formulario ---------- */
+  .pd-code-chip { display:inline-flex; align-items:center; gap:16px; margin-top:22px; }
+  .pd-code-chip span { font-weight:400; letter-spacing:.38em; font-size:13px; }
+  .pd-code-chip i { width:1px; height:12px; background:var(--faint); display:block; }
 
-  form.pd-fields { display:grid; grid-template-columns:1fr 1fr; gap:14px; max-width:640px; }
-  .pd-field { display:flex; flex-direction:column; gap:7px; }
+  form.pd-fields {
+    display:grid; grid-template-columns:1fr 1fr; gap:30px 28px;
+    margin-top:46px; text-align:left;
+  }
+  @media (max-width:520px){ form.pd-fields { grid-template-columns:1fr; gap:26px; } }
+  .pd-field { display:flex; flex-direction:column; gap:4px; }
   .pd-field.is-wide { grid-column:1 / -1; }
-  @media (max-width:520px){ form.pd-fields { grid-template-columns:1fr; } }
-  .pd-field label {
-    font-size:10px; font-weight:500; letter-spacing:.28em; text-transform:uppercase; color:var(--muted);
-  }
+  .pd-field label { font-size:10px; font-weight:400; letter-spacing:.3em; text-transform:uppercase; color:var(--muted); }
   .pd-input {
-    width:100%; background:var(--field); color:var(--ink);
-    border:1px solid var(--line); border-radius:0;
-    padding:15px 16px; font-size:16px; outline:none;
-    transition:border-color .15s;
-    -webkit-appearance:none; appearance:none;
+    width:100%; background:transparent; color:var(--ink);
+    border:none; border-bottom:1px solid var(--line); border-radius:0;
+    padding:10px 0 9px; font-size:16px; font-weight:300; outline:none;
+    transition:border-color .25s; -webkit-appearance:none; appearance:none;
   }
-  .pd-input:focus { border-color:var(--red); }
-  .pd-input.has-error { border-color:var(--red); }
-  .pd-input::placeholder { color:#55554f; }
-  input[type="date"].pd-input { color-scheme:dark; min-height:52px; }
+  .pd-input:focus { border-bottom-color:var(--ink); }
+  .pd-input.has-error { border-bottom-color:var(--red); }
+  .pd-input::placeholder { color:var(--faint); }
+  input[type="date"].pd-input { color-scheme:dark; min-height:42px; }
   .pd-prefix { position:relative; }
-  .pd-prefix > span {
-    position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none;
-  }
-  .pd-prefix .pd-input { padding-left:34px; }
-  .pd-err { font-size:12px; color:var(--red); min-height:0; margin:0; }
+  .pd-prefix > span { position:absolute; left:0; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+  .pd-prefix .pd-input { padding-left:16px; }
+  .pd-err { font-size:12px; color:var(--red); margin:2px 0 0; }
   .pd-err:empty { display:none; }
 
-  .pd-check { grid-column:1 / -1; display:flex; gap:12px; align-items:flex-start; margin-top:6px; font-size:13px; color:var(--muted); line-height:1.55; }
+  .pd-check { grid-column:1 / -1; display:flex; gap:14px; align-items:flex-start; font-size:13px; color:var(--muted); line-height:1.6; cursor:pointer; }
   .pd-check input {
-    appearance:none; -webkit-appearance:none; flex:none; margin:2px 0 0;
-    width:18px; height:18px; border:1px solid var(--muted); background:var(--field); cursor:pointer; border-radius:0;
+    appearance:none; -webkit-appearance:none; flex:none; margin:3px 0 0;
+    width:15px; height:15px; border:1px solid var(--muted); background:transparent; cursor:pointer; border-radius:0;
   }
-  .pd-check input:checked { background:var(--red); border-color:var(--red); }
-  .pd-check input:checked::after { content:''; display:block; width:5px; height:9px; margin:2px 0 0 5.5px; border:solid #0A0A0A; border-width:0 2px 2px 0; transform:rotate(45deg); }
-  .pd-check input:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
-  .pd-check a:hover { color:var(--amber); }
-  .pd-form-actions { grid-column:1 / -1; }
-  .pd-form-actions .pd-btn { margin-top:10px; }
+  .pd-check input:checked { background:var(--ink); border-color:var(--ink); }
+  .pd-check input:checked::after { content:''; display:block; width:4px; height:8px; margin:1px 0 0 4.5px; border:solid var(--bg); border-width:0 1.5px 1.5px 0; transform:rotate(45deg); }
+  .pd-check input:focus-visible { outline:1px solid var(--ink); outline-offset:3px; }
+  .pd-check a { text-underline-offset:3px; }
+  .pd-check a:hover { color:var(--ink); }
+  .pd-form-actions { grid-column:1 / -1; text-align:center; }
+  .pd-form-actions .pd-btn { margin-top:14px; }
 
-  /* ---------- ticket ---------- */
-  .pd-ticket { display:flex; flex-direction:column; align-items:flex-start; }
-  .pd-qr-wrap { background:var(--ink); padding:16px; display:inline-block; }
-  .pd-qr-wrap img { display:block; width:240px; height:240px; image-rendering:pixelated; }
-  .pd-ticket-code { font-family:ui-monospace, Menlo, monospace; letter-spacing:.12em; font-size:14px; margin:16px 0 0; }
-  .pd-ticket-name { font-family:'Unbounded', sans-serif; font-weight:900; text-transform:uppercase; font-size:clamp(1.4rem, 3.4vw, 2.2rem); line-height:1.05; letter-spacing:-.02em; margin:0; }
-  .pd-meta { margin:22px 0 0; padding:18px 0 0; border-top:1px solid var(--line); width:100%; max-width:440px; color:var(--muted); font-size:14px; }
-  .pd-meta strong { color:var(--ink); font-weight:600; display:block; }
-  .pd-ticket-actions { display:flex; flex-direction:column; gap:0; width:100%; max-width:440px; }
-  .pd-ticket-actions .pd-btn { text-align:center; text-decoration:none; display:block; }
-  .pd-ticket-actions .pd-btn + .pd-btn { margin-top:10px; }
+  /* ---------- entrada ---------- */
+  .pd-ticket-name { font-family:var(--serif); font-size:clamp(28px, 6vw, 36px); line-height:1.1; margin:14px 0 0; }
+  .pd-qr-frame { display:inline-block; margin-top:34px; padding:14px; background:var(--ink); }
+  .pd-qr-frame img { display:block; width:236px; height:236px; image-rendering:pixelated; }
+  .pd-ticket-code { margin:18px 0 0; font-size:12px; letter-spacing:.38em; text-indent:.38em; color:var(--muted); }
+  .pd-validity {
+    margin:30px auto 0; padding:16px 0; max-width:320px;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  }
+  .pd-validity .pd-cap + .pd-cap { margin-top:8px; }
+  .pd-validity .is-red { color:var(--red); }
+  .pd-note { color:var(--muted); font-size:13px; margin:22px auto 0; max-width:330px; }
 
   /* ---------- footer ---------- */
   footer {
-    border-top:1px solid var(--line); padding:22px var(--gutter) calc(22px + env(safe-area-inset-bottom));
-    display:flex; flex-wrap:wrap; gap:10px 26px; justify-content:space-between; align-items:center;
-    font-size:12px; color:#55554f;
+    padding:28px 24px calc(28px + env(safe-area-inset-bottom)); text-align:center;
+    color:var(--faint); font-size:10px; letter-spacing:.28em; text-transform:uppercase;
   }
-  footer nav { display:flex; flex-wrap:wrap; gap:8px 20px; }
-  footer a { text-decoration:none; }
-  footer a:hover { color:var(--amber); }
+  footer nav { display:flex; justify-content:center; flex-wrap:wrap; gap:8px 26px; margin-bottom:14px; }
+  footer a { text-decoration:none; color:var(--muted); }
+  footer a:hover { color:var(--ink); }
 
-  .pd-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-
-  @keyframes pd-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-  .pd-step.is-active > div { animation:pd-in .5s cubic-bezier(.16,.84,.3,1) both; }
-  .pd-step.is-active > div + div { animation-delay:.08s; }
-  @media (prefers-reduced-motion: reduce) {
-    .pd-step.is-active > div { animation:none; }
-  }
+  @keyframes pd-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  .pd-step.is-active { animation:pd-in .7s cubic-bezier(.2,.7,.2,1) both; }
+  .pd-brand { animation:pd-in 1s cubic-bezier(.2,.7,.2,1) both; }
+  @media (prefers-reduced-motion: reduce) { .pd-step.is-active, .pd-brand { animation:none; } }
 </style>
 </head>
 <body>
-  <div class="pd-top"></div>
-  <header class="pd-head">
-    <img src="/paradisio-logo.png" alt="Paradisio" width="1200" height="388" />
-    <p class="pd-eyebrow" id="event-date-head"></p>
+  <header class="pd-brand">
+    <div class="pd-mark">
+      <img src="/logo-script-white.png" alt="Paradisio" width="1200" height="388" />
+      <span class="pd-club" aria-hidden="true">CLUB</span>
+    </div>
+    <div class="pd-dateline">
+      <p class="pd-cap" id="event-date-head">17 Octubre</p><i></i><p class="pd-cap">10 PM</p><i></i><p class="pd-cap">Barranco</p>
+    </div>
   </header>
 
   <main>
     <!-- Paso 1: código -->
-    <section class="pd-step pd-split is-active" id="step-code" aria-labelledby="code-title">
-      <div>
-        <p class="pd-eyebrow">Acceso con código</p>
-        <h1 class="pd-display" id="code-title">Tu código.<br>Tu QR.</h1>
-        <p class="pd-lead">Ingresa el código que te pasó tu promotor. Cada código es personal y funciona una sola vez.</p>
-      </div>
-      <div>
-        <form class="pd-code-form" id="code-form" novalidate>
-          <label class="pd-eyebrow" for="code-input">Código</label>
-          <input class="pd-code-input" id="code-input" name="code" type="text"
-                 placeholder="XXXXXX" maxlength="16" autocomplete="off" autocapitalize="characters"
-                 spellcheck="false" inputmode="text" aria-describedby="code-msg" />
-          <p class="pd-msg" id="code-msg" role="alert"></p>
-          <button class="pd-btn" type="submit" id="code-btn">Continuar</button>
-        </form>
-      </div>
+    <section class="pd-step is-active" id="step-code" aria-labelledby="code-title">
+      <h1 class="pd-title" id="code-title">Ingresa tu <em>código</em></h1>
+      <p class="pd-lead">El que te pasó tu promotor. Es personal y funciona una sola vez.</p>
+      <form class="pd-code-form" id="code-form" novalidate>
+        <label class="pd-cap is-muted" for="code-input" style="display:block;margin-bottom:10px;">Código</label>
+        <input class="pd-code-input" id="code-input" name="code" type="text"
+               placeholder="······" maxlength="16" autocomplete="off" autocapitalize="characters"
+               spellcheck="false" aria-describedby="code-msg" />
+        <p class="pd-msg" id="code-msg" role="alert"></p>
+        <button class="pd-btn" type="submit" id="code-btn">Continuar</button>
+      </form>
     </section>
 
     <!-- Paso 2: datos -->
-    <section class="pd-step pd-form-wrap" id="step-form" aria-labelledby="form-title">
-      <div>
-        <p class="pd-eyebrow">Código válido</p>
-        <h2 class="pd-display" id="form-title">Tus datos.</h2>
-        <p class="pd-lead">Usa tu nombre tal como figura en tu documento. En la puerta te lo van a pedir junto con el QR.</p>
-        <div class="pd-code-chip">
-          <span id="code-chip"></span>
-          <button type="button" class="pd-link-btn" id="change-code-btn">Cambiar</button>
+    <section class="pd-step" id="step-form" aria-labelledby="form-title">
+      <h2 class="pd-title" id="form-title">Tus <em>datos</em></h2>
+      <p class="pd-lead">Tal como figuran en tu documento. Te lo pedirán en la puerta junto con el QR.</p>
+      <div class="pd-code-chip">
+        <span id="code-chip"></span><i></i>
+        <button type="button" class="pd-link-btn" id="change-code-btn">Cambiar</button>
+      </div>
+      <form class="pd-fields" id="data-form" novalidate>
+        <div class="pd-field">
+          <label for="f-nombre">Nombre</label>
+          <input class="pd-input" id="f-nombre" name="nombre" type="text" autocomplete="given-name" autocapitalize="words" required />
+          <p class="pd-err" data-for="f-nombre"></p>
         </div>
-      </div>
-      <div>
-        <form class="pd-fields" id="data-form" novalidate>
-          <div class="pd-field">
-            <label for="f-nombre">Nombre</label>
-            <input class="pd-input" id="f-nombre" name="nombre" type="text" autocomplete="given-name" autocapitalize="words" required />
-            <p class="pd-err" data-for="f-nombre"></p>
+        <div class="pd-field">
+          <label for="f-apellido">Apellido</label>
+          <input class="pd-input" id="f-apellido" name="apellido" type="text" autocomplete="family-name" autocapitalize="words" required />
+          <p class="pd-err" data-for="f-apellido"></p>
+        </div>
+        <div class="pd-field">
+          <label for="f-dni">DNI</label>
+          <input class="pd-input" id="f-dni" name="dni" type="text" inputmode="numeric" autocomplete="off" maxlength="12" required />
+          <p class="pd-err" data-for="f-dni"></p>
+        </div>
+        <div class="pd-field">
+          <label for="f-dob">Fecha de nacimiento</label>
+          <input class="pd-input" id="f-dob" name="dob" type="date" autocomplete="bday" required />
+          <p class="pd-err" data-for="f-dob"></p>
+        </div>
+        <div class="pd-field is-wide">
+          <label for="f-email">Correo</label>
+          <input class="pd-input" id="f-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required />
+          <p class="pd-err" data-for="f-email"></p>
+        </div>
+        <div class="pd-field">
+          <label for="f-phone">Número</label>
+          <input class="pd-input" id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required />
+          <p class="pd-err" data-for="f-phone"></p>
+        </div>
+        <div class="pd-field">
+          <label for="f-ig">Instagram</label>
+          <div class="pd-prefix">
+            <span aria-hidden="true">@</span>
+            <input class="pd-input" id="f-ig" name="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
           </div>
-          <div class="pd-field">
-            <label for="f-apellido">Apellido</label>
-            <input class="pd-input" id="f-apellido" name="apellido" type="text" autocomplete="family-name" autocapitalize="words" required />
-            <p class="pd-err" data-for="f-apellido"></p>
-          </div>
-          <div class="pd-field">
-            <label for="f-dni">DNI</label>
-            <input class="pd-input" id="f-dni" name="dni" type="text" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="8 dígitos" required />
-            <p class="pd-err" data-for="f-dni"></p>
-          </div>
-          <div class="pd-field">
-            <label for="f-dob">Fecha de nacimiento</label>
-            <input class="pd-input" id="f-dob" name="dob" type="date" autocomplete="bday" required />
-            <p class="pd-err" data-for="f-dob"></p>
-          </div>
-          <div class="pd-field is-wide">
-            <label for="f-email">Correo</label>
-            <input class="pd-input" id="f-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Aquí te llega tu QR" required />
-            <p class="pd-err" data-for="f-email"></p>
-          </div>
-          <div class="pd-field">
-            <label for="f-phone">Número</label>
-            <input class="pd-input" id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="9XX XXX XXX" required />
-            <p class="pd-err" data-for="f-phone"></p>
-          </div>
-          <div class="pd-field">
-            <label for="f-ig">Instagram</label>
-            <div class="pd-prefix">
-              <span aria-hidden="true">@</span>
-              <input class="pd-input" id="f-ig" name="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="usuario" required />
-            </div>
-            <p class="pd-err" data-for="f-ig"></p>
-          </div>
-          <label class="pd-check">
-            <input type="checkbox" id="f-accept" />
-            <span>Soy mayor de 18 años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a> y la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>.</span>
-          </label>
-          <div class="pd-form-actions">
-            <p class="pd-msg" id="form-msg" role="alert"></p>
-            <button class="pd-btn" type="submit" id="form-btn">Generar mi QR</button>
-          </div>
-        </form>
-      </div>
+          <p class="pd-err" data-for="f-ig"></p>
+        </div>
+        <label class="pd-check">
+          <input type="checkbox" id="f-accept" />
+          <span>Soy mayor de 18 años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a> y la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>.</span>
+        </label>
+        <div class="pd-form-actions">
+          <p class="pd-msg" id="form-msg" role="alert"></p>
+          <button class="pd-btn" type="submit" id="form-btn">Generar mi QR</button>
+        </div>
+      </form>
     </section>
 
     <!-- Paso 3: QR -->
-    <section class="pd-step pd-split" id="step-ticket" aria-labelledby="ticket-title">
-      <div>
-        <p class="pd-eyebrow" id="ticket-tier">Invitación</p>
-        <h2 class="pd-display" id="ticket-title">Estás dentro.</h2>
-        <p class="pd-lead" id="ticket-lead">También te lo mandamos al correo. Guarda una captura por si acaso.</p>
-        <div class="pd-meta">
-          <strong id="ticket-event"></strong>
-          <span id="ticket-date"></span>
-          <span id="ticket-validity" style="display:block;"></span>
-          <span style="display:block;margin-top:10px;">Presenta el QR con tu documento de identidad físico y original. Solo mayores de 18.</span>
-        </div>
+    <section class="pd-step" id="step-ticket" aria-labelledby="ticket-name">
+      <p class="pd-cap" style="color:var(--red);" id="ticket-tier">Invitación</p>
+      <p class="pd-ticket-name" id="ticket-name"></p>
+      <div class="pd-qr-frame"><img id="ticket-qr" alt="Código QR de tu entrada" width="236" height="236" /></div>
+      <p class="pd-ticket-code" id="ticket-code"></p>
+      <div class="pd-validity">
+        <p class="pd-cap" id="ticket-date"></p>
+        <p class="pd-cap is-red" id="ticket-validity"></p>
       </div>
-      <div>
-        <div class="pd-ticket">
-          <p class="pd-ticket-name" id="ticket-name"></p>
-          <div class="pd-qr-wrap" style="margin-top:22px;"><img id="ticket-qr" alt="Código QR de tu entrada" width="240" height="240" /></div>
-          <p class="pd-ticket-code" id="ticket-code"></p>
-          <div class="pd-ticket-actions">
-            <a class="pd-btn" id="ticket-link" href="#">Ver mi entrada</a>
-            <button class="pd-btn pd-btn-ghost" type="button" id="another-btn">Canjear otro código</button>
-          </div>
-        </div>
-      </div>
+      <p class="pd-note" id="ticket-lead">También te lo enviamos por correo. Preséntalo con tu documento de identidad físico. Solo mayores de 18.</p>
+      <a class="pd-btn" id="ticket-link" href="#">Ver mi entrada</a>
+      <button class="pd-btn pd-btn-quiet" type="button" id="another-btn">Canjear otro código</button>
     </section>
   </main>
 
   <footer>
-    <span>Paradisio · Barranco, Lima · <a href="mailto:info@paradisioclub.com">info@paradisioclub.com</a></span>
     <nav>
       <a href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">Instagram</a>
       <a href="/terminos">Términos</a>
       <a href="/privacidad">Privacidad</a>
       <a href="/libro-reclamaciones">Libro de Reclamaciones</a>
     </nav>
+    Paradisio Club · Barranco, Lima
   </footer>
 
 <script>
@@ -350,8 +315,7 @@
   function setEvent(ev){
     if (!ev) return;
     eventInfo = ev;
-    // El header sólo muestra la fecha (sin el lugar) para no saturar en celular.
-    $('event-date-head').textContent = (ev.dateLabel || '').split('·')[0].trim();
+    if (ev.shortDate) $('event-date-head').textContent = ev.shortDate;
   }
 
   /* ---------------- Paso 1 ---------------- */
@@ -536,10 +500,10 @@
     $('ticket-name').textContent = t.name;
     $('ticket-qr').src = res.qr;
     $('ticket-code').textContent = t.id;
-    $('ticket-event').textContent = ev.name || '';
     $('ticket-date').textContent = ev.dateLabel || '';
-    $('ticket-validity').textContent = t.validityLabel ? 'Válida ' + t.validityLabel : '';
-    $('ticket-lead').textContent = 'También te lo mandamos a ' + email + '. Guarda una captura por si acaso.';
+    $('ticket-validity').textContent = t.validityLabel ? 'QR válido ' + t.validityLabel : '';
+    $('ticket-validity').style.display = t.validityLabel ? '' : 'none';
+    $('ticket-lead').textContent = 'También te lo enviamos a ' + email + '. Preséntalo con tu documento de identidad físico. Solo mayores de 18.';
     $('ticket-link').href = '/entrada?t=' + encodeURIComponent(t.token);
     show('step-ticket');
   }

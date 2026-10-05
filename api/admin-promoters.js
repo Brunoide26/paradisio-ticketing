@@ -1,5 +1,6 @@
 const { listAllTickets } = require('../lib/tickets');
-const { listPromoters, addPromoter } = require('../lib/promoters');
+const { listPromoters, addPromoter, removePromoter } = require('../lib/promoters');
+const { setInviteRevoked } = require('../lib/invites');
 const { listInvites } = require('../lib/invites');
 const { CURRENT_EVENT_ID, eventIdOfTicket, eventIdOfInvite } = require('../lib/events');
 
@@ -27,10 +28,24 @@ module.exports = async (req, res) => {
 
     // Todo por fecha: sólo los tickets y códigos del evento pedido (por
     // defecto, el vigente).
+    // Eliminar un promotor: desaparece de la lista y sus códigos sin usar se
+    // revocan (no se pueden canjear). Las entradas que ya sacaron sus
+    // invitados siguen válidas y atribuidas a él.
+    if (req.method === 'POST' && (req.body || {}).action === 'remove') {
+      const result = await removePromoter(req.body.code);
+      if (!result.ok) return res.status(404).json({ error: result.reason });
+      const pending = (await listInvites()).filter((i) => i.promoterCode === result.code && !i.ticketId && !i.revoked);
+      for (const i of pending) await setInviteRevoked(i.code, true);
+      return res.status(200).json({ ok: true, code: result.code, revokedCodes: pending.length });
+    }
+
     const eventId = (req.body && req.body.eventId) || (req.query && req.query.eventId) || CURRENT_EVENT_ID;
-    const [allT, promoters, allI] = await Promise.all([listAllTickets(), listPromoters(), listInvites()]);
+    const [allT, allP, allI] = await Promise.all([listAllTickets(), listPromoters({ includeRemoved: true }), listInvites()]);
     const tickets = allT.filter((t) => eventIdOfTicket(t) === eventId);
     const invites = allI.filter((i) => eventIdOfInvite(i) === eventId);
+    // Un eliminado sólo se muestra si tuvo movimiento en la fecha consultada.
+    const promoters = allP.filter((p) => !p.removed
+      || tickets.some((t) => t.promoterCode === p.code) || invites.some((i) => i.promoterCode === p.code));
 
     const stats = promoters.map((p) => {
       const own = tickets.filter((t) => t.promoterCode === p.code && !t.voided);
@@ -65,7 +80,7 @@ module.exports = async (req, res) => {
       return {
         code: p.code, name: p.name, active: p.active,
         cortesias, pagadas, invitaciones, codigos, codigosLibres, personas, ingreso, ingresaron, conversion,
-        aTiempo, tardeCobrado, tardeGratis, custom: !!p.custom,
+        aTiempo, tardeCobrado, tardeGratis, custom: !!p.custom, removed: !!p.removed,
       };
     });
 

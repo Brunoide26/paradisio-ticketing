@@ -1369,10 +1369,14 @@
           <button class="btn btn-ghost btn-sm" onclick="viewCodesOf('${p.code}')">Ver códigos</button>
         </td>
         <td>
-          <label class="toggle-label">
-            <input type="checkbox" ${p.active ? 'checked' : ''} onchange="togglePromoterActive('${p.code}', this.checked)" />
-            ${p.active ? 'Activo' : 'Inactivo'}
-          </label>
+          ${p.removed ? '<span style="color:#888;font-size:12px;">Eliminado</span>' : `
+          <div style="display:flex;align-items:center;gap:12px;">
+            <label class="toggle-label">
+              <input type="checkbox" ${p.active ? 'checked' : ''} onchange="togglePromoterActive('${p.code}', this.checked)" />
+              ${p.active ? 'Activo' : 'Inactivo'}
+            </label>
+            <button class="btn btn-ghost btn-sm" title="Eliminar promotor" onclick="removePromoter('${p.code}')">Eliminar</button>
+          </div>`}
         </td>
       </tr>
     `).join('');
@@ -1485,6 +1489,23 @@
     const original = btn.textContent;
     btn.textContent = 'Copiado ✓';
     setTimeout(() => { btn.textContent = original; }, 1500);
+  };
+
+  window.removePromoter = async function(code){
+    const p = allPromoters.find(x => x.code === code);
+    const name = p ? p.name : code;
+    const libres = p ? p.codigosLibres : 0;
+    const msg = `¿Eliminar a ${name}?\n\n` +
+      `• Deja de aparecer en la lista y no puede recibir códigos nuevos.\n` +
+      (libres ? `• Sus ${libres} códigos sin usar se revocan (ya no se podrán canjear).\n` : '') +
+      `• Las entradas que ya sacaron sus invitados siguen válidas y cuentan para él.`;
+    if (!confirm(msg)) return;
+    try {
+      const r = await fetch('/api/admin-promoters', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, action:'remove', code }) });
+      if (!r.ok) { alert('No se pudo eliminar el promotor.'); return; }
+      await loadPromoters();
+    } catch(e) { alert('Error de conexión.'); }
   };
 
   window.togglePromoterActive = async function(code, active){

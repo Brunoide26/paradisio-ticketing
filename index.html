@@ -31,7 +31,7 @@
   @font-face { font-family:'Bodoni Moda'; src:url('/fonts/BodoniModa-Italic.woff2') format('woff2'); font-weight:400 900; font-style:italic; font-display:swap; }
   @font-face { font-family:'Jost'; src:url('/fonts/Jost.woff2') format('woff2'); font-weight:100 900; font-style:normal; font-display:swap; }
   :root {
-    --bg:#0A0909; --ink:#F4F0EA; --muted:#8C877F; --faint:#3A3734;
+    --bg:#000000; --ink:#F4F0EA; --muted:#8C877F; --faint:#3A3734;
     --red:#E2361F; --line:rgba(244,240,234,0.14);
     --serif:'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
     --sans:'Jost', 'Futura', system-ui, sans-serif;
@@ -56,20 +56,13 @@
   .pd-cap.is-muted { color:var(--muted); }
 
   /* ---------- marca ---------- */
+  /* Igual que la pantalla de coming soon: logo rojo sobre negro puro. */
   .pd-brand { padding:clamp(40px, 8vh, 72px) 24px 0; text-align:center; }
-  .pd-mark { display:inline-block; position:relative; width:min(62vw, 300px); }
-  .pd-mark img { width:100%; height:auto; display:block; }
-  .pd-mark .pd-club {
-    position:absolute; right:-1%; bottom:-24%;
-    font-family:var(--serif); font-weight:500; color:var(--red);
-    font-size:clamp(26px, 6.4vw, 38px); line-height:1; letter-spacing:.01em;
-    transform:scaleX(.72); transform-origin:right bottom;
-  }
-  .pd-dateline {
-    display:flex; justify-content:center; align-items:center; gap:14px;
-    margin:clamp(40px, 6vh, 56px) 0 0; color:var(--muted);
-  }
-  .pd-dateline i { width:3px; height:3px; border-radius:50%; background:var(--faint); display:block; }
+  .pd-logo { width:min(56vw, 300px); height:auto; display:inline-block; }
+  body.is-landing { justify-content:center; }
+  body.is-landing .pd-brand { padding-top:0; }
+  body.is-landing .pd-logo { width:min(72vw, 620px); }
+  body.is-landing main { flex:0; padding-top:clamp(30px, 6vh, 56px); }
 
   main { flex:1; display:flex; justify-content:center; padding:clamp(36px, 6vh, 64px) 24px 72px; }
   .pd-step { width:100%; max-width:460px; display:none; text-align:center; }
@@ -84,17 +77,20 @@
   .pd-lead { color:var(--muted); margin:16px auto 0; max-width:340px; font-size:14px; }
 
   /* ---------- código ---------- */
-  .pd-code-form { margin-top:44px; }
+  #step-code { max-width:340px; }
+  .pd-code-form { margin:0; }
   .pd-code-input {
     width:100%; background:transparent; color:var(--ink); text-align:center;
-    border:none; border-bottom:1px solid var(--line); border-radius:0; outline:none;
-    font-family:var(--sans); font-weight:400; text-transform:uppercase;
-    font-size:clamp(24px, 7vw, 30px); letter-spacing:.42em; text-indent:.42em;
-    padding:8px 0 14px; transition:border-color .25s;
+    border:1px solid rgba(255,255,255,.34); border-radius:0; outline:none;
+    font-family:var(--sans); font-weight:300; text-transform:uppercase;
+    font-size:15px; letter-spacing:.42em; text-indent:.42em;
+    padding:18px 12px; transition:border-color .25s;
   }
-  .pd-code-input::placeholder { color:var(--faint); }
-  .pd-code-input:focus { border-bottom-color:var(--ink); }
-  .pd-code-input.has-error { border-bottom-color:var(--red); }
+  .pd-code-input::placeholder { color:rgba(255,255,255,.34); font-size:11px; letter-spacing:.42em; }
+  .pd-code-input:focus { border-color:rgba(255,255,255,.75); }
+  .pd-code-input.has-error { border-color:var(--red); }
+  #step-code .pd-btn { margin-top:14px; border-color:transparent; color:rgba(255,255,255,.55); font-weight:300; }
+  #step-code .pd-btn:hover:not(:disabled) { background:transparent; color:var(--ink); border-color:transparent; }
 
   /* ---------- botones ---------- */
   .pd-btn {
@@ -188,27 +184,18 @@
   @media (prefers-reduced-motion: reduce) { .pd-step.is-active, .pd-brand { animation:none; } }
 </style>
 </head>
-<body>
+<body class="is-landing">
   <header class="pd-brand">
-    <div class="pd-mark">
-      <img src="/logo-script-white.png" alt="Paradisio" width="1200" height="388" />
-      <span class="pd-club" aria-hidden="true">CLUB</span>
-    </div>
-    <div class="pd-dateline">
-      <p class="pd-cap" id="event-date-head">17 Octubre</p><i></i><p class="pd-cap">10 PM</p><i></i><p class="pd-cap">Barranco</p>
-    </div>
+    <img class="pd-logo" src="/paradisio-logo.png" alt="Paradisio" width="1200" height="388" />
   </header>
 
   <main>
     <!-- Paso 1: código -->
-    <section class="pd-step is-active" id="step-code" aria-labelledby="code-title">
-      <h1 class="pd-title" id="code-title">Ingresa tu <em>código</em></h1>
-      <p class="pd-lead">El que te pasó tu promotor. Es personal y funciona una sola vez.</p>
+    <section class="pd-step is-active" id="step-code" aria-label="Ingresa tu código">
       <form class="pd-code-form" id="code-form" novalidate>
-        <label class="pd-cap is-muted" for="code-input" style="display:block;margin-bottom:10px;">Código</label>
         <input class="pd-code-input" id="code-input" name="code" type="text"
-               placeholder="······" maxlength="16" autocomplete="off" autocapitalize="characters"
-               spellcheck="false" aria-describedby="code-msg" />
+               placeholder="Ingresa tu código" aria-label="Ingresa tu código" maxlength="16"
+               autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="code-msg" />
         <p class="pd-msg" id="code-msg" role="alert"></p>
         <button class="pd-btn" type="submit" id="code-btn">Continuar</button>
       </form>
@@ -288,15 +275,6 @@
     </section>
   </main>
 
-  <footer>
-    <nav>
-      <a href="https://instagram.com/paradisioclub___" target="_blank" rel="noopener">Instagram</a>
-      <a href="/terminos">Términos</a>
-      <a href="/privacidad">Privacidad</a>
-      <a href="/libro-reclamaciones">Libro de Reclamaciones</a>
-    </nav>
-    Paradisio Club · Barranco, Lima
-  </footer>
 
 <script>
 (function(){
@@ -307,6 +285,7 @@
 
   function show(id){
     steps.forEach((s) => $(s).classList.toggle('is-active', s === id));
+    document.body.classList.toggle('is-landing', id === 'step-code');
     window.scrollTo(0, 0);
   }
 
@@ -315,14 +294,13 @@
   function setEvent(ev){
     if (!ev) return;
     eventInfo = ev;
-    if (ev.shortDate) $('event-date-head').textContent = ev.shortDate;
   }
 
   /* ---------------- Paso 1 ---------------- */
   const CODE_ERRORS = {
     not_found: 'Ese código no existe. Revisa que esté bien escrito.',
-    used: 'Ese código ya fue usado. Pídele uno nuevo a tu promotor.',
-    revoked: 'Ese código ya no es válido. Pídele uno nuevo a tu promotor.',
+    used: 'Ese código ya fue usado.',
+    revoked: 'Ese código ya no es válido.',
   };
 
   async function submitCode(e){
@@ -448,8 +426,8 @@
     underage: 'El evento es solo para mayores de 18.',
     invalid_email: 'Ese correo no es válido o no recibe mensajes. Usa otro.',
     code_not_found: 'Ese código no existe.',
-    code_used: 'Ese código ya fue usado. Pídele uno nuevo a tu promotor.',
-    code_revoked: 'Ese código ya no es válido. Pídele uno nuevo a tu promotor.',
+    code_used: 'Ese código ya fue usado.',
+    code_revoked: 'Ese código ya no es válido.',
   };
 
   $('data-form').addEventListener('submit', async (e) => {

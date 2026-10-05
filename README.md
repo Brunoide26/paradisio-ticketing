@@ -8,7 +8,10 @@ Ya no hay venta ni landing. `paradisioclub.com` abre directo la pantalla de **in
 2. Llena: nombre, apellido, DNI, fecha de nacimiento, correo, número e Instagram (+ casilla de 18+ y términos/privacidad).
 3. Recibe su QR en pantalla y por correo. El código queda quemado.
 
-- **Generar códigos:** `/admin` → pestaña **Códigos** → elegir promotor + cantidad → Generar. Se copian como lista de códigos o lista de links.
+- **Dar códigos:** `/admin` → pestaña **Promotores** → "Dar códigos" en la fila del promotor (o elegirlo arriba) + cantidad → Generar. Se copian como códigos, links, o un mensaje por invitado listo para WhatsApp.
+- **Promotores nuevos:** se agregan desde esa misma pestaña ("Agregar promotor"), sin redeploy. El código del promotor sale de su primer nombre.
+- **Por promotor se ve:** códigos dados, QRs sacados, sin usar, ingresaron, antes de las 11, después de las 11 (pagó / gratis) y % de asistencia. La pestaña **Códigos** lista cada código con su estado.
+- **Puerta después de las 11:** el scanner muestra "DESPUÉS DE HORA" con dos botones, **Pagó entrada** o **Entra gratis**. Los dos registran el ingreso y cuentan para el promotor.
 - Cada código es de **una sola persona** y queda atribuido al promotor. Un mismo DNI o correo no puede sacar dos entradas.
 - Códigos libres se pueden **revocar**; para invalidar una entrada ya canjeada, se anula el ticket como siempre.
 - Las entradas salen como tipo `promo` ("Invitación"). **QR válido hasta las 11:00 p.m.**: después de esa hora el scanner las rechaza como QR EXPIRADO, con el mismo botón "Dejar entrar igual" de la cortesía.

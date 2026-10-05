@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   try {
-    const { ticketId, passcode, allowExpiredCortesia } = req.body || {};
+    const { ticketId, passcode, allowExpiredCortesia, lateCharged } = req.body || {};
     if (passcode !== process.env.STAFF_PASSCODE) {
       return res.status(401).json({ error: 'unauthorized' });
     }
@@ -19,6 +19,7 @@ module.exports = async (req, res) => {
     // relaxes the Cortesia expiry branch only.
     const result = await checkInTicket(ticketId, {
       allowExpiredCortesia: allowExpiredCortesia === true,
+      lateCharged: lateCharged === true,
     });
     return res.status(200).json(result);
   } catch (err) {

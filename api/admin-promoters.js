@@ -1,5 +1,5 @@
 const { listAllTickets } = require('../lib/tickets');
-const { listPromoters } = require('../lib/promoters');
+const { listPromoters, addPromoter } = require('../lib/promoters');
 const { listInvites } = require('../lib/invites');
 
 // Per-promoter rollup for the admin "Promotores" tab. Voided tickets never
@@ -14,6 +14,14 @@ module.exports = async (req, res) => {
     const passcode = req.method === 'POST' ? (req.body || {}).passcode : req.query.passcode;
     if (passcode !== process.env.STAFF_PASSCODE) {
       return res.status(401).json({ error: 'unauthorized' });
+    }
+
+    // Agregar un promotor nuevo desde el admin (queda activo y listo para
+    // recibir códigos, sin redeploy).
+    if (req.method === 'POST' && (req.body || {}).action === 'add') {
+      const result = await addPromoter(req.body.name);
+      if (!result.ok) return res.status(400).json({ error: result.reason });
+      return res.status(200).json({ ok: true, promoter: result.promoter });
     }
 
     const [tickets, promoters, invites] = await Promise.all([listAllTickets(), listPromoters(), listInvites()]);
@@ -39,11 +47,19 @@ module.exports = async (req, res) => {
         if (!paidOrderAmounts.has(key)) paidOrderAmounts.set(key, t.amount || 0);
       });
       const ingreso = [...paidOrderAmounts.values()].reduce((sum, a) => sum + a, 0);
+      // Todo el que cruzó la puerta cuenta como ingreso, haya llegado a tiempo
+      // o después del corte. Los tardíos se separan en cobrados y gratis
+      // según lo que marcó el staff en el scanner.
       const ingresaron = own.filter((t) => t.checkedIn).length;
+      const late = own.filter((t) => t.checkedIn && t.lateEntry);
+      const tardeCobrado = late.filter((t) => t.lateCharged).length;
+      const tardeGratis = late.length - tardeCobrado;
+      const aTiempo = ingresaron - late.length;
       const conversion = personas > 0 ? Math.round((ingresaron / personas) * 1000) / 10 : 0;
       return {
         code: p.code, name: p.name, active: p.active,
         cortesias, pagadas, invitaciones, codigos, codigosLibres, personas, ingreso, ingresaron, conversion,
+        aTiempo, tardeCobrado, tardeGratis, custom: !!p.custom,
       };
     });
 

@@ -252,7 +252,29 @@
     </div>
 
     <div id="promotores-panel" style="display:none;">
+      <div class="stat-row" id="promo-totals"></div>
+
+      <div class="puerta-chart-wrap" id="promo-give-card">
+        <p class="pd-eyebrow" style="margin-bottom:14px;">Dar códigos</p>
+        <div class="toolbar">
+          <select id="promo-give-select" class="btn btn-ghost"></select>
+          <input type="number" id="promo-give-count" min="1" max="500" value="20" style="flex:0 0 110px;" />
+          <button class="btn btn-pink" id="promo-give-btn">Generar códigos</button>
+        </div>
+        <div id="promo-give-result" style="display:none;">
+          <div class="codes-new" id="promo-give-codes"></div>
+          <div class="toolbar" style="margin-top:10px;">
+            <button class="btn btn-ghost btn-sm" id="promo-give-copy-codes">Copiar códigos</button>
+            <button class="btn btn-ghost btn-sm" id="promo-give-copy-links">Copiar links</button>
+            <button class="btn btn-ghost btn-sm" id="promo-give-copy-msg">Copiar mensajes para WhatsApp</button>
+          </div>
+        </div>
+        <div class="hint">Cada código es para una persona y queda a nombre del promotor. Se pasan tal cual o como link (<span style="font-family:monospace;">/?c=CODIGO</span>), que abre el formulario con el código puesto.</div>
+      </div>
+
       <div class="toolbar">
+        <input type="text" id="promo-new-name" placeholder="Nombre del promotor nuevo" />
+        <button class="btn btn-ghost" id="promo-add-btn">Agregar promotor</button>
         <button class="btn btn-ghost" id="promotores-export-btn">Exportar CSV</button>
         <button class="btn btn-ghost" id="promotores-refresh-btn">Actualizar</button>
       </div>
@@ -261,21 +283,22 @@
           <thead>
             <tr>
               <th class="sortable-th" data-sort="name">Promotor <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="invitaciones">Invitaciones <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="codigosLibres">Códigos libres <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="cortesias">Cortesías <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="pagadas">Pagadas <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="personas">Personas <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="ingreso">Ingreso <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="codigos">Códigos dados <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="invitaciones">QRs sacados <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="codigosLibres">Sin usar <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="ingresaron">Ingresaron <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="conversion">Conversión <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="aTiempo">Antes 11 <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="tardeCobrado">Después · pagó <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="tardeGratis">Después · gratis <span class="sort-arrow"></span></th>
+              <th>Asistencia</th>
+              <th></th>
               <th>Activo</th>
             </tr>
           </thead>
           <tbody id="promotores-table-body"></tbody>
         </table>
       </div>
-      <div class="hint">Ordena haciendo clic en cualquier columna. "Ingresaron" es el dato más importante: cuántos de los QRs de cada promotor entraron realmente al evento. "Códigos libres" son los códigos de invitación generados para ese promotor que todavía nadie canjeó. Desactivar un promotor conserva la atribución de las entradas ya emitidas.</div>
+      <div class="hint">"QRs sacados" = personas que canjearon un código del promotor. "Ingresaron" cuenta a todos los que entraron, antes o después de las 11 (pagando o gratis, según lo que marcó la puerta). "Asistencia" = ingresaron / QRs sacados. Desactivar un promotor no borra sus entradas ya emitidas.</div>
     </div>
 
     <div id="codigos-panel" style="display:none;">
@@ -784,7 +807,9 @@
     // Va junto al estado y no reemplazándolo: "En puerta" sigue siendo cierto,
     // el badge sólo dice que ese ingreso fue después del corte.
     const lateBadge = t.lateEntry
-      ? ` <span class="badge badge-late" title="Cortesía vencida admitida en puerta con el botón &quot;Dejar entrar igual&quot; del scanner">🌙 Tardío</span>`
+      ? (t.type === 'promo'
+          ? ` <span class="badge badge-late" title="Entró después de las 11 pm">🌙 Después de hora · ${t.lateCharged ? 'pagó' : 'gratis'}</span>`
+          : ` <span class="badge badge-late" title="Cortesía vencida admitida en puerta con el botón &quot;Dejar entrar igual&quot; del scanner">🌙 Tardío</span>`)
       : '';
     return `<tr${rowClass}>
       <td style="font-family:monospace;">${t.id}</td>
@@ -918,13 +943,14 @@
     // ahí corre las columnas posteriores respecto de exports anteriores.
     // Instagram, Promotor y CodigoInvitacion van al final para no correr las
     // columnas de exports anteriores.
-    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso','Instagram','Promotor','CodigoInvitacion'];
+    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso','Instagram','Promotor','CodigoInvitacion','DespuesDeHora'];
     const rows = allTickets.map(t => [
       t.id, t.name, t.dni, t.dob, t.phone, t.email, t.type, t.amount, t.orderId || '',
       t.createdAt, t.checkedIn ? 'si' : 'no', t.checkedInAt || '', t.lateEntry ? 'si' : 'no',
       t.voided ? 'si' : 'no', t.emailStatus || 'pending',
       suspiciousFlags.has(t.id) ? [...suspiciousFlags.get(t.id)].join('; ') : '',
-      t.instagram ? '@' + t.instagram : '', t.promoterCode || '', t.inviteCode || ''
+      t.instagram ? '@' + t.instagram : '', t.promoterCode || '', t.inviteCode || '',
+      t.lateEntry ? (t.lateCharged ? 'pago' : 'gratis') : ''
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1242,7 +1268,7 @@
   let allPromoters = [];
   // "Ingresaron" first by default — per the spec, it's the number that
   // actually decides who gets kept for VOL. 2.
-  let promoSort = { key: 'ingresaron', dir: 'desc' };
+  let promoSort = { key: 'invitaciones', dir: 'desc' };
 
   async function loadPromoters(){
     try {
@@ -1284,22 +1310,28 @@
   function renderPromotoresTable(){
     const body = document.getElementById('promotores-table-body');
     const list = sortedPromoters();
+    renderPromoTotals();
+    fillGiveSelect();
     if (list.length === 0) {
-      body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#666;">Sin datos</td></tr>';
+      body.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#666;">Sin datos</td></tr>';
       updateSortHeaders();
       return;
     }
     body.innerHTML = list.map(p => `
-      <tr>
+      <tr${p.active ? '' : ' style="opacity:.5;"'}>
         <td>${escapeHtml(p.name)}<br><span style="font-family:monospace;color:#888;font-size:11px;">${escapeHtml(p.code)}</span></td>
-        <td>${p.invitaciones}</td>
-        <td>${p.codigosLibres} / ${p.codigos}</td>
-        <td>${p.cortesias}</td>
-        <td>${p.pagadas}</td>
-        <td>${p.personas}</td>
-        <td>S/${p.ingreso}</td>
-        <td>${p.ingresaron}</td>
-        <td>${p.conversion}%</td>
+        <td>${p.codigos}</td>
+        <td><strong>${p.invitaciones}</strong></td>
+        <td>${p.codigosLibres}</td>
+        <td><strong>${p.ingresaron}</strong></td>
+        <td>${p.aTiempo}</td>
+        <td>${p.tardeCobrado}</td>
+        <td>${p.tardeGratis}</td>
+        <td>${p.invitaciones ? Math.round(p.ingresaron / p.invitaciones * 100) + '%' : '—'}</td>
+        <td style="white-space:nowrap;">
+          ${p.active ? `<button class="btn btn-pink btn-sm" onclick="giveCodesTo('${p.code}')">Dar códigos</button>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="viewCodesOf('${p.code}')">Ver códigos</button>
+        </td>
         <td>
           <label class="toggle-label">
             <input type="checkbox" ${p.active ? 'checked' : ''} onchange="togglePromoterActive('${p.code}', this.checked)" />
@@ -1310,6 +1342,88 @@
     `).join('');
     updateSortHeaders();
   }
+
+  function renderPromoTotals(){
+    const sum = (k) => allPromoters.reduce((a, p) => a + (p[k] || 0), 0);
+    const cards = [
+      [sum('codigos'), 'Códigos dados', false],
+      [sum('invitaciones'), 'QRs sacados', true],
+      [sum('ingresaron'), 'Ingresaron', true],
+      [sum('aTiempo'), 'Antes de las 11', false],
+      [sum('tardeCobrado'), 'Después · pagó', false],
+      [sum('tardeGratis'), 'Después · gratis', false],
+    ];
+    document.getElementById('promo-totals').innerHTML = cards.map(([n, l, f]) =>
+      `<div class="stat${f ? ' stat-featured' : ''}"><div class="stat-num">${n}</div><div class="stat-label">${l}</div></div>`).join('');
+  }
+
+  function fillGiveSelect(){
+    const sel = document.getElementById('promo-give-select');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Elegir promotor…</option>' + [...allPromoters]
+      .filter(p => p.active).sort((a, b) => a.name.localeCompare(b.name))
+      .map(p => `<option value="${escapeHtml(p.code)}">${escapeHtml(p.name)}</option>`).join('');
+    sel.value = prev;
+  }
+
+  window.giveCodesTo = function(code){
+    document.getElementById('promo-give-select').value = code;
+    document.getElementById('promo-give-card').scrollIntoView({ behavior:'smooth', block:'start' });
+    document.getElementById('promo-give-count').focus();
+  };
+
+  window.viewCodesOf = async function(code){
+    switchTab('codigos');
+    await loadCodigos();
+    document.getElementById('codes-filter-promoter').value = code;
+    renderCodigos();
+  };
+
+  let lastGiven = [];
+  document.getElementById('promo-give-btn').onclick = async function(){
+    const promoterCode = document.getElementById('promo-give-select').value;
+    const count = parseInt(document.getElementById('promo-give-count').value, 10);
+    if (!promoterCode) { alert('Elige un promotor.'); return; }
+    if (!count || count < 1 || count > 500) { alert('Entre 1 y 500 códigos por tanda.'); return; }
+    const btn = this; btn.disabled = true; btn.textContent = 'Generando…';
+    try {
+      const r = await fetch('/api/admin-invites', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, action:'generate', promoterCode, count }) });
+      if (!r.ok) { alert('No se pudieron generar los códigos.'); return; }
+      const d = await r.json();
+      lastGiven = d.created || [];
+      const p = allPromoters.find(x => x.code === promoterCode);
+      document.getElementById('promo-give-codes').textContent =
+        `${p ? p.name : promoterCode} · ${lastGiven.length} códigos nuevos\n\n` + lastGiven.map(i => i.code).join('\n');
+      document.getElementById('promo-give-result').style.display = 'block';
+      await loadPromoters();
+    } catch(e) { alert('Error de conexión.'); }
+    finally { btn.disabled = false; btn.textContent = 'Generar códigos'; }
+  };
+  document.getElementById('promo-give-copy-codes').onclick = async function(){ await copyText(lastGiven.map(i => i.code).join('\n')); flash(this); };
+  document.getElementById('promo-give-copy-links').onclick = async function(){ await copyText(lastGiven.map(i => inviteLink(i.code)).join('\n')); flash(this); };
+  document.getElementById('promo-give-copy-msg').onclick = async function(){
+    // Un mensaje por código, separados por una línea en blanco, para reenviar uno a cada invitado.
+    const msgs = lastGiven.map(i => `Tu código para Paradisio: ${i.code}\nSaca tu QR aquí: ${inviteLink(i.code)}`);
+    await copyText(msgs.join('\n\n')); flash(this);
+  };
+
+  document.getElementById('promo-add-btn').onclick = async function(){
+    const input = document.getElementById('promo-new-name');
+    const name = input.value.trim();
+    if (name.length < 2) { alert('Escribe el nombre del promotor.'); return; }
+    const btn = this; btn.disabled = true;
+    try {
+      const r = await fetch('/api/admin-promoters', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, action:'add', name }) });
+      if (!r.ok) { alert('No se pudo agregar el promotor.'); return; }
+      const d = await r.json();
+      input.value = '';
+      await loadPromoters();
+      giveCodesTo(d.promoter.code);
+    } catch(e) { alert('Error de conexión.'); }
+    finally { btn.disabled = false; }
+  };
 
   document.querySelectorAll('#promotores-panel .sortable-th').forEach(th => {
     th.addEventListener('click', function(){
@@ -1356,10 +1470,10 @@
   document.getElementById('promotores-refresh-btn').onclick = loadPromoters;
 
   document.getElementById('promotores-export-btn').onclick = function(){
-    const headers = ['Codigo','Nombre','Invitaciones','CodigosGenerados','CodigosLibres','Cortesias','Pagadas','Personas','Ingreso','Ingresaron','Conversion','Activo'];
+    const headers = ['Codigo','Nombre','CodigosDados','QRsSacados','SinUsar','Ingresaron','Antes11','DespuesPago','DespuesGratis','Asistencia','Activo'];
     const rows = sortedPromoters().map(p => [
-      p.code, p.name, p.invitaciones, p.codigos, p.codigosLibres, p.cortesias, p.pagadas, p.personas, p.ingreso, p.ingresaron, p.conversion,
-      p.active ? 'si' : 'no'
+      p.code, p.name, p.codigos, p.invitaciones, p.codigosLibres, p.ingresaron, p.aTiempo, p.tardeCobrado, p.tardeGratis,
+      p.invitaciones ? Math.round(p.ingresaron / p.invitaciones * 100) + '%' : '', p.active ? 'si' : 'no'
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

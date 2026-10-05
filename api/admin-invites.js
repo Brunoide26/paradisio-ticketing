@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
       const { promoterCode, count } = req.body;
       const promoter = await getPromoter(promoterCode);
       if (!promoter) return res.status(400).json({ error: 'invalid_promoter' });
-      if (!promoter.active) return res.status(400).json({ error: 'inactive_promoter' });
+      if (promoter.removed || !promoter.active) return res.status(400).json({ error: 'inactive_promoter' });
       const n = parseInt(count, 10);
       if (!n || n < 1 || n > MAX_BATCH) return res.status(400).json({ error: 'invalid_count', max: MAX_BATCH });
       const created = await generateInvites(promoter.code, n);

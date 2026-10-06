@@ -16,7 +16,12 @@ module.exports = async (req, res) => {
     if (!ticket) return res.status(404).json({ error: 'not_found' });
     if (!ticket.email) return res.status(400).json({ error: 'no_email' });
 
-    await sendTicketEmail(ticket);
+    try {
+      await sendTicketEmail(ticket);
+    } catch (sendErr) {
+      // Devuelve el motivo real de Resend (cuota, dominio, etc.) para verlo en el admin.
+      return res.status(200).json({ ok: false, error: 'send_failed', reason: sendErr.message });
+    }
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error(err);

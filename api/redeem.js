@@ -99,9 +99,11 @@ module.exports = async (req, res) => {
       throw err;
     }
 
+    let emailSent = true;
     try {
       await sendTicketEmail(ticket);
     } catch (emailErr) {
+      emailSent = false;
       console.error('Email send failed:', emailErr);
     }
 
@@ -112,6 +114,7 @@ module.exports = async (req, res) => {
         tierLabel: ticketTypeLabel(ticket), validityLabel: ticketValidityLabel(ticket),
       },
       qr,
+      emailSent,
       event: { name: EVENT_NAME, dateLabel: EVENT_DATE_LABEL, address: EVENT_ADDRESS, mapsUrl: EVENT_MAPS_URL },
     });
   } catch (err) {

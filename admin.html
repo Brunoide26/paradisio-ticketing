@@ -197,11 +197,14 @@
           <option value="delivered">Correo: entregado</option>
           <option value="bounced">Correo: rebotado</option>
           <option value="pending">Correo: pendiente</option>
+          <option value="sent">Correo: enviado</option>
+          <option value="failed">Correo: no salió</option>
         </select>
         <label class="btn btn-ghost" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="suspicious-filter" style="margin:0;" /> Solo sospechosos
         </label>
         <button class="btn btn-ghost" id="view-toggle-btn">Vista: por orden</button>
+        <button class="btn btn-pink" id="resend-failed-btn">Reenviar correos que no salieron</button>
         <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
         <button class="btn btn-pink" id="export-emails-btn">Exportar lista de correos</button>
         <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
@@ -677,19 +680,52 @@
     issueManualTicket('vip', 'manual-vip-nombre', 'manual-vip-email', this);
   };
 
-  window.resendTicketQr = async function(ticketId){
+  async function resendOne(ticketId){
+    const r = await fetch('/api/admin-resend-ticket', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ passcode: PASSCODE, ticketId })
+    });
+    if (r.status === 401) return { ok:false, reason:'Clave incorrecta' };
+    const d = await r.json().catch(() => ({}));
+    return d.ok ? { ok:true } : { ok:false, reason: d.reason || d.error || 'error desconocido' };
+  }
+
+  window.resendTicketQr = async function(ticketId, btn){
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
     try {
-      const r = await fetch('/api/admin-resend-ticket', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ passcode: PASSCODE, ticketId })
-      });
-      if (r.status === 401) { alert('Clave incorrecta'); return; }
-      const d = await r.json();
-      if (!d.ok) { alert('No se pudo reenviar: ' + (d.error || 'error desconocido')); return; }
-      alert('QR reenviado.');
+      const res = await resendOne(ticketId);
+      if (!res.ok) alert('No se pudo reenviar.\n\nMotivo: ' + res.reason);
+      else if (btn) btn.textContent = 'Reenviado ✓';
     } catch(e){
       alert('Error de conexión al reenviar');
+    } finally {
+      if (btn) { btn.disabled = false; setTimeout(() => { btn.textContent = 'Reenviar QR'; }, 2000); }
     }
+  };
+
+  // Reenvía, uno por uno y con una pausa corta entre cada uno (para no
+  // chocar con el límite por segundo de Resend), todos los tickets de la
+  // fecha elegida cuyo correo no salió o nunca se confirmó. Se detiene en
+  // el primer error que no sea de ritmo (p. ej. cuota diaria agotada) para
+  // no quemar intentos.
+  document.getElementById('resend-failed-btn').onclick = async function(){
+    const targets = allTickets.filter(t => !t.voided && t.email && (t.emailStatus === 'failed' || ((t.emailStatus || 'pending') === 'pending' && !t.resendEmailId)));
+    if (!targets.length) { alert('No hay correos pendientes de reenviar en esta fecha.'); return; }
+    if (!confirm(`Reenviar el QR a ${targets.length} persona(s) cuyo correo no salió?`)) return;
+    const btn = this; btn.disabled = true;
+    let ok = 0, fail = 0, lastReason = '';
+    for (let i = 0; i < targets.length; i++) {
+      btn.textContent = `Enviando ${i + 1}/${targets.length}…`;
+      const res = await resendOne(targets[i].id).catch(() => ({ ok:false, reason:'conexión' }));
+      if (res.ok) ok++; else { fail++; lastReason = res.reason; }
+      if (!res.ok && /quota|limit|daily|exceeded/i.test(res.reason) && !/too many requests/i.test(res.reason)) {
+        fail += targets.length - i - 1; break;
+      }
+      await new Promise(r => setTimeout(r, 350));
+    }
+    btn.disabled = false; btn.textContent = 'Reenviar correos que no salieron';
+    alert(`Reenviados: ${ok}` + (fail ? `\nNo se pudieron: ${fail}\nMotivo: ${lastReason}` : ''));
+    await loadData();
   };
 
   // --- Block 5: suspicious-duplicate detection. Flags only, never auto-blocks —
@@ -793,6 +829,8 @@
   function emailStatusBadge(t){
     if (t.emailStatus === 'delivered') return '<span class="badge badge-mail-delivered">Entregado</span>';
     if (t.emailStatus === 'bounced') return '<span class="badge badge-mail-bounced">Rebotado</span>';
+    if (t.emailStatus === 'failed') return `<span class="badge badge-mail-bounced" style="cursor:help;" title="${escapeHtml(t.emailError || '')}">No salió</span>`;
+    if (t.emailStatus === 'sent') return '<span class="badge badge-mail-pending">Enviado</span>';
     return '<span class="badge badge-mail-pending">Pendiente</span>';
   }
 
@@ -860,7 +898,7 @@
       <td>${date}</td>
       <td>${statusBadge}${lateBadge}</td>
       <td>${emailStatusBadge(t)}</td>
-      <td>${voidBtn}</td>
+      <td style="white-space:nowrap;">${voidBtn}${t.email && !t.voided ? ` <button class="btn btn-ghost btn-sm" onclick="resendTicketQr('${t.id}', this)">Reenviar QR</button>` : ''}</td>
     </tr>`;
   }
 

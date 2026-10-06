@@ -488,7 +488,9 @@
     $('ticket-address').parentNode.style.display = ev.address ? '' : 'none';
     $('ticket-validity').textContent = t.validityLabel ? 'QR válido ' + t.validityLabel : '';
     $('ticket-validity').style.display = t.validityLabel ? '' : 'none';
-    $('ticket-lead').textContent = 'También te lo enviamos a ' + email + '. Preséntalo con tu documento de identidad físico. Solo mayores de 18.';
+    $('ticket-lead').textContent = (res.emailSent === false
+      ? 'No pudimos enviarlo a tu correo ahora. Toma una captura de esta pantalla y guarda el link de "Ver mi entrada".'
+      : 'También te lo enviamos a ' + email + '.') + ' Preséntalo con tu documento de identidad físico. Solo mayores de 18.';
     $('ticket-link').href = '/entrada?t=' + encodeURIComponent(t.token);
     show('step-ticket');
   }

@@ -52,7 +52,7 @@
   .badge-free { background:#1a2a3a; color:#7fbfe0; }
   .badge-paid { background:#2a1a3a; color:#c07fe0; }
   .badge-promo { background:rgba(255,40,0,0.14); color:#ff8a70; }
-  .codes-new { background:#000; border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-family:monospace; font-size:13px; line-height:1.7; white-space:pre-wrap; max-height:260px; overflow:auto; margin-top:12px; }
+  .codes-new { background:#000; border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-family:monospace; font-size:13px; line-height:1.7; white-space:pre-wrap; max-height:420px; overflow:auto; margin-top:12px; user-select:all; }
   .toolbar select.btn { min-width:180px; }
   .badge-in { background:#0a2a12; color:#7fe0a0; }
   .badge-out { background:#2a2a2a; color:#999; }
@@ -277,9 +277,9 @@
         <div id="promo-give-result" style="display:none;">
           <div class="codes-new" id="promo-give-codes"></div>
           <div class="toolbar" style="margin-top:10px;">
-            <button class="btn btn-ghost btn-sm" id="promo-give-copy-codes">Copiar códigos</button>
-            <button class="btn btn-ghost btn-sm" id="promo-give-copy-links">Copiar links</button>
-            <button class="btn btn-ghost btn-sm" id="promo-give-copy-msg">Copiar mensajes para WhatsApp</button>
+            <button class="btn btn-pink btn-sm" id="promo-give-copy-msg">Copiar mensajes para WhatsApp</button>
+            <button class="btn btn-ghost btn-sm" id="promo-give-copy-codes">Copiar solo códigos</button>
+            <button class="btn btn-ghost btn-sm" id="promo-give-copy-links">Copiar solo links</button>
           </div>
         </div>
         <div class="hint">Cada código es para una persona y queda a nombre del promotor. Se pasan tal cual o como link (<span style="font-family:monospace;">/?c=CODIGO</span>), que abre el formulario con el código puesto.</div>
@@ -326,8 +326,9 @@
         <div id="codes-new-wrap" style="display:none;">
           <div class="codes-new" id="codes-new"></div>
           <div class="toolbar" style="margin-top:10px;">
-            <button class="btn btn-ghost btn-sm" id="codes-copy-codes-btn">Copiar códigos</button>
-            <button class="btn btn-ghost btn-sm" id="codes-copy-links-btn">Copiar links</button>
+            <button class="btn btn-pink btn-sm" id="codes-copy-msg-btn">Copiar mensajes para WhatsApp</button>
+            <button class="btn btn-ghost btn-sm" id="codes-copy-codes-btn">Copiar solo códigos</button>
+            <button class="btn btn-ghost btn-sm" id="codes-copy-links-btn">Copiar solo links</button>
           </div>
         </div>
       </div>
@@ -1472,18 +1473,21 @@
       lastGiven = d.created || [];
       const p = allPromoters.find(x => x.code === promoterCode);
       document.getElementById('promo-give-codes').textContent =
-        `${p ? p.name : promoterCode} · ${lastGiven.length} códigos nuevos\n\n` + lastGiven.map(i => i.code).join('\n');
+        `${p ? p.name : promoterCode} · ${lastGiven.length} códigos nuevos\n\n` + inviteMessages(lastGiven);
       document.getElementById('promo-give-result').style.display = 'block';
       await loadPromoters();
     } catch(e) { alert('Error de conexión.'); }
     finally { btn.disabled = false; btn.textContent = 'Generar códigos'; }
   };
+  // Mensajes listos para WhatsApp, numerados del 1 al N de esta tanda.
+  function inviteMessages(list){
+    return list.map((i, n) => `${n + 1}. Tu código para Paradisio: ${i.code}\nSaca tu QR aquí: ${inviteLink(i.code)}`).join('\n\n');
+  }
+
   document.getElementById('promo-give-copy-codes').onclick = async function(){ await copyText(lastGiven.map(i => i.code).join('\n')); flash(this); };
   document.getElementById('promo-give-copy-links').onclick = async function(){ await copyText(lastGiven.map(i => inviteLink(i.code)).join('\n')); flash(this); };
   document.getElementById('promo-give-copy-msg').onclick = async function(){
-    // Un mensaje por código, separados por una línea en blanco, para reenviar uno a cada invitado.
-    const msgs = lastGiven.map(i => `Tu código para Paradisio: ${i.code}\nSaca tu QR aquí: ${inviteLink(i.code)}`);
-    await copyText(msgs.join('\n\n')); flash(this);
+    await copyText(inviteMessages(lastGiven)); flash(this);
   };
 
   document.getElementById('promo-add-btn').onclick = async function(){
@@ -1718,12 +1722,13 @@
       lastGenerated = d.created || [];
       allInvites = lastGenerated.concat(allInvites);
       document.getElementById('codes-new').textContent =
-        `${promoterName(promoterCode)} · ${lastGenerated.length} códigos\n\n` + lastGenerated.map(i => i.code).join('\n');
+        `${promoterName(promoterCode)} · ${lastGenerated.length} códigos nuevos\n\n` + inviteMessages(lastGenerated);
       document.getElementById('codes-new-wrap').style.display = 'block';
       renderCodigos();
     } catch(e) { alert('Error de conexión.'); }
     finally { btn.disabled = false; btn.textContent = 'Generar'; }
   };
+  document.getElementById('codes-copy-msg-btn').onclick = async function(){ await copyText(inviteMessages(lastGenerated)); flash(this); };
   document.getElementById('codes-copy-codes-btn').onclick = async function(){ await copyText(lastGenerated.map(i => i.code).join('\n')); flash(this); };
   document.getElementById('codes-copy-links-btn').onclick = async function(){ await copyText(lastGenerated.map(i => inviteLink(i.code)).join('\n')); flash(this); };
 

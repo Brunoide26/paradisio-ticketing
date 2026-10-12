@@ -4,7 +4,7 @@ const {
   PAID_CAP, isCortesiaSoldOut, listEventTickets, soldTableUnits,
 } = require('../lib/tickets');
 const {
-  getTicketTypes, TABLE_TYPES, TABLE_UNITS, FREE_ENTRY, DOOR_PRICE_SOLES, MAX_TICKETS_PER_ORDER,
+  getTicketTypes, TABLE_TYPES, TABLE_UNITS, TABLE_MAP, BOTELLAS_A_ELECCION, FREE_ENTRY, DOOR_PRICE_SOLES, MAX_TICKETS_PER_ORDER,
   TEST_SKU_ENABLED, TEST_SKU,
 } = require('../lib/catalog');
 const { CURRENT_EVENT_ID } = require('../lib/events');
@@ -57,6 +57,8 @@ module.exports = async (req, res) => {
       tickets,
       maxTicketsPerOrder: MAX_TICKETS_PER_ORDER,
       tables: {
+        map: TABLE_MAP,
+        bottles: BOTELLAS_A_ELECCION,
         types: PAYMENTS_ENABLED ? TABLE_TYPES : [],
         units: PAYMENTS_ENABLED ? TABLE_UNITS.map((u) => ({ ...u, sold: sold.has(u.id) })) : [],
       },

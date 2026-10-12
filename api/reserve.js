@@ -70,7 +70,7 @@ module.exports = async (req, res) => {
           currency_code: 'PEN',
           email: h.email,
           source_id: token,
-          description: `Paradisio - ${unit.typeInfo.name} ${unit.id}`.slice(0, 80),
+          description: `Paradisio - ${unit.typeInfo.name} ${unit.label || unit.id}`.slice(0, 80),
         }),
       });
       culqiData = await culqiRes.json();
@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
       type: 'table',
       amount: chargeCents / 100,
       sku: unit.typeInfo.type,
-      skuLabel: `${unit.typeInfo.name} ${unit.id} · ${unit.typeInfo.people} personas`,
+      skuLabel: `${unit.typeInfo.name} · ${unit.label || unit.id} · ${unit.typeInfo.people} personas`,
       unitId: unit.id,
       partySize: unit.typeInfo.people,
       promoterCode: promoter ? promoter.code : null,

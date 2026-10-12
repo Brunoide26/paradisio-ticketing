@@ -278,7 +278,7 @@
         }
         return;
       }
-      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : d.ticket.type === 'table' ? 'MESA ' + (d.ticket.unitId || '') + ' · ' + (d.ticket.partySize || 1) + ' PERSONAS' : d.ticket.type === 'promo' ? 'FREE ENTRY' : 'CORTESÍA';
+      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : d.ticket.type === 'table' ? String(d.ticket.skuLabel || ('Mesa ' + (d.ticket.unitId || ''))).toUpperCase() : d.ticket.type === 'promo' ? 'FREE ENTRY' : 'CORTESÍA';
       if(d.ticket.lateEntry){
         showOverlay('ok', d.ticket.lateCharged ? 'DESPUÉS DE HORA · PAGÓ' : 'DESPUÉS DE HORA · GRATIS', 'INGRESO REGISTRADO', d.ticket.name + ' — ' + docLabel(d.ticket));
       } else {

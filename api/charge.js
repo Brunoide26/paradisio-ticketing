@@ -1,37 +1,62 @@
-const { getCounters, createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP, getClientIp, qrDataUrl, EVENT_DATE_LABEL } = require('../lib/tickets');
+const {
+  createTicket, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP,
+  getClientIp, qrDataUrl, listEventTickets, EVENT_DATE_LABEL,
+} = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
-const { findPaidSku } = require('../lib/catalog');
+const { findTicketType, MAX_TICKETS_PER_ORDER } = require('../lib/catalog');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 const { resolveActivePromoter, applyDiscount } = require('../lib/promoters');
 
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
 
+// Compra de entradas pagadas. Un carrito puede mezclar tipos (p. ej. 2 Early
+// + 1 General); cada entrada es nominal (un asistente por entrada) y todo se
+// cobra en UN solo cargo de Culqi. Precio y cupos salen siempre del catálogo
+// del servidor, nunca del navegador.
+//
+// body: { token, items: [{ sku, qty }], assistants: [{ sku, nombre, apellido,
+//         tipoDocumento, numeroDocumento, dob, email }], ref }
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   if (!PAYMENTS_ENABLED) return res.status(403).json({ error: 'payments_disabled' });
 
   try {
-    const { token, sku: skuId, assistants, promoterCode } = req.body || {};
-
-    // Price and headcount are always read from the current window's catalog,
-    // never from the client — a stale/forged sku id (wrong window, wrong price)
-    // simply fails to resolve here.
-    const sku = findPaidSku(skuId);
-    if (!sku) return res.status(403).json({ error: 'sales_closed' });
-    const qty = sku.qty;
-
-    if (!token || !Array.isArray(assistants) || assistants.length !== qty) {
+    const { token, items, assistants, ref } = req.body || {};
+    if (!token || !Array.isArray(items) || !Array.isArray(assistants)) {
       return res.status(400).json({ error: 'missing_fields' });
     }
 
+    // Resolver el carrito contra el catálogo vigente.
+    const lines = [];
+    for (const it of items) {
+      const type = findTicketType(it && it.sku);
+      const qty = parseInt(it && it.qty, 10);
+      if (!type) return res.status(403).json({ error: 'sales_closed', sku: it && it.sku });
+      if (!qty || qty < 1) return res.status(400).json({ error: 'invalid_qty' });
+      lines.push({ type, qty });
+    }
+    const totalQty = lines.reduce((s, l) => s + l.qty, 0);
+    if (!totalQty || totalQty > MAX_TICKETS_PER_ORDER) return res.status(400).json({ error: 'invalid_qty' });
+    if (assistants.length !== totalQty) return res.status(400).json({ error: 'missing_fields' });
+
+    // Cada asistente debe pertenecer a una línea, en la cantidad exacta.
+    const perSku = new Map(lines.map((l) => [l.type.sku, l.qty]));
+    for (const a of assistants) {
+      const left = perSku.get(a && a.sku);
+      if (!left) return res.status(400).json({ error: 'missing_fields' });
+      perSku.set(a.sku, left - 1);
+    }
+
     const cleaned = assistants.map((a) => ({
-      nombre: (a?.nombre || '').trim(),
-      apellido: (a?.apellido || '').trim(),
-      tipoDocumento: a?.tipoDocumento,
-      numeroDocumento: (a?.numeroDocumento || '').trim(),
-      dob: a?.dob || '',
-      email: (a?.email || '').trim(),
+      sku: a.sku,
+      nombre: String(a.nombre || '').trim(),
+      apellido: String(a.apellido || '').trim(),
+      tipoDocumento: a.tipoDocumento,
+      numeroDocumento: String(a.numeroDocumento || '').trim().toUpperCase(),
+      dob: String(a.dob || ''),
+      email: String(a.email || '').trim().toLowerCase(),
+      phone: String(a.phone || '').replace(/[^\d+]/g, ''),
     }));
 
     for (let i = 0; i < cleaned.length; i++) {
@@ -39,88 +64,79 @@ module.exports = async (req, res) => {
       if (!a.nombre || !a.apellido || !TIPO_DOCUMENTO.includes(a.tipoDocumento) || !a.numeroDocumento || !a.dob) {
         return res.status(400).json({ error: 'missing_fields', index: i });
       }
-      if (!isValidNamePart(a.nombre) || !isValidNamePart(a.apellido)) {
-        return res.status(400).json({ error: 'invalid_name', index: i });
-      }
-      if (!isValidDocument(a.numeroDocumento, a.tipoDocumento)) {
-        return res.status(400).json({ error: 'invalid_document', index: i });
-      }
-      if (i === 0 && !a.email) {
-        return res.status(400).json({ error: 'missing_buyer_email' });
+      if (!isValidNamePart(a.nombre) || !isValidNamePart(a.apellido)) return res.status(400).json({ error: 'invalid_name', index: i });
+      if (!isValidDocument(a.numeroDocumento, a.tipoDocumento)) return res.status(400).json({ error: 'invalid_document', index: i });
+      if (i === 0 && !a.email) return res.status(400).json({ error: 'missing_buyer_email' });
+      if (i === 0) {
+        const digits = a.phone.replace(/\D/g, '');
+        if (digits.length < 7 || digits.length > 15) return res.status(400).json({ error: 'invalid_phone', index: 0 });
       }
       if (a.email) {
         const emailCheck = await validateEmail(a.email);
-        if (!emailCheck.ok) {
-          return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason, index: i });
-        }
+        if (!emailCheck.ok) return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason, index: i });
       }
       const age = calcAge(a.dob);
-      if (age === null || age < 18) {
-        return res.status(403).json({ error: 'underage', index: i });
+      if (age === null || age < 18) return res.status(403).json({ error: 'underage', index: i });
+    }
+    const docKeys = cleaned.map((a) => a.numeroDocumento.toLowerCase());
+    if (new Set(docKeys).size !== docKeys.length) return res.status(400).json({ error: 'duplicate_document' });
+
+    // Cupos: global de pagadas de la fecha y, si el tipo tiene, su propio cupo.
+    const sold = (await listEventTickets()).filter((t) => t.type === 'paid' && !t.voided);
+    if (sold.length + totalQty > PAID_CAP) return res.status(409).json({ error: 'sold_out' });
+    for (const l of lines) {
+      if (l.type.cap != null) {
+        const soldOfType = sold.filter((t) => t.sku === l.type.sku).length;
+        if (soldOfType + l.qty > l.type.cap) return res.status(409).json({ error: 'sold_out', sku: l.type.sku });
       }
     }
 
-    const docKeys = cleaned.map((a) => a.numeroDocumento.trim().toLowerCase());
-    const hasDuplicateDoc = new Set(docKeys).size !== docKeys.length;
-    if (hasDuplicateDoc) {
-      return res.status(400).json({ error: 'duplicate_document' });
-    }
-
-    const buyer = cleaned[0];
-
-    const counters = await getCounters();
-    if ((counters.paid || 0) + qty > PAID_CAP) return res.status(409).json({ error: 'sold_out' });
-
-    const skuLabel = `${sku.tier} ${sku.name}`;
-
-    // The discount is resolved and applied here, server-side, from the sku's
-    // own price — never from a client-supplied amount. An unknown/inactive
-    // code silently charges full price rather than blocking the purchase.
-    const promoter = promoterCode ? await resolveActivePromoter(promoterCode) : null;
-    const { subtotalCents, discountCents, totalCents } = applyDiscount(sku.price);
+    const subtotalSoles = lines.reduce((s, l) => s + l.type.price * l.qty, 0);
+    const promoter = ref ? await resolveActivePromoter(ref) : null;
+    const { subtotalCents, discountCents, totalCents } = applyDiscount(subtotalSoles);
     const chargeCents = promoter ? totalCents : subtotalCents;
     const appliedDiscountCents = promoter ? discountCents : 0;
 
-    // Charge the card server-side ONCE for the full bundle amount, using the Culqi
-    // secret key — a Culqi token is single-use, so multi-ticket orders must be one
-    // charge, not one per ticket. Culqi amounts are in cents ("céntimos").
+    const buyer = cleaned[0];
+    const skuLabel = lines.map((l) => (l.qty > 1 ? `${l.type.name} ×${l.qty}` : l.type.name)).join(' · ');
+
     const culqiRes = await fetch('https://api.culqi.com/v2/charges', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.CULQI_SECRET_KEY}`,
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CULQI_SECRET_KEY}` },
       body: JSON.stringify({
         amount: chargeCents,
         currency_code: 'PEN',
         email: buyer.email,
         source_id: token,
-        description: `Paradisio - Entrada ${skuLabel}`,
+        description: `Paradisio - ${skuLabel}`.slice(0, 80),
       }),
     });
-
     const culqiData = await culqiRes.json();
-
     if (!culqiRes.ok) {
       console.error('Culqi charge failed:', culqiData);
       return res.status(402).json({ error: 'payment_failed', detail: culqiData.user_message || culqiData.merchant_message });
     }
 
-    // Payment succeeded -> issue one nominal ticket per assistant, grouped under one order.
-    const chargedSoles = chargeCents / 100;
+    // Monto por entrada = su precio menos su parte del descuento.
+    const factor = subtotalCents ? chargeCents / subtotalCents : 1;
+    const priceOf = (sku) => Math.round(lines.find((l) => l.type.sku === sku).type.price * factor * 100) / 100;
+
     const { id: orderId, token: orderToken } = reserveOrderIdentity();
     const ip = getClientIp(req);
     const tickets = [];
     for (const a of cleaned) {
+      const type = lines.find((l) => l.type.sku === a.sku).type;
       const t = await createTicket({
         name: `${a.nombre} ${a.apellido}`.trim(),
         email: a.email,
+        phone: a === buyer ? a.phone : '',
         dni: a.numeroDocumento,
         docType: a.tipoDocumento,
         dob: a.dob,
         type: 'paid',
-        amount: chargedSoles,
-        skuLabel,
+        amount: priceOf(a.sku),
+        sku: type.sku,
+        skuLabel: type.name,
         orderId,
         ip,
         promoterCode: promoter ? promoter.code : null,
@@ -135,29 +151,31 @@ module.exports = async (req, res) => {
       buyerName: `${buyer.nombre} ${buyer.apellido}`.trim(),
       buyerEmail: buyer.email,
       ticketIds: tickets.map((t) => t.id),
-      amount: chargedSoles,
-      qty,
+      amount: chargeCents / 100,
+      qty: totalQty,
       skuLabel,
       promoterCode: promoter ? promoter.code : null,
-      subtotal: sku.price,
+      subtotal: subtotalSoles,
       discountAmount: appliedDiscountCents / 100,
     });
 
     try {
       await Promise.all([
         ...tickets.filter((t) => t.email).map((t) => sendTicketEmail(t)),
-        sendOrderEmail(order, tickets),
+        tickets.length > 1 ? sendOrderEmail(order, tickets) : Promise.resolve(),
       ]);
     } catch (emailErr) {
       console.error('Email send failed:', emailErr);
     }
 
-    // The confirmation screen shows the QR immediately instead of sending the
-    // buyer to /orden to see it — same qrDataUrl already used everywhere else
-    // a ticket's QR is rendered.
-    const ticketsWithQr = await Promise.all(tickets.map(async (t) => ({ ...t, qr: await qrDataUrl(t.id) })));
-
-    return res.status(200).json({ order, tickets: ticketsWithQr, eventDateLabel: EVENT_DATE_LABEL });
+    const ticketsWithQr = await Promise.all(tickets.map(async (t) => ({
+      id: t.id, name: t.name, token: t.token, skuLabel: t.skuLabel, qr: await qrDataUrl(t.id),
+    })));
+    return res.status(200).json({
+      order: { id: order.id, token: order.token, amount: order.amount, qty: order.qty },
+      tickets: ticketsWithQr,
+      eventDateLabel: EVENT_DATE_LABEL,
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'server_error' });

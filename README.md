@@ -1,26 +1,20 @@
 # Paradisio — sistema de tickets
 
-## Modo actual: solo promotoría (códigos de un solo uso)
+## Modo actual: página de evento (free entry + entradas + mesas)
 
-Ya no hay venta ni landing. `paradisioclub.com` abre directo la pantalla de **ingresar código**:
+`paradisioclub.com` es la página de **Paradisio by Jägermeister** (formato tipo WHAN/Discofobia): flyer, fecha, lugar con "Cómo llegar", y tres bloques de compra.
 
-1. El invitado escribe el código que le pasó su promotor (o entra por `paradisioclub.com/?c=CODIGO`, que lo trae puesto).
-2. Llena: nombre, apellido, DNI, fecha de nacimiento, correo, número e Instagram (+ casilla de 18+ y términos/privacidad).
-3. Recibe su QR en pantalla y por correo. El código queda quemado.
+1. **Free entry (lista):** la persona se apunta con nombre, apellidos, correo, DNI, fecha de nacimiento, celular e Instagram. **No recibe QR al toque**: ve "Gracias por registrarte, tu invitación será aprobada y enviada días previos al evento". Válido hasta las 11 p.m. (`PROMO_VALIDITY_LABEL` / `PROMO_ENTRY_CUTOFF`).
+2. **Entradas pagadas:** selector +/− por tipo, barra fija con el total, datos nominales por asistente y pago con tarjeta (Culqi). El QR sale en pantalla y por correo.
+3. **Mesas y boxes:** "Ver mapa" abre el plano; se elige una mesa (en el mapa o por tipo), se ponen los datos del titular y se paga. La mesa queda tomada con un candado atómico antes de cobrar (no se vende dos veces). Un solo QR para todo el grupo; el scanner muestra "MESA X · N PERSONAS".
 
-- **Dar códigos:** `/admin` → pestaña **Promotores** → "Dar códigos" en la fila del promotor (o elegirlo arriba) + cantidad → Generar. Se copian como códigos, links, o un mensaje por invitado listo para WhatsApp.
-- **Promotores nuevos:** se agregan desde esa misma pestaña ("Agregar promotor"), sin redeploy. El código del promotor sale de su primer nombre.
-- **Por promotor se ve:** códigos dados, QRs sacados, sin usar, ingresaron, antes de las 11, después de las 11 (pagó / gratis) y % de asistencia. La pestaña **Códigos** lista cada código con su estado.
-- **Puerta después de las 11:** el scanner muestra "DESPUÉS DE HORA" con dos botones, **Pagó entrada** o **Entra gratis**. Los dos registran el ingreso y cuentan para el promotor.
-- Cada código es de **una sola persona** y queda atribuido al promotor. Un mismo DNI o correo no puede sacar dos entradas.
-- Códigos libres se pueden **revocar**; para invalidar una entrada ya canjeada, se anula el ticket como siempre.
-- Las entradas salen como tipo `promo` ("Invitación"). **QR válido hasta las 11:00 p.m.**: después de esa hora el scanner las rechaza como QR EXPIRADO, con el mismo botón "Dejar entrar igual" de la cortesía.
-- Fecha actual (por defecto en código): sábado 17 de octubre, 10 PM, Catalino Miranda 162 - Barranco (`EVENT_ADDRESS`, con link a Google Maps). Para la próxima fecha se pisan con variables en Vercel: `EVENT_NAME`, `EVENT_DATE_LABEL`, `EVENT_SHORT_DATE`, `EVENT_DATE_ISO` (filtro +18), `EMAIL_SUBJECT`, `PROMO_VALIDITY_LABEL` y `PROMO_ENTRY_CUTOFF` (ISO con offset, ej. `2026-10-17T23:00:00-05:00`).
-- Estética: script blanco (`logo-script-white.png`) + CLUB en rojo, Bodoni Moda + Jost autoalojadas en `/fonts`. Portada, `/entrada` y correo del QR comparten este estilo.
-- Los links viejos `/p/NOMBRE` redirigen a la portada.
-- **Todo va por fecha.** Cada ticket y código se guarda con su fecha (`eventId` = `EVENT_DATE_ISO`). El admin tiene un selector de fecha arriba: tickets, promotores, códigos, puerta y CSV muestran solo esa fecha. La fecha actual es donde entran los QRs nuevos; las pasadas quedan de consulta.
-- **Nueva fecha:** cambiar `EVENT_DATE_ISO`, `EVENT_NAME` (y textos de fecha/dirección/horario) en Vercel o en los defaults de `lib/events.js` + `lib/tickets.js`. Todo arranca en cero; los códigos sobrantes de la fecha anterior dejan de servir.
-- **En puerta** se rechaza cualquier QR de otra fecha ("QR DE OTRA FECHA"), aunque esté vigente y sin usar.
+- **Links de promotores:** cada promotor tiene `paradisioclub.com/?ref=CODIGO` (o `/p/CODIGO`). Todo lo que saque esa persona —free entry, entradas y mesas— queda a su nombre (el ref se recuerda 7 días en el navegador). Se copian desde `/admin` → Promotores → "Copiar link" o "Copiar todos los links". Descuento por link: apagado (`PROMOTER_DISCOUNT_RATE`, ej. `0.10`).
+- **Enviar los QRs del free entry:** `/admin` → "Enviar QRs pendientes (N)". Se mandan en tandas y eso aprueba cada registro. Para rechazar a alguien, anula su registro antes de enviar. Un registro pendiente es rechazado en puerta ("NO APROBADO"). Abrir / cerrar la lista: botones de la misma tarjeta.
+- **Probar un pago real antes de abrir la venta:** poner `TEST_SKU_ENABLED=true` en Vercel, entrar a `paradisioclub.com/?qa=1` y comprar la entrada "Prueba interna" de S/1 con una tarjeta real. Llega el QR por correo y aparece en el admin. Después borrar la variable.
+- **Plano y reservas:** el mapa es el plano del local redibujado en vector (`planSvg` en `index.html`). Box 5 y 6 = **Box Paradisio** (10 personas, junto al DJ booth); Box 1 a 4 = **Box After Hours** (8 personas); 6 **Mesas** (6 personas) repartidas. Las posiciones de las mesas están en `TABLE_UNITS` (en % del plano).
+- **Precios, cupos, mesas y mapa:** `lib/catalog.js` (o variables `TICKET_TYPES_JSON`, `TABLE_TYPES_JSON`, `TABLE_UNITS_JSON` en Vercel). El servidor siempre cobra lo de ese archivo.
+- **Fecha:** igual que antes (`EVENT_DATE_ISO`, `EVENT_NAME`, `EVENT_DATE_LABEL`, `EVENT_SHORT_DATE`, `EVENT_ADDRESS`, `PROMO_ENTRY_CUTOFF`…). Todo va por fecha en el admin.
+- **La fecha del 17/10 se movió al sábado 24/10.** Todo lo emitido para el 17 (QRs canjeados con código, códigos y stats de promotores) cuenta como del 24 y esos QRs siguen entrando (`MOVED_EVENTS` en `lib/events.js`). Su correo decía 17: reenviarlo desde el admin ("Reenviar QR") manda la fecha nueva.
 
 ---
 

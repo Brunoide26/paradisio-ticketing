@@ -1,78 +1,85 @@
-const { createTicket, sendTicketEmail, qrDataUrl, calcAge, isCortesiaSoldOut, findConflictingFreeTicket, getClientIp, EVENT_DATE_LABEL } = require('../lib/tickets');
+const {
+  createTicket, calcAge, isCortesiaSoldOut, findConflictingFreeTicket, getClientIp, PROMO_VALIDITY_LABEL,
+} = require('../lib/tickets');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
-const { isCortesiaDateOpen } = require('../lib/catalog');
+const { FREE_ENTRY } = require('../lib/catalog');
 const { resolveActivePromoter } = require('../lib/promoters');
 
+// "@usuario", "usuario", "instagram.com/usuario/" -> "usuario"
+function cleanInstagram(raw) {
+  let v = String(raw || '').trim();
+  v = v.replace(/^https?:\/\//i, '').replace(/^(www\.)?instagram\.com\//i, '');
+  v = v.split(/[/?#]/)[0].replace(/^@+/, '');
+  return v.toLowerCase();
+}
+const INSTAGRAM_RE = /^[a-z0-9._]{1,30}$/;
+
+function cleanPhone(raw) {
+  return String(raw || '').replace(/[^\d+]/g, '');
+}
+
+// Registro de Free Entry. NO entrega QR: el registro queda pendiente
+// (type 'promo', pending: true) y el QR se manda desde el admin días antes
+// del evento ("Enviar QRs"). Queda atribuido al promotor del link (?ref=).
+//
+// Abrir / cerrar el registro: el mismo control manual de cortesías del admin.
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
-  if (!isCortesiaDateOpen()) return res.status(403).json({ error: 'cortesia_closed' });
 
   try {
-    const { nombre, apellido, phone, email, tipoDocumento, dni, dob, promoterCode } = req.body || {};
-    // Cortesía is one per person — fixed at qty 1, regardless of what the client sends.
-    const qty = 1;
-    if (!nombre || !apellido || !phone || !email || !tipoDocumento || !dni || !dob) {
+    const body = req.body || {};
+    const nombre = String(body.nombre || '').trim();
+    const apellido = String(body.apellido || '').trim();
+    const dni = String(body.dni || '').trim().toUpperCase();
+    const dob = String(body.dob || '').trim();
+    const email = String(body.email || '').trim().toLowerCase();
+    const phone = cleanPhone(body.phone);
+    const instagram = cleanInstagram(body.instagram);
+
+    if (!nombre || !apellido || !dni || !dob || !email || !phone || !instagram) {
       return res.status(400).json({ error: 'missing_fields' });
     }
-
-    if (!['DNI', 'CE', 'Pasaporte'].includes(tipoDocumento)) {
-      return res.status(400).json({ error: 'invalid_document' });
-    }
-    if (!isValidNamePart(nombre) || !isValidNamePart(apellido)) {
-      return res.status(400).json({ error: 'invalid_name' });
-    }
-    if (!isValidDocument(dni, tipoDocumento)) {
-      return res.status(400).json({ error: 'invalid_document' });
-    }
-
-    const emailCheck = await validateEmail(email);
-    if (!emailCheck.ok) {
-      return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason });
-    }
+    if (!body.accepted) return res.status(400).json({ error: 'not_accepted' });
+    if (!isValidNamePart(nombre) || !isValidNamePart(apellido)) return res.status(400).json({ error: 'invalid_name' });
+    if (!isValidDocument(dni)) return res.status(400).json({ error: 'invalid_document' });
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 7 || digits.length > 15) return res.status(400).json({ error: 'invalid_phone' });
+    if (!INSTAGRAM_RE.test(instagram)) return res.status(400).json({ error: 'invalid_instagram' });
 
     const age = calcAge(dob);
-    if (age === null || age < 18) {
-      return res.status(403).json({ error: 'underage' });
-    }
+    if (age === null) return res.status(400).json({ error: 'invalid_dob' });
+    if (age < 18) return res.status(403).json({ error: 'underage' });
 
-    const name = `${nombre.trim()} ${apellido.trim()}`.trim();
+    if (await isCortesiaSoldOut()) return res.status(409).json({ error: 'closed' });
 
-    // Email and document must be unique among active Cortesía tickets — this uniqueness
-    // never crosses into paid tickets, which are a separate product.
-    const conflict = await findConflictingFreeTicket(email, dni);
+    const emailCheck = await validateEmail(email);
+    if (!emailCheck.ok) return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason });
+
+    // Un registro por persona en la fecha (mismo DNI o correo).
+    const conflict = await findConflictingFreeTicket(email, dni, 'promo');
     if (conflict) {
-      const field = conflict.email.trim().toLowerCase() === email.trim().toLowerCase() ? 'email' : 'dni';
-      return res.status(409).json({ error: 'free_already_claimed', field });
+      const field = (conflict.email || '').trim().toLowerCase() === email ? 'email' : 'dni';
+      return res.status(409).json({ error: 'already_registered', field });
     }
 
-    // Same shared check api/config.js uses for cortesiaState -- one source of
-    // truth, and it latches permanently sold out once FREE_CAP is reached
-    // (see isCortesiaSoldOut in lib/tickets.js), so a voided ticket freeing a
-    // slot later doesn't silently let registration reopen on its own.
-    if (await isCortesiaSoldOut()) return res.status(409).json({ error: 'sold_out' });
+    // Un ref desconocido o inactivo no bloquea: queda sin promotor.
+    const promoter = body.ref ? await resolveActivePromoter(body.ref) : null;
 
-    // Cortesía never discounts (it's already free) — a code here is
-    // attribution-only, so an unknown/inactive code is silently dropped
-    // rather than blocking the registration.
-    const promoter = promoterCode ? await resolveActivePromoter(promoterCode) : null;
+    await createTicket({
+      name: `${nombre} ${apellido}`,
+      phone, email, dni, dob,
+      docType: /^\d{8}$/.test(dni) ? 'DNI' : 'CE/Pasaporte',
+      type: 'promo',
+      amount: 0,
+      skuLabel: FREE_ENTRY.name,
+      promoterCode: promoter ? promoter.code : null,
+      instagram,
+      pending: true,
+      ip: getClientIp(req),
+    });
 
-    const ip = getClientIp(req);
-    const tickets = [];
-    for (let i = 0; i < qty; i++) {
-      tickets.push(await createTicket({ name, phone, email, dni, docType: tipoDocumento, dob, type: 'free', amount: 0, ip, promoterCode: promoter ? promoter.code : null }));
-    }
-
-    // Send email(s), but don't fail the request if email delivery has an issue —
-    // the person still gets their QR(s) on screen either way.
-    try {
-      await Promise.all(tickets.map((t) => sendTicketEmail(t)));
-    } catch (emailErr) {
-      console.error('Email send failed:', emailErr);
-    }
-
-    const qrs = await Promise.all(tickets.map((t) => qrDataUrl(t.id)));
-    return res.status(200).json({ ticket: tickets[0], qr: qrs[0], tickets, qrs, eventDateLabel: EVENT_DATE_LABEL });
+    return res.status(200).json({ ok: true, validityLabel: PROMO_VALIDITY_LABEL });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'server_error' });

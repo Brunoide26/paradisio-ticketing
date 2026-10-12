@@ -12,7 +12,7 @@
 - **Enviar los QRs del free entry:** `/admin` → "Enviar QRs pendientes (N)". Se mandan en tandas y eso aprueba cada registro. Para rechazar a alguien, anula su registro antes de enviar. Un registro pendiente es rechazado en puerta ("NO APROBADO"). Abrir / cerrar la lista: botones de la misma tarjeta.
 - **Precios, cupos, mesas y mapa:** `lib/catalog.js` (o variables `TICKET_TYPES_JSON`, `TABLE_TYPES_JSON`, `TABLE_UNITS_JSON` en Vercel). El servidor siempre cobra lo de ese archivo.
 - **Fecha:** igual que antes (`EVENT_DATE_ISO`, `EVENT_NAME`, `EVENT_DATE_LABEL`, `EVENT_SHORT_DATE`, `EVENT_ADDRESS`, `PROMO_ENTRY_CUTOFF`…). Todo va por fecha en el admin.
-- Los códigos de un solo uso del 17/10 quedan como consulta en la pestaña "Códigos (fechas pasadas)".
+- **La fecha del 17/10 se movió al sábado 24/10.** Todo lo emitido para el 17 (QRs canjeados con código, códigos y stats de promotores) cuenta como del 24 y esos QRs siguen entrando (`MOVED_EVENTS` en `lib/events.js`). Su correo decía 17: reenviarlo desde el admin ("Reenviar QR") manda la fecha nueva.
 
 ---
 

@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Paradisio</title>
-<meta name="description" content="Paradisio Club — Latin after disco, after hours. 17 de octubre, Barranco." />
+<title>Paradisio by Jägermeister</title>
+<meta name="description" content="Paradisio by Jägermeister. Disco, house, italo y dance en Barranco. Free entry hasta las 11 p.m., entradas y mesas." />
 
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paradisioclub.com/" />
-<meta property="og:title" content="Paradisio" />
-<meta property="og:description" content="Ingresa tu código y obtén tu QR." />
+<meta property="og:title" content="Paradisio by Jägermeister" />
+<meta property="og:description" content="Free entry hasta las 11 p.m. Entradas y mesas." />
 <meta property="og:image:alt" content="Paradisio" />
 <meta property="og:image" content="https://paradisioclub.com/og-paradisio.png" />
 <meta property="og:image:width" content="1200" />
@@ -23,7 +23,7 @@
 <link rel="shortcut icon" href="/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/site.webmanifest" />
-<meta name="theme-color" content="#0A0909" />
+<meta name="theme-color" content="#000000" />
 
 <link rel="preload" href="/fonts/Jost.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/fonts/BodoniModa.woff2" as="font" type="font/woff2" crossorigin />
@@ -32,492 +32,997 @@
   @font-face { font-family:'Bodoni Moda'; src:url('/fonts/BodoniModa-Italic.woff2') format('woff2'); font-weight:400 900; font-style:italic; font-display:swap; }
   @font-face { font-family:'Jost'; src:url('/fonts/Jost.woff2') format('woff2'); font-weight:100 900; font-style:normal; font-display:swap; }
   :root {
-    --bg:#000000; --ink:#F4F0EA; --muted:#A9A39A; --faint:#4A4643;
-    --red:#E2361F; --line:rgba(244,240,234,0.26);
+    --bg:#000000; --card:#0E0D0D; --card-2:#151413; --ink:#F4F0EA; --muted:#A9A39A; --faint:#5F5A55;
+    --red:#E2361F; --red-hover:#F2552F; --line:rgba(244,240,234,0.14); --line-strong:rgba(244,240,234,0.34);
     --serif:'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
     --sans:'Jost', 'Futura', system-ui, sans-serif;
+    --gut:18px;
   }
   *, *::before, *::after { box-sizing:border-box; }
   html { -webkit-text-size-adjust:100%; }
   body {
-    margin:0; min-height:100vh; min-height:100svh;
-    background:var(--bg); color:var(--ink);
-    font-family:var(--sans); font-weight:400; font-size:15px; line-height:1.65;
-    -webkit-font-smoothing:antialiased;
-    display:flex; flex-direction:column;
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); font-weight:400; font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   }
+  body.sheet-open { overflow:hidden; }
   a { color:inherit; }
-  button, input { font:inherit; }
+  button, input, select { font:inherit; color:inherit; }
+  img { display:block; max-width:100%; }
 
-  /* Etiquetas: sans fino, mayúsculas, muy espaciado -- como el flyer. */
-  .pd-cap {
-    font-family:var(--sans); font-weight:500; font-size:11px;
-    letter-spacing:.3em; text-transform:uppercase; margin:0;
+  .cap { font-family:var(--sans); font-weight:500; font-size:11px; letter-spacing:.26em; text-transform:uppercase; margin:0; }
+  .cap.red { color:var(--red); }
+  .cap.muted { color:var(--muted); }
+
+  /* ---------- top ---------- */
+  .top { position:sticky; top:0; z-index:20; height:54px; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.84); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+  .top img { height:24px; width:auto; }
+
+  /* ---------- layout: 1 columna en móvil, flyer + info en desktop ---------- */
+  .page { position:relative; max-width:1080px; margin:0 auto; }
+  .backdrop { display:none; }
+  .grid { display:block; }
+  @media (min-width:900px) {
+    .backdrop { display:block; position:fixed; inset:0; z-index:-1; background:url('/hero-photo.jpg') center/cover; filter:blur(40px) brightness(.25) saturate(.6); transform:scale(1.15); }
+    .grid { display:grid; grid-template-columns:400px 1fr; gap:56px; padding:40px 32px 0; align-items:start; }
+    .side { position:sticky; top:94px; }
   }
-  .pd-cap.is-muted { color:var(--muted); }
 
-  /* ---------- marca ---------- */
-  /* Igual que la pantalla de coming soon: logo rojo sobre negro puro. */
-  .pd-brand { padding:clamp(40px, 8vh, 72px) 24px 0; text-align:center; }
-  .pd-logo { width:min(56vw, 300px); height:auto; display:inline-block; }
-  body.is-landing { justify-content:center; }
-  body.is-landing .pd-brand { padding-top:0; }
-  body.is-landing .pd-logo { width:min(72vw, 620px); }
-  body.is-landing main { flex:0; padding-top:clamp(30px, 6vh, 56px); }
+  /* ---------- flyer ---------- */
+  .flyer { position:relative; aspect-ratio:1 / 1; overflow:hidden; background:#050505; }
+  .flyer-photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:35% 50%; filter:grayscale(.3) contrast(1.05) brightness(.6); }
+  .flyer::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,.88) 100%); }
+  .flyer-inner { position:absolute; left:0; right:0; bottom:0; z-index:1; padding:0 22px 24px; text-align:center; }
+  .flyer-logo { width:66%; margin:0 auto; }
+  @media (min-width:900px) { .flyer-logo { width:82%; } }
+  .flyer-by { font-family:var(--serif); font-style:italic; font-size:22px; margin:0; }
+  .flyer-date { margin-top:14px; }
+  .flyer.has-image .flyer-photo { filter:none; }
+  .flyer.has-image::after, .flyer.has-image .flyer-inner { display:none; }
 
-  main { flex:1; display:flex; justify-content:center; padding:clamp(36px, 6vh, 64px) 24px 72px; }
-  .pd-step { width:100%; max-width:460px; display:none; text-align:center; }
-  .pd-step.is-active { display:block; }
-  #step-form { max-width:560px; }
+  .side-extra { padding:16px var(--gut) 0; }
+  @media (min-width:900px) { .side-extra { padding:16px 0 0; } .flyer { aspect-ratio:4 / 5; } .m-extra { display:none; } }
+  @media (max-width:899px) { .side-extra { display:none; } .m-extra { margin-top:16px; } }
+  .about-short { color:var(--muted); margin:0; font-size:14px; }
+  .pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border:1px solid var(--line-strong); font-size:12px; letter-spacing:.06em; }
+  .pill.solid { background:var(--ink); color:#0A0909; border-color:var(--ink); font-weight:500; }
 
-  .pd-title {
-    font-family:var(--serif); font-weight:500; font-size:clamp(34px, 7vw, 46px);
-    line-height:1.08; letter-spacing:-.005em; margin:0;
+  /* ---------- cabecera del evento ---------- */
+  .main { padding:0 var(--gut); }
+  @media (min-width:900px) { .main { padding:0; } }
+  .when { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 0 0; }
+  .when p { margin:0; font-weight:500; font-size:15px; }
+  .when p span { color:var(--muted); font-weight:400; }
+  .share { background:none; border:none; padding:6px 0; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--ink); text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--faint); }
+  .share svg { width:16px; height:16px; }
+  .title { font-family:var(--serif); font-weight:500; font-size:clamp(34px, 9vw, 52px); line-height:1.02; margin:18px 0 0; letter-spacing:-.01em; }
+  .title em { font-style:italic; font-weight:400; font-size:.62em; display:block; margin-top:4px; }
+  .venue { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-top:16px; }
+  .venue p { margin:0; color:#DCD6CD; }
+  .pill-btn { display:inline-flex; align-items:center; gap:7px; padding:7px 14px; border:1px solid var(--line-strong); border-radius:999px; text-decoration:none; font-size:13px; }
+  .pill-btn:hover { border-color:var(--ink); }
+  .pill-btn svg { width:15px; height:15px; }
+  .ref-chip { display:none; margin-top:18px; padding:10px 14px; border-left:2px solid var(--red); background:var(--card); font-size:13px; color:var(--muted); }
+  .ref-chip strong { color:var(--ink); font-weight:500; }
+  .ref-chip.is-on { display:block; }
+
+  /* ---------- secciones de compra ---------- */
+  .sec { padding-top:38px; }
+  .sec-h { font-family:var(--sans); font-weight:600; font-size:17px; letter-spacing:.14em; text-transform:uppercase; margin:0 0 14px; }
+  .cards { display:grid; gap:10px; }
+  .card { display:grid; grid-template-columns:84px 1fr; background:var(--card); border:1px solid var(--line); transition:border-color .2s; }
+  .card.is-active { border-color:var(--ink); }
+  .card.is-off { opacity:.5; }
+  .card-l { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:16px 6px; border-right:1px solid var(--line); text-align:center; }
+  .card-l svg { width:28px; height:28px; color:var(--muted); }
+  .card-l .price { font-family:var(--serif); font-size:20px; line-height:1; white-space:nowrap; }
+  .card-l .from { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-bottom:-4px; }
+  .badge { padding:4px 9px; background:var(--ink); color:#0A0909; font-size:10.5px; font-weight:600; letter-spacing:.18em; }
+  .card-r { padding:14px 14px 14px 16px; min-width:0; }
+  .card-top { display:flex; justify-content:space-between; align-items:center; gap:10px; min-height:44px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+  .card-name { margin:0; font-weight:500; font-size:16px; letter-spacing:.01em; }
+  .card-name .tag { display:inline-block; margin-left:6px; padding:1px 6px; font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; border:1px solid var(--red); color:var(--red); vertical-align:2px; font-weight:500; }
+  .card-desc { margin:10px 0 0; color:var(--muted); font-size:13px; line-height:1.5; }
+
+  .btn {
+    appearance:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; flex:none;
+    background:transparent; color:var(--ink); border:1px solid var(--line-strong); border-radius:999px;
+    font-family:var(--sans); font-weight:500; font-size:11.5px; letter-spacing:.2em; text-transform:uppercase;
+    padding:10px 16px; text-decoration:none; transition:background .2s, color .2s, border-color .2s; white-space:nowrap;
   }
-  .pd-title em { font-style:italic; }
-  .pd-title .pd-sub { display:inline-block; font-size:.56em; margin-top:6px; }
-  .pd-lead { color:var(--muted); margin:14px auto 0; max-width:400px; font-size:13.5px; line-height:1.45; text-wrap:balance; }
+  .btn:hover:not(:disabled) { border-color:var(--ink); }
+  .btn:disabled { opacity:.4; cursor:default; }
+  .btn:focus-visible, .qty button:focus-visible, .unit:focus-visible, .share:focus-visible, .tcard:focus-visible { outline:1px solid var(--ink); outline-offset:3px; }
+  .btn-red { background:var(--red); border-color:var(--red); color:#0A0909; }
+  .btn-red:hover:not(:disabled) { background:var(--red-hover); border-color:var(--red-hover); }
+  .btn-block { display:flex; width:100%; padding:16px 20px; font-size:12px; }
 
-  /* ---------- código ---------- */
-  #step-code { max-width:340px; }
-  .pd-code-form { margin:0; }
-  .pd-code-input {
-    width:100%; background:transparent; color:var(--ink); text-align:center;
-    border:1px solid rgba(255,255,255,.34); border-radius:0; outline:none;
-    font-family:var(--sans); font-weight:300; text-transform:uppercase;
-    font-size:15px; letter-spacing:.42em; text-indent:.42em;
-    padding:18px 12px; transition:border-color .25s;
-  }
-  .pd-code-input::placeholder { color:rgba(255,255,255,.34); font-size:11px; letter-spacing:.42em; }
-  .pd-code-input:focus { border-color:rgba(255,255,255,.75); }
-  .pd-code-input.has-error { border-color:var(--red); }
-  #step-code .pd-btn { margin-top:14px; border-color:transparent; color:rgba(255,255,255,.55); font-weight:300; }
-  #step-code .pd-btn:hover:not(:disabled) { background:transparent; color:var(--ink); border-color:transparent; }
+  .qty { display:flex; align-items:center; gap:4px; }
+  .qty button { width:36px; height:36px; border-radius:50%; border:1px solid var(--line-strong); background:none; cursor:pointer; font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--ink); }
+  .qty button:hover:not(:disabled) { border-color:var(--ink); }
+  .qty button.plus { background:var(--ink); color:#0A0909; border-color:var(--ink); }
+  .qty button:disabled { opacity:.3; cursor:default; }
+  .qty output { min-width:26px; text-align:center; font-weight:500; font-size:16px; }
 
-  /* ---------- botones ---------- */
-  .pd-btn {
-    appearance:none; display:block; width:100%; margin-top:34px; cursor:pointer;
-    background:transparent; color:var(--ink); border:1px solid rgba(244,240,234,.55); border-radius:0;
-    font-family:var(--sans); font-weight:500; font-size:12px; letter-spacing:.32em; text-indent:.32em; text-transform:uppercase;
-    padding:18px 24px; text-align:center; text-decoration:none;
-    transition:background .25s, color .25s, border-color .25s;
-  }
-  .pd-btn:hover:not(:disabled) { background:var(--ink); color:var(--bg); border-color:var(--ink); }
-  .pd-btn:focus-visible { outline:1px solid var(--ink); outline-offset:4px; }
-  .pd-btn:disabled { opacity:.4; cursor:default; }
-  .pd-btn-quiet { border-color:transparent; color:var(--muted); margin-top:6px; }
-  .pd-btn-quiet:hover:not(:disabled) { background:transparent; color:var(--ink); border-color:transparent; }
-  .pd-link-btn {
-    background:none; border:none; padding:0; cursor:pointer; color:var(--muted);
-    font-size:11px; font-weight:500; letter-spacing:.24em; text-transform:uppercase;
-  }
-  .pd-link-btn:hover { color:var(--ink); }
+  .about { padding-top:42px; }
+  .about p { margin:0 0 12px; color:#D5CFC6; }
 
-  .pd-msg { min-height:20px; margin:16px 0 0; font-size:13px; color:var(--red); }
-  .pd-msg:empty { min-height:0; margin:0; }
-
-  /* ---------- formulario ---------- */
-  .pd-code-chip { display:inline-flex; align-items:center; gap:16px; margin-top:22px; }
-  .pd-code-chip span { font-weight:500; letter-spacing:.38em; font-size:13px; }
-  .pd-code-chip i { width:1px; height:12px; background:var(--faint); display:block; }
-
-  form.pd-fields {
-    display:grid; grid-template-columns:1fr 1fr; gap:30px 28px;
-    margin-top:46px; text-align:left;
-  }
-  @media (max-width:520px){ form.pd-fields { grid-template-columns:1fr; gap:26px; } }
-  .pd-field { display:flex; flex-direction:column; gap:4px; }
-  .pd-field.is-wide { grid-column:1 / -1; }
-  .pd-field label { font-size:11px; font-weight:500; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); }
-  .pd-input {
-    width:100%; background:transparent; color:var(--ink);
-    border:none; border-bottom:1px solid var(--line); border-radius:0;
-    padding:10px 0 9px; font-size:17px; font-weight:400; outline:none;
-    transition:border-color .25s; -webkit-appearance:none; appearance:none;
-  }
-  .pd-input:focus { border-bottom-color:var(--ink); }
-  .pd-input.has-error { border-bottom-color:var(--red); }
-  .pd-input::placeholder { color:var(--faint); }
-  input[type="date"].pd-input { color-scheme:dark; min-height:42px; }
-  .pd-prefix { position:relative; }
-  .pd-prefix > span { position:absolute; left:0; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
-  .pd-prefix .pd-input { padding-left:16px; }
-  .pd-err { font-size:12px; color:var(--red); margin:2px 0 0; }
-  .pd-err:empty { display:none; }
-
-  .pd-check { grid-column:1 / -1; display:flex; gap:14px; align-items:flex-start; font-size:14px; color:var(--muted); line-height:1.6; cursor:pointer; }
-  .pd-check input {
-    appearance:none; -webkit-appearance:none; flex:none; margin:3px 0 0;
-    width:15px; height:15px; border:1px solid var(--muted); background:transparent; cursor:pointer; border-radius:0;
-  }
-  .pd-check input:checked { background:var(--ink); border-color:var(--ink); }
-  .pd-check input:checked::after { content:''; display:block; width:4px; height:8px; margin:1px 0 0 4.5px; border:solid var(--bg); border-width:0 1.5px 1.5px 0; transform:rotate(45deg); }
-  .pd-check input:focus-visible { outline:1px solid var(--ink); outline-offset:3px; }
-  .pd-check a { text-underline-offset:3px; }
-  .pd-check a:hover { color:var(--ink); }
-  .pd-form-actions { grid-column:1 / -1; text-align:center; }
-  .pd-form-actions .pd-btn { margin-top:14px; }
-
-  /* ---------- entrada ---------- */
-  .pd-ticket-name { font-family:var(--serif); font-size:clamp(28px, 6vw, 36px); line-height:1.1; margin:14px 0 0; }
-  .pd-qr-frame { display:inline-block; margin-top:34px; padding:14px; background:var(--ink); }
-  .pd-qr-frame img { display:block; width:236px; height:236px; image-rendering:pixelated; }
-  .pd-ticket-code { margin:18px 0 0; font-size:12px; letter-spacing:.38em; text-indent:.38em; color:var(--muted); }
-  .pd-validity {
-    margin:30px auto 0; padding:16px 0; max-width:320px;
-    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
-  }
-  .pd-validity .pd-cap + .pd-cap { margin-top:8px; }
-  .pd-validity .is-red { color:var(--red); }
-  .pd-note { color:var(--muted); font-size:13px; margin:22px auto 0; max-width:330px; }
-
-  /* ---------- footer ---------- */
-  footer {
-    padding:28px 24px calc(28px + env(safe-area-inset-bottom)); text-align:center;
-    color:var(--faint); font-size:10px; letter-spacing:.28em; text-transform:uppercase;
-  }
-  footer nav { display:flex; justify-content:center; flex-wrap:wrap; gap:8px 26px; margin-bottom:14px; }
+  footer { margin-top:56px; padding:26px var(--gut) calc(110px + env(safe-area-inset-bottom)); text-align:center; color:var(--faint); font-size:10px; letter-spacing:.24em; text-transform:uppercase; border-top:1px solid var(--line); }
+  footer nav { display:flex; justify-content:center; flex-wrap:wrap; gap:8px 22px; margin-bottom:12px; }
   footer a { text-decoration:none; color:var(--muted); }
   footer a:hover { color:var(--ink); }
 
-  @keyframes pd-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
-  .pd-step.is-active { animation:pd-in .7s cubic-bezier(.2,.7,.2,1) both; }
-  .pd-brand { animation:pd-in 1s cubic-bezier(.2,.7,.2,1) both; }
-  @media (prefers-reduced-motion: reduce) { .pd-step.is-active, .pd-brand { animation:none; } }
+  /* ---------- barra fija (carrito de entradas) ---------- */
+  .bar { position:fixed; left:0; right:0; bottom:0; z-index:30; visibility:hidden;
+    background:rgba(10,9,9,.95); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); border-top:1px solid var(--line-strong);
+    padding:12px var(--gut) calc(12px + env(safe-area-inset-bottom)); transform:translateY(110%); transition:transform .3s cubic-bezier(.2,.7,.2,1), visibility 0s .3s; }
+  .bar.is-on { transform:none; visibility:visible; transition:transform .3s cubic-bezier(.2,.7,.2,1); }
+  .bar-inner { max-width:620px; margin:0 auto; display:flex; align-items:center; gap:16px; }
+  .bar-sum { flex:1; min-width:0; }
+  .bar-sum p { margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar-sum .total { font-family:var(--serif); font-size:22px; line-height:1.15; }
+  .bar-sum .what { font-size:12px; color:var(--muted); }
+  .bar .btn { padding:14px 22px; }
+
+  /* ---------- hoja (pasos) ---------- */
+  .sheet { position:fixed; inset:0; z-index:50; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; display:none; }
+  .sheet.is-open { display:block; animation:sheet-in .3s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes sheet-in { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  .sheet-top { position:sticky; top:0; z-index:3; height:54px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 6px; background:rgba(0,0,0,.92); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+  .sheet-top button { background:none; border:none; cursor:pointer; padding:12px; color:var(--muted); font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:500; justify-self:start; }
+  .sheet-top button:last-child { justify-self:end; }
+  .sheet-top button:hover { color:var(--ink); }
+  .sheet-top .ttl { font-size:11px; letter-spacing:.26em; text-transform:uppercase; font-weight:500; }
+  .sheet-body { max-width:620px; margin:0 auto; padding:22px var(--gut) calc(120px + env(safe-area-inset-bottom)); }
+  .sheet-body.wide { max-width:1080px; }
+  .view { display:none; }
+  .view.is-on { display:block; }
+
+  .steps { display:flex; align-items:center; gap:10px; margin:0 0 24px; padding:0; list-style:none; }
+  .steps li { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--faint); letter-spacing:.06em; }
+  .steps li i { width:24px; height:24px; border-radius:50%; border:1px solid var(--faint); display:flex; align-items:center; justify-content:center; font-style:normal; font-size:12px; }
+  .steps li.done { color:var(--muted); }
+  .steps li.done i { border-color:var(--muted); }
+  .steps li.now { color:var(--ink); }
+  .steps li.now i { background:var(--ink); border-color:var(--ink); color:#0A0909; font-weight:600; }
+  .steps .sep { flex:1; max-width:34px; height:1px; background:var(--line-strong); }
+
+  .h2 { font-family:var(--serif); font-weight:500; font-size:28px; line-height:1.1; margin:0 0 6px; }
+  .h2 em { font-style:italic; }
+  .lead { color:var(--muted); font-size:14px; margin:0 0 20px; }
+
+  /* mesas */
+  .t-grid { display:block; }
+  @media (min-width:900px) { .t-grid { display:grid; grid-template-columns:1.1fr 1fr; gap:36px; align-items:start; } .t-map { position:sticky; top:78px; } }
+  .map-wrap { border:1px solid var(--line); padding:12px; background:var(--card); }
+  .map { width:100%; height:auto; display:block; }
+  .map text { font-family:var(--sans); }
+  .unit { cursor:pointer; outline:none; }
+  .unit rect { fill:transparent; stroke:var(--ink); stroke-width:.35; transition:fill .2s; }
+  .unit text { fill:var(--ink); font-size:2.6px; font-weight:500; }
+  .unit:hover rect { fill:rgba(244,240,234,.1); }
+  .unit.is-selected rect { fill:var(--red); stroke:var(--red); }
+  .unit.is-selected text { fill:#0A0909; }
+  .unit.is-sold { cursor:default; }
+  .unit.is-sold rect { fill:#1d1b1a; stroke:#3a3633; }
+  .unit.is-sold text { fill:#5A5550; }
+  .map-legend { display:flex; gap:16px; flex-wrap:wrap; margin:10px 0 0; font-size:12px; color:var(--muted); }
+  .map-legend i { display:inline-block; width:11px; height:11px; margin-right:6px; vertical-align:-1px; border:1px solid var(--ink); }
+  .map-legend i.sel { background:var(--red); border-color:var(--red); }
+  .map-legend i.sold { background:#1d1b1a; border-color:#3a3633; }
+  .t-list { display:grid; gap:10px; margin-top:22px; }
+  @media (min-width:900px) { .t-list { margin-top:0; } }
+  .tcard { background:var(--card); border:1px solid var(--line); padding:16px 16px 14px; cursor:pointer; transition:border-color .2s; }
+  .tcard.is-active { border-color:var(--red); }
+  .tcard.is-off { opacity:.45; cursor:default; }
+  .tcard-h { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .tcard-name { margin:0; font-weight:500; letter-spacing:.12em; text-transform:uppercase; font-size:14px; }
+  .tcard-price { font-family:var(--serif); font-size:26px; margin:6px 0 0; line-height:1.1; }
+  .tcard-price small { font-family:var(--sans); font-size:13px; color:var(--muted); margin-left:6px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .chip { padding:4px 10px; background:var(--card-2); border:1px solid var(--line); font-size:12px; color:#CFC9C0; }
+  .units { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .units button { min-width:46px; padding:7px 10px; background:none; border:1px solid var(--line-strong); cursor:pointer; font-size:12px; font-weight:500; letter-spacing:.06em; }
+  .units button:hover:not(:disabled) { border-color:var(--ink); }
+  .units button.is-selected { background:var(--red); border-color:var(--red); color:#0A0909; }
+  .units button:disabled { opacity:.35; text-decoration:line-through; cursor:default; }
+  .sheet-bar { position:sticky; bottom:0; z-index:4; margin:22px calc(-1 * var(--gut)) calc(-120px - env(safe-area-inset-bottom)); background:rgba(10,9,9,.96); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); border-top:1px solid var(--line-strong); padding:12px var(--gut) calc(12px + env(safe-area-inset-bottom)); }
+  body.sheet-open .bar { visibility:hidden; }
+
+  /* formularios */
+  .summary { border:1px solid var(--line); background:var(--card); padding:14px 16px; margin:0 0 24px; }
+  .summary-row { display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:3px 0; }
+  .summary-row span:first-child { color:var(--muted); }
+  .summary-row.total { margin-top:8px; padding-top:10px; border-top:1px solid var(--line); font-size:16px; }
+  .summary-row.total span { color:var(--ink) !important; }
+  .summary-row.total span:last-child { font-family:var(--serif); font-size:22px; }
+  .person { padding:22px 0 6px; border-top:1px solid var(--line); }
+  .person:first-of-type { border-top:none; padding-top:0; }
+  .person-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px; }
+  .fields { display:grid; grid-template-columns:1fr 1fr; gap:20px 22px; }
+  @media (max-width:520px){ .fields { grid-template-columns:1fr; gap:18px; } }
+  .field { display:flex; flex-direction:column; gap:3px; }
+  .field.wide { grid-column:1 / -1; }
+  .field label { font-size:10.5px; font-weight:500; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+  .field label small { letter-spacing:.04em; text-transform:none; color:var(--faint); font-size:11px; }
+  .in { width:100%; background:transparent; color:var(--ink); border:none; border-bottom:1px solid var(--line-strong); border-radius:0;
+    padding:9px 0 8px; font-size:17px; outline:none; -webkit-appearance:none; appearance:none; transition:border-color .2s; }
+  .in:focus { border-bottom-color:var(--ink); }
+  .in.bad { border-bottom-color:var(--red); }
+  select.in { background-image:linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position:calc(100% - 10px) 55%, calc(100% - 5px) 55%; background-size:5px 5px; background-repeat:no-repeat; padding-right:22px; }
+  select.in option { background:#111; color:var(--ink); }
+  input[type="date"].in { color-scheme:dark; min-height:42px; }
+  .pre { position:relative; }
+  .pre > span { position:absolute; left:0; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+  .pre .in { padding-left:16px; }
+  .err { font-size:12px; color:var(--red); margin:2px 0 0; }
+  .err:empty { display:none; }
+  .hint { font-size:12px; color:var(--faint); margin:2px 0 0; }
+  .suggest { font-size:12.5px; color:var(--muted); margin:4px 0 0; }
+  .suggest button { background:none; border:none; padding:0; color:var(--ink); text-decoration:underline; text-underline-offset:3px; cursor:pointer; font-size:12.5px; }
+  .suggest:empty { display:none; }
+  .check { display:flex; gap:14px; align-items:flex-start; margin:26px 0 0; font-size:14px; color:var(--muted); line-height:1.6; cursor:pointer; }
+  .check input { appearance:none; -webkit-appearance:none; flex:none; margin:3px 0 0; width:18px; height:18px; border:1px solid var(--muted); background:transparent; cursor:pointer; border-radius:0; }
+  .check input:checked { background:var(--ink); border-color:var(--ink); }
+  .check input:checked::after { content:''; display:block; width:5px; height:9px; margin:1px 0 0 5.5px; border:solid var(--bg); border-width:0 1.5px 1.5px 0; transform:rotate(45deg); }
+  .check a { text-underline-offset:3px; }
+  .msg { margin:16px 0 0; font-size:13px; color:var(--red); }
+  .msg:empty { margin:0; }
+  .actions { margin-top:22px; }
+  .fine { color:var(--faint); font-size:12px; text-align:center; margin:12px 0 0; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .fine svg { width:13px; height:13px; }
+
+  /* confirmaciones */
+  .done { text-align:center; padding-top:16px; }
+  .done-mark { width:56px; height:56px; margin:0 auto 20px; border:1px solid var(--red); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--red); }
+  .done h2 { font-family:var(--serif); font-weight:500; font-size:clamp(30px, 7vw, 40px); line-height:1.1; margin:0; }
+  .done h2 em { font-style:italic; }
+  .done p { color:var(--muted); max-width:420px; margin:16px auto 0; }
+  .done p strong { color:var(--ink); font-weight:500; }
+  .done .box { margin:26px auto 0; max-width:360px; padding:16px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .done .box .cap + .cap { margin-top:8px; }
+  .qr-list { display:grid; gap:26px; margin-top:28px; }
+  .qr-card { padding-top:24px; border-top:1px solid var(--line); }
+  .qr-card:first-child { border-top:none; padding-top:0; }
+  .qr-frame { display:inline-block; padding:12px; background:var(--ink); }
+  .qr-frame img { width:210px; height:210px; image-rendering:pixelated; }
+  .qr-name { font-family:var(--serif); font-size:22px; margin:12px 0 0; }
+  .qr-code { font-size:11px; letter-spacing:.32em; color:var(--muted); margin:6px 0 0; }
+
+  @media (prefers-reduced-motion: reduce) { .sheet.is-open { animation:none; } .bar, .bar.is-on { transition:none; } }
 </style>
 </head>
-<body class="is-landing">
-  <header class="pd-brand">
-    <img class="pd-logo" src="/paradisio-logo.png" alt="Paradisio" width="1200" height="388" />
-  </header>
+<body>
+  <div class="backdrop" aria-hidden="true"></div>
+  <header class="top"><img src="/paradisio-logo.png" alt="Paradisio" width="1200" height="388" /></header>
 
-  <main>
-    <!-- Paso 1: código -->
-    <section class="pd-step is-active" id="step-code" aria-label="Ingresa tu código">
-      <form class="pd-code-form" id="code-form" novalidate>
-        <input class="pd-code-input" id="code-input" name="code" type="text"
-               placeholder="Ingresa tu código" aria-label="Ingresa tu código" maxlength="16"
-               autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="code-msg" />
-        <p class="pd-msg" id="code-msg" role="alert"></p>
-        <button class="pd-btn" type="submit" id="code-btn">Continuar</button>
-      </form>
-    </section>
-
-    <!-- Paso 2: datos -->
-    <section class="pd-step" id="step-form" aria-labelledby="form-title">
-      <h2 class="pd-title" id="form-title">After Hours<br><em class="pd-sub">by Jägermeister</em></h2>
-      <p class="pd-lead">Completa tus datos tal como figuran en tu documento. Te lo pedirán en la puerta junto con el QR.</p>
-      <div class="pd-code-chip">
-        <span id="code-chip"></span><i></i>
-        <button type="button" class="pd-link-btn" id="change-code-btn">Cambiar</button>
-      </div>
-      <form class="pd-fields" id="data-form" novalidate>
-        <div class="pd-field">
-          <label for="f-nombre">Nombre</label>
-          <input class="pd-input" id="f-nombre" name="nombre" type="text" autocomplete="given-name" autocapitalize="words" required />
-          <p class="pd-err" data-for="f-nombre"></p>
-        </div>
-        <div class="pd-field">
-          <label for="f-apellido">Apellidos</label>
-          <input class="pd-input" id="f-apellido" name="apellido" type="text" autocomplete="family-name" autocapitalize="words" required />
-          <p class="pd-err" data-for="f-apellido"></p>
-        </div>
-        <div class="pd-field">
-          <label for="f-dni">DNI</label>
-          <input class="pd-input" id="f-dni" name="dni" type="text" inputmode="numeric" autocomplete="off" maxlength="12" required />
-          <p class="pd-err" data-for="f-dni"></p>
-        </div>
-        <div class="pd-field">
-          <label for="f-dob">Fecha de nacimiento</label>
-          <input class="pd-input" id="f-dob" name="dob" type="date" autocomplete="bday" required />
-          <p class="pd-err" data-for="f-dob"></p>
-        </div>
-        <div class="pd-field is-wide">
-          <label for="f-email">Correo</label>
-          <input class="pd-input" id="f-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required />
-          <p class="pd-err" data-for="f-email"></p>
-        </div>
-        <div class="pd-field">
-          <label for="f-phone">Número</label>
-          <input class="pd-input" id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required />
-          <p class="pd-err" data-for="f-phone"></p>
-        </div>
-        <div class="pd-field">
-          <label for="f-ig">Instagram</label>
-          <div class="pd-prefix">
-            <span aria-hidden="true">@</span>
-            <input class="pd-input" id="f-ig" name="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+  <div class="page">
+    <div class="grid">
+      <!-- Columna del flyer -->
+      <aside class="side">
+        <div class="flyer" id="flyer">
+          <img class="flyer-photo" id="flyer-photo" src="/hero-photo.jpg" alt="" width="1920" height="1080" />
+          <div class="flyer-inner">
+            <img class="flyer-logo" src="/logo-script-white.png" alt="Paradisio" width="1200" height="388" />
+            <p class="flyer-by">by Jägermeister</p>
+            <p class="cap flyer-date" id="flyer-date">&nbsp;</p>
           </div>
-          <p class="pd-err" data-for="f-ig"></p>
         </div>
-        <label class="pd-check">
-          <input type="checkbox" id="f-accept" />
-          <span>Soy mayor de 18 años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a> y la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>.</span>
-        </label>
-        <div class="pd-form-actions">
-          <p class="pd-msg" id="form-msg" role="alert"></p>
-          <button class="pd-btn" type="submit" id="form-btn">Generar mi QR</button>
+        <div class="side-extra">
+          <p class="about-short">Disco y house de todas las épocas, con italo, nu disco y dance. Una noche para no dejar de bailar.</p>
+          <div class="pills"><span class="pill solid">+18 años</span><span class="pill">DNI físico</span><span class="pill">Disco · House</span></div>
         </div>
-      </form>
-    </section>
+      </aside>
 
-    <!-- Paso 3: QR -->
-    <section class="pd-step" id="step-ticket" aria-labelledby="ticket-name">
-      <p class="pd-cap" style="color:var(--red);" id="ticket-tier">Invitación</p>
-      <p class="pd-ticket-name" id="ticket-name"></p>
-      <div class="pd-qr-frame"><img id="ticket-qr" alt="Código QR de tu entrada" width="236" height="236" /></div>
-      <p class="pd-ticket-code" id="ticket-code"></p>
-      <div class="pd-validity">
-        <p class="pd-cap" id="ticket-date"></p>
-        <p class="pd-cap"><a id="ticket-address" href="#" target="_blank" rel="noopener" style="text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--faint);"></a></p>
-        <p class="pd-cap is-red" id="ticket-validity"></p>
+      <!-- Columna de compra -->
+      <main class="main">
+        <div class="when">
+          <p id="when"><span>&nbsp;</span></p>
+          <button class="share" type="button" id="share-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 15V3M7.5 7.5L12 3l4.5 4.5"/><path d="M5 11v9h14v-9"/></svg>Compartir
+          </button>
+        </div>
+        <h1 class="title">Paradisio<em>by Jägermeister</em></h1>
+        <div class="venue">
+          <p id="venue">Barranco, Lima</p>
+          <a class="pill-btn" id="maps-btn" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Cómo llegar
+          </a>
+        </div>
+        <div class="m-extra">
+          <p class="about-short">Disco y house de todas las épocas, con italo, nu disco y dance. Una noche para no dejar de bailar.</p>
+          <div class="pills"><span class="pill solid">+18 años</span><span class="pill">DNI físico</span><span class="pill">Disco · House</span></div>
+        </div>
+        <p class="ref-chip" id="ref-chip">Vas de parte de <strong id="ref-name"></strong></p>
+
+        <section class="sec" aria-labelledby="h-listas">
+          <h2 class="sec-h" id="h-listas">Free entry</h2>
+          <div class="cards">
+            <div class="card" id="free-card">
+              <div class="card-l"><span class="badge">GRATIS</span></div>
+              <div class="card-r">
+                <div class="card-top">
+                  <p class="card-name">Lista free</p>
+                  <button class="btn btn-red" type="button" id="free-btn">Apuntarme</button>
+                </div>
+                <p class="card-desc" id="free-desc">Hasta las 11:00 p.m. Tu QR llega por correo días antes del evento.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec" id="entradas" aria-labelledby="h-entradas" hidden>
+          <h2 class="sec-h" id="h-entradas">Entradas</h2>
+          <div class="cards" id="tix-list"></div>
+        </section>
+
+        <section class="sec" id="mesas" aria-labelledby="h-mesas" hidden>
+          <h2 class="sec-h" id="h-mesas">Mesas y boxes</h2>
+          <div class="cards">
+            <div class="card">
+              <div class="card-l">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><ellipse cx="16" cy="11" rx="11" ry="3.5"/><path d="M16 14.5V26M10 27h12"/></svg>
+                <span class="from">Desde</span><span class="price" id="tables-from">—</span>
+              </div>
+              <div class="card-r">
+                <div class="card-top">
+                  <p class="card-name">Pista principal</p>
+                  <button class="btn" type="button" id="tables-btn">Ver mapa</button>
+                </div>
+                <p class="card-desc" id="tables-desc">Boxes y mesas con consumo incluido. Tu grupo entra junto a cualquier hora.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="about" aria-labelledby="h-noche">
+          <h2 class="sec-h" id="h-noche">La noche</h2>
+          <p>Paradisio nace como una respuesta a la fiesta en Lima: un espacio donde conviven los amantes de la electrónica y quienes no terminan de encajar en un solo sonido.</p>
+          <p>Pensamos cada set como un viaje a través de distintos años y artistas. Los himnos del disco y del house son nuestra línea, y sobre ella sumamos italo disco, nu disco y dance.</p>
+        </section>
+      </main>
+    </div>
+
+    <footer>
+      <nav>
+        <a href="/terminos">Términos</a><a href="/privacidad">Privacidad</a><a href="/devoluciones">Devoluciones</a><a href="/libro-reclamaciones">Libro de reclamaciones</a>
+      </nav>
+      <div>Paradisio · info@paradisioclub.com</div>
+    </footer>
+  </div>
+
+  <!-- Barra fija del carrito -->
+  <div class="bar" id="bar" aria-live="polite">
+    <div class="bar-inner">
+      <div class="bar-sum"><p class="total" id="bar-total">S/ 0</p><p class="what" id="bar-what"></p></div>
+      <button class="btn btn-red" type="button" id="bar-btn">Continuar</button>
+    </div>
+  </div>
+
+  <!-- Hoja de pasos -->
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-top">
+      <button type="button" id="sheet-back">← Volver</button>
+      <span class="ttl" id="sheet-title">Registro</span>
+      <button type="button" id="sheet-close">Cerrar</button>
+    </div>
+    <div class="sheet-body" id="sheet-body">
+
+      <!-- Mesas: mapa + tipos -->
+      <div class="view" id="v-tables">
+        <ol class="steps" data-steps="table" data-now="1"></ol>
+        <div class="t-grid">
+          <div class="t-map">
+            <div class="map-wrap"><svg class="map" id="map" viewBox="0 0 100 104" role="group" aria-label="Mapa de mesas y boxes"></svg></div>
+            <div class="map-legend" aria-hidden="true"><span><i></i>Disponible</span><span><i class="sel"></i>Tu elección</span><span><i class="sold"></i>Reservada</span></div>
+          </div>
+          <div class="t-list" id="types"></div>
+        </div>
+        <div class="sheet-bar" id="t-bar" hidden>
+          <div class="bar-inner">
+            <div class="bar-sum"><p class="total" id="t-total"></p><p class="what" id="t-what"></p></div>
+            <button class="btn btn-red" type="button" id="t-next">Continuar</button>
+          </div>
+        </div>
       </div>
-      <p class="pd-note" id="ticket-lead">También te lo enviamos por correo. Preséntalo con tu documento de identidad físico. Solo mayores de 18.</p>
-      <a class="pd-btn" id="ticket-link" href="#">Ver mi entrada</a>
-      <button class="pd-btn pd-btn-quiet" type="button" id="another-btn">Canjear otro código</button>
-    </section>
-  </main>
 
+      <!-- Free entry -->
+      <div class="view" id="v-free">
+        <h2 class="h2">Apúntate a la lista</h2>
+        <p class="lead">Free entry hasta las 11:00 p.m. Completa tus datos tal como figuran en tu documento: te lo pedirán en la puerta.</p>
+        <form id="free-form" novalidate>
+          <div class="fields">
+            <div class="field"><label for="ff-nombre">Nombre</label><input class="in" id="ff-nombre" type="text" autocomplete="given-name" autocapitalize="words" /><p class="err"></p></div>
+            <div class="field"><label for="ff-apellido">Apellidos</label><input class="in" id="ff-apellido" type="text" autocomplete="family-name" autocapitalize="words" /><p class="err"></p></div>
+            <div class="field wide"><label for="ff-email">Correo <small>· aquí te llega tu QR</small></label><input class="in" id="ff-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" /><p class="err"></p><p class="suggest"></p></div>
+            <div class="field"><label for="ff-dni">DNI / CE / Pasaporte</label><input class="in" id="ff-dni" type="text" autocomplete="off" maxlength="12" /><p class="err"></p></div>
+            <div class="field"><label for="ff-dob">Fecha de nacimiento</label><input class="in" id="ff-dob" type="date" autocomplete="bday" /><p class="err"></p></div>
+            <div class="field"><label for="ff-phone">Celular</label><input class="in" id="ff-phone" type="tel" inputmode="tel" autocomplete="tel" /><p class="err"></p><p class="hint">Solo para avisos de esta fecha.</p></div>
+            <div class="field"><label for="ff-ig">Instagram</label><div class="pre"><span aria-hidden="true">@</span><input class="in" id="ff-ig" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" /></div><p class="err"></p></div>
+          </div>
+          <label class="check"><input type="checkbox" id="ff-accept" /><span>Soy mayor de 18 años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a> y la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>.</span></label>
+          <p class="msg" id="free-msg" role="alert"></p>
+          <div class="actions"><button class="btn btn-red btn-block" type="submit" id="free-submit">Apuntarme</button></div>
+        </form>
+      </div>
+
+      <div class="view done" id="v-free-done">
+        <div class="done-mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
+        <h2>Gracias por <em>registrarte</em></h2>
+        <p>Tu invitación será aprobada y enviada días previos al evento a <strong id="free-done-email"></strong>.</p>
+        <div class="box"><p class="cap" id="free-done-date"></p><p class="cap red" id="free-done-validity">Free entry hasta las 11:00 p.m.</p></div>
+        <p style="font-size:13px;">Revisa también spam y promociones. Si no te llega, escríbenos a info@paradisioclub.com.</p>
+        <div class="actions" style="max-width:360px;margin-left:auto;margin-right:auto;"><button class="btn btn-block" type="button" data-close>Volver al evento</button></div>
+      </div>
+
+      <!-- Datos + pago (entradas o mesa) -->
+      <div class="view" id="v-buy">
+        <ol class="steps" id="buy-steps"></ol>
+        <h2 class="h2" id="buy-title">Datos de los asistentes</h2>
+        <p class="lead" id="buy-lead"></p>
+        <div class="summary" id="buy-summary"></div>
+        <form id="buy-form" novalidate>
+          <div id="people"></div>
+          <label class="check"><input type="checkbox" id="buy-accept" /><span>Todos son mayores de 18 años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a>, la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a> y la <a href="/devoluciones" target="_blank" rel="noopener">política de devoluciones</a>.</span></label>
+          <p class="msg" id="buy-msg" role="alert"></p>
+          <div class="actions"><button class="btn btn-red btn-block" type="submit" id="buy-submit">Pagar</button></div>
+          <p class="fine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="11" width="14" height="10"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Pago seguro con tarjeta vía Culqi</p>
+        </form>
+      </div>
+
+      <div class="view done" id="v-buy-done">
+        <div class="done-mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
+        <h2 id="buy-done-title">Compra <em>confirmada</em></h2>
+        <p id="buy-done-lead"></p>
+        <div class="qr-list" id="qr-list"></div>
+        <div class="actions" style="max-width:360px;margin-left:auto;margin-right:auto;">
+          <a class="btn btn-block" id="buy-done-order" href="#" target="_blank" rel="noopener" hidden>Ver todas mis entradas</a>
+          <button class="btn btn-block" type="button" data-close style="margin-top:10px;border-color:transparent;color:var(--muted);">Volver al evento</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
 (function(){
   const $ = (id) => document.getElementById(id);
-  const steps = ['step-code', 'step-form', 'step-ticket'];
-  let currentCode = '';
-  let eventInfo = { name: '', dateLabel: '', dateIso: '' };
+  const money = (n) => 'S/\u00a0' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const TICKET_ICON = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><g transform="rotate(-35 16 16)"><path d="M5 10h22v4a2 2 0 0 0 0 4v4H5v-4a2 2 0 0 0 0-4z"/><path d="M19 10v12" stroke-dasharray="2 2"/></g></svg>';
 
-  function show(id){
-    steps.forEach((s) => $(s).classList.toggle('is-active', s === id));
-    document.body.classList.toggle('is-landing', id === 'step-code');
-    window.scrollTo(0, 0);
+  let cfg = null;
+  let cart = {};           // sku -> qty
+  let selectedUnit = null; // mesa elegida
+  let mode = null;         // 'tickets' | 'table'
+  let ref = null;          // promotor (link ?ref=)
+
+  /* ================= Promotor ================= */
+  // El ref se recuerda 7 días: si la persona vuelve sin el link, sigue
+  // contando para el promotor que la trajo.
+  const REF_KEY = 'pd_ref';
+  const cleanRef = (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
+  function storedRef(){
+    try { const r = JSON.parse(localStorage.getItem(REF_KEY) || 'null'); if (r && r.code && Date.now() - r.at < 7 * 864e5) return r.code; } catch (e) {}
+    return null;
   }
-
-  function cleanCode(v){ return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16); }
-
-  function setEvent(ev){
-    if (!ev) return;
-    eventInfo = ev;
-  }
-
-  /* ---------------- Paso 1 ---------------- */
-  const CODE_ERRORS = {
-    not_found: 'Ese código no existe. Revisa que esté bien escrito.',
-    used: 'Ese código ya fue utilizado.',
-    revoked: 'Ese código ya no es válido.',
-    expired: 'Ese código ya no es válido.',
-  };
-
-  async function submitCode(e){
-    if (e) e.preventDefault();
-    const code = cleanCode($('code-input').value);
-    $('code-input').value = code;
-    const msg = $('code-msg');
-    if (code.length < 4) {
-      msg.textContent = 'Ingresa tu código.';
-      $('code-input').classList.add('has-error');
-      $('code-input').focus();
-      return;
-    }
-    const btn = $('code-btn');
-    btn.disabled = true; btn.textContent = 'Verificando…'; msg.textContent = '';
+  async function initRef(){
+    const params = new URLSearchParams(location.search);
+    const code = cleanRef(params.get('ref') || params.get('r')) || storedRef();
+    if (!code) return;
     try {
-      const r = await fetch('/api/invite?code=' + encodeURIComponent(code));
-      const d = await r.json();
-      setEvent(d.event);
-      if (!d.ok) {
-        msg.textContent = CODE_ERRORS[d.reason] || 'No pudimos validar el código.';
-        $('code-input').classList.add('has-error');
-        return;
-      }
-      currentCode = code;
-      $('code-chip').textContent = code;
-      show('step-form');
-      $('f-nombre').focus({ preventScroll: true });
-    } catch (err) {
-      msg.textContent = 'Error de conexión. Intenta de nuevo.';
-    } finally {
-      btn.disabled = false; btn.textContent = 'Continuar';
+      const d = await (await fetch('/api/promoter?code=' + encodeURIComponent(code))).json();
+      if (!d.ok) { try { localStorage.removeItem(REF_KEY); } catch (e) {} return; }
+      ref = d.code;
+      try { localStorage.setItem(REF_KEY, JSON.stringify({ code: d.code, at: Date.now() })); } catch (e) {}
+      $('ref-name').textContent = String(d.name || '').split(' ')[0];
+      $('ref-chip').classList.add('is-on');
+    } catch (e) {}
+  }
+
+  /* ================= Carga ================= */
+  async function load(){
+    const qa = new URLSearchParams(location.search).get('qa') === '1' ? '?qa=1' : '';
+    try { cfg = await (await fetch('/api/config' + qa)).json(); } catch (e) { cfg = null; }
+    if (!cfg || !cfg.event) return;
+    const ev = cfg.event;
+    const parts = String(ev.dateLabel).split('·');
+    $('when').innerHTML = esc(parts[0].trim()) + (parts[1] ? ' <span>/ ' + esc(parts[1].trim()) + '</span>' : '');
+    $('flyer-date').textContent = ev.dateLabel;
+    $('venue').textContent = ev.address;
+    $('maps-btn').href = ev.mapsUrl;
+    $('free-done-date').textContent = ev.dateLabel;
+    renderFree(); renderTickets(); renderTablesCard(); renderTables();
+  }
+
+  function renderFree(){
+    const fe = cfg.freeEntry;
+    $('free-desc').textContent = 'Entra gratis ' + fe.validityLabel + ' Tu QR llega por correo días antes del evento. Después de esa hora, S/\u00a0' + fe.doorPrice + ' en puerta.';
+    $('free-done-validity').textContent = 'Free entry ' + fe.validityLabel;
+    if (!fe.open) { $('free-card').classList.add('is-off'); $('free-btn').disabled = true; $('free-btn').textContent = 'Cerrada'; }
+  }
+
+  /* ================= Entradas ================= */
+  function ticketType(sku){ return (cfg.tickets || []).find((t) => t.sku === sku); }
+  function totalQty(){ return Object.values(cart).reduce((a, b) => a + b, 0); }
+
+  function renderTickets(){
+    const list = $('tix-list');
+    const tix = cfg.tickets || [];
+    $('entradas').hidden = !tix.length;
+    list.innerHTML = tix.map((t) =>
+      '<div class="card' + (t.soldOut ? ' is-off' : '') + '" data-sku="' + esc(t.sku) + '">' +
+        '<div class="card-l">' + TICKET_ICON + '<span class="price">' + money(t.price) + '</span></div>' +
+        '<div class="card-r"><div class="card-top"><p class="card-name">' + esc(t.name) + (t.fewLeft ? '<span class="tag">Últimas</span>' : '') + '</p>' +
+        (t.soldOut ? '<span class="cap muted">Agotado</span>'
+          : '<div class="qty" data-sku="' + esc(t.sku) + '">' +
+              '<button type="button" data-d="-1" aria-label="Quitar una ' + esc(t.name) + '">−</button>' +
+              '<output aria-live="polite">0</output>' +
+              '<button type="button" class="plus" data-d="1" aria-label="Agregar una ' + esc(t.name) + '">+</button></div>') +
+        '</div><p class="card-desc">' + esc(t.description) + '</p></div></div>').join('');
+    list.querySelectorAll('.qty').forEach((q) => q.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (b) changeQty(q.dataset.sku, parseInt(b.dataset.d, 10));
+    }));
+    syncQty();
+  }
+  function changeQty(sku, d){
+    const t = ticketType(sku); if (!t) return;
+    const cur = cart[sku] || 0;
+    let next = Math.max(0, Math.min(t.maxQty, cur + d));
+    if (d > 0 && totalQty() >= cfg.maxTicketsPerOrder) next = cur;
+    if (next === cur) return;
+    if (next) cart[sku] = next; else delete cart[sku];
+    syncQty(); syncBar();
+  }
+  function syncQty(){
+    document.querySelectorAll('#tix-list .qty').forEach((q) => {
+      const t = ticketType(q.dataset.sku); const n = cart[q.dataset.sku] || 0;
+      q.querySelector('output').textContent = n;
+      q.querySelector('[data-d="-1"]').disabled = n === 0;
+      q.querySelector('[data-d="1"]').disabled = n >= t.maxQty || totalQty() >= cfg.maxTicketsPerOrder;
+      q.closest('.card').classList.toggle('is-active', n > 0);
+    });
+  }
+  function cartLines(){ return Object.keys(cart).map((sku) => { const t = ticketType(sku); return { sku, name: t.name, price: t.price, qty: cart[sku] }; }); }
+  function discountRate(){ return ref && cfg.promoterDiscountRate ? cfg.promoterDiscountRate : 0; }
+  function priced(sub){ const s = Math.round(sub * 100); const d = Math.round(s * discountRate()); return { subtotal: s / 100, discount: d / 100, total: (s - d) / 100 }; }
+
+  function syncBar(){
+    const n = totalQty();
+    if (!n) { $('bar').classList.remove('is-on'); return; }
+    const sub = cartLines().reduce((a, l) => a + l.price * l.qty, 0);
+    $('bar-total').textContent = money(priced(sub).total);
+    $('bar-what').textContent = cartLines().map((l) => l.qty + ' × ' + l.name).join(' · ');
+    $('bar').classList.add('is-on');
+  }
+  $('bar-btn').addEventListener('click', () => { if (totalQty()) openBuy('tickets'); });
+
+  /* ================= Mesas ================= */
+  function tableType(type){ return (cfg.tables.types || []).find((t) => t.type === type); }
+  function unitById(id){ return (cfg.tables.units || []).find((u) => u.id === id); }
+
+  function renderTablesCard(){
+    const t = cfg.tables;
+    if (!t || !t.units || !t.units.length) { $('mesas').hidden = true; return; }
+    $('mesas').hidden = false;
+    const avail = t.units.filter((u) => !u.sold);
+    const prices = t.types.filter((tt) => avail.some((u) => u.type === tt.type)).map((tt) => tt.price);
+    $('tables-from').textContent = prices.length ? money(Math.min(...prices)) : '—';
+    if (!avail.length) { $('tables-btn').disabled = true; $('tables-btn').textContent = 'Agotadas'; }
+  }
+
+  function renderTables(){
+    const t = cfg.tables;
+    if (!t || !t.units || !t.units.length) return;
+    let html =
+      '<rect x="0.5" y="0.5" width="99" height="103" fill="none" stroke="rgba(244,240,234,.22)" stroke-width=".3"/>' +
+      '<rect x="40" y="1.5" width="20" height="3.2" fill="rgba(226,54,31,.18)" stroke="#E2361F" stroke-width=".3"/>' +
+      '<text x="50" y="3.9" text-anchor="middle" font-size="2" letter-spacing=".5" fill="#E2361F">CABINA</text>' +
+      '<rect x="22" y="22" width="56" height="50" fill="rgba(244,240,234,.03)" stroke="rgba(244,240,234,.18)" stroke-width=".3" stroke-dasharray="1 1"/>' +
+      '<text x="50" y="48.5" text-anchor="middle" font-size="3.2" letter-spacing="1.4" fill="rgba(244,240,234,.38)">PISTA</text>' +
+      '<rect x="30" y="97" width="40" height="5" fill="none" stroke="rgba(244,240,234,.22)" stroke-width=".3"/>' +
+      '<text x="50" y="100.4" text-anchor="middle" font-size="2" letter-spacing=".8" fill="rgba(244,240,234,.45)">BARRA</text>';
+    t.units.forEach((u) => {
+      const tt = tableType(u.type);
+      const aria = esc((tt ? tt.name : '') + ' ' + u.id + (u.sold ? ', reservada' : (tt ? ', ' + tt.people + ' personas, ' + money(tt.price) : '')));
+      html += '<g class="unit' + (u.sold ? ' is-sold' : '') + '" data-id="' + esc(u.id) + '" role="button" tabindex="' + (u.sold ? -1 : 0) + '" aria-label="' + aria + '">' +
+        '<rect x="' + u.x + '" y="' + u.y + '" width="' + u.w + '" height="' + u.h + '"/>' +
+        '<text x="' + (u.x + u.w / 2) + '" y="' + (u.y + u.h / 2 + 0.95) + '" text-anchor="middle">' + esc(u.id) + '</text></g>';
+    });
+    $('map').innerHTML = html;
+    $('map').querySelectorAll('.unit').forEach((g) => {
+      const pick = () => selectUnit(g.dataset.id, true);
+      g.addEventListener('click', pick);
+      g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+    });
+
+    $('types').innerHTML = t.types.map((tt) => {
+      const units = t.units.filter((u) => u.type === tt.type);
+      const free = units.filter((u) => !u.sold);
+      return '<div class="tcard' + (free.length ? '' : ' is-off') + '" data-type="' + esc(tt.type) + '">' +
+        '<div class="tcard-h"><p class="tcard-name">' + esc(tt.name) + '</p>' + (free.length ? '' : '<span class="cap muted">Agotado</span>') + '</div>' +
+        '<p class="tcard-price">' + money(tt.price) + '<small>hasta ' + tt.people + ' personas</small></p>' +
+        '<div class="chips"><span class="chip">' + money(Math.round(tt.price / tt.people)) + ' por persona</span><span class="chip">' + esc(tt.includes) + '</span></div>' +
+        '<div class="units" role="group" aria-label="Elige tu ' + esc(tt.name) + '">' +
+          units.map((u) => '<button type="button" data-id="' + esc(u.id) + '"' + (u.sold ? ' disabled aria-label="' + esc(u.id) + ' reservada"' : '') + '>' + esc(u.id) + '</button>').join('') +
+        '</div></div>';
+    }).join('');
+    $('types').querySelectorAll('.units button').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); selectUnit(b.dataset.id, false); }));
+    $('types').querySelectorAll('.tcard').forEach((c) => c.addEventListener('click', () => {
+      const u = t.units.find((x) => x.type === c.dataset.type && !x.sold);
+      if (u) selectUnit(u.id, false);
+    }));
+    syncTableSel();
+  }
+
+  function selectUnit(id, fromMap){
+    const u = unitById(id); if (!u || u.sold) return;
+    selectedUnit = selectedUnit === id && fromMap ? null : id;
+    syncTableSel();
+  }
+  function syncTableSel(){
+    document.querySelectorAll('#map .unit').forEach((g) => g.classList.toggle('is-selected', g.dataset.id === selectedUnit));
+    document.querySelectorAll('#types .units button').forEach((b) => b.classList.toggle('is-selected', b.dataset.id === selectedUnit));
+    const u = selectedUnit && unitById(selectedUnit);
+    document.querySelectorAll('#types .tcard').forEach((c) => c.classList.toggle('is-active', !!u && c.dataset.type === u.type));
+    $('t-bar').hidden = !u;
+    if (u) {
+      const tt = tableType(u.type);
+      $('t-total').textContent = money(priced(tt.price).total);
+      $('t-what').textContent = tt.name + ' ' + u.id + ' · hasta ' + tt.people + ' personas';
     }
   }
-  $('code-form').addEventListener('submit', submitCode);
-  $('code-input').addEventListener('input', () => {
-    $('code-input').classList.remove('has-error');
-    $('code-msg').textContent = '';
-  });
-  $('change-code-btn').addEventListener('click', () => {
-    show('step-code');
-    $('code-input').focus();
-    $('code-input').select();
+  $('tables-btn').addEventListener('click', () => { openSheet(); go('v-tables'); });
+  $('t-next').addEventListener('click', () => { if (selectedUnit) openBuy('table'); });
+
+  /* ================= Hoja y pasos ================= */
+  let returnFocus = null;
+  const history = [];
+  const TITLES = { 'v-tables': 'Reserva', 'v-free': 'Free entry', 'v-free-done': 'Free entry', 'v-buy': 'Tus datos', 'v-buy-done': 'Listo' };
+  function openSheet(){
+    returnFocus = document.activeElement;
+    history.length = 0;
+    $('sheet').classList.add('is-open');
+    document.body.classList.add('sheet-open');
+  }
+  function go(view, push = true){
+    const cur = document.querySelector('.view.is-on');
+    if (push && cur && cur.id !== view && !/done$/.test(cur.id)) history.push(cur.id);
+    document.querySelectorAll('.view').forEach((v) => v.classList.toggle('is-on', v.id === view));
+    $('sheet-title').textContent = TITLES[view] || '';
+    $('sheet-body').classList.toggle('wide', view === 'v-tables');
+    $('sheet-back').style.visibility = /done$/.test(view) ? 'hidden' : '';
+    $('sheet').scrollTop = 0;
+  }
+  function closeSheet(){
+    $('sheet').classList.remove('is-open');
+    document.body.classList.remove('sheet-open');
+    document.querySelectorAll('.view').forEach((v) => v.classList.remove('is-on'));
+    if (returnFocus && returnFocus.focus) returnFocus.focus({ preventScroll: true });
+  }
+  $('sheet-close').addEventListener('click', closeSheet);
+  $('sheet-back').addEventListener('click', () => { const prev = history.pop(); if (prev) go(prev, false); else closeSheet(); });
+  document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeSheet));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('sheet').classList.contains('is-open')) closeSheet(); });
+
+  function renderSteps(el, labels, now){
+    el.innerHTML = labels.map((l, i) =>
+      (i ? '<span class="sep" aria-hidden="true"></span>' : '') +
+      '<li class="' + (i + 1 < now ? 'done' : (i + 1 === now ? 'now' : '')) + '"' + (i + 1 === now ? ' aria-current="step"' : '') + '><i>' + (i + 1 < now ? '✓' : i + 1) + '</i>' + esc(l) + '</li>').join('');
+  }
+  renderSteps(document.querySelector('[data-steps="table"]'), ['Elige', 'Datos', 'Pago'], 1);
+
+  $('share-btn').addEventListener('click', async () => {
+    const url = location.origin + '/' + (ref ? '?ref=' + ref : '');
+    try {
+      if (navigator.share) await navigator.share({ title: 'Paradisio by Jägermeister', url });
+      else { await navigator.clipboard.writeText(url); $('share-btn').lastChild.textContent = 'Link copiado'; }
+    } catch (e) {}
   });
 
-  /* ---------------- Paso 2 ---------------- */
+  /* ================= Validación ================= */
   const NAME_RE = /^[a-zA-ZñÑüÜáéíóúÁÉÍÓÚ' -]{2,}$/;
-  const DOC_RE = /^(\d{8}|[a-zA-Z0-9]{8,12})$/;
+  const DNI_RE = /^\d{8}$/;
+  const CE_RE = /^[a-zA-Z0-9]{8,12}$/;
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const IG_RE = /^[a-z0-9._]{1,30}$/;
-
-  function cleanIg(v){
-    return String(v || '').trim()
-      .replace(/^https?:\/\//i, '').replace(/^(www\.)?instagram\.com\//i, '')
-      .split(/[/?#]/)[0].replace(/^@+/, '').toLowerCase();
+  const cleanIg = (v) => String(v || '').trim().replace(/^https?:\/\//i, '').replace(/^(www\.)?instagram\.com\//i, '').split(/[/?#]/)[0].replace(/^@+/, '').toLowerCase();
+  function ageAt(dob){
+    const asOf = cfg && cfg.event.dateIso ? new Date(cfg.event.dateIso + 'T00:00:00') : new Date();
+    const d = new Date(dob + 'T00:00:00'); if (isNaN(d.getTime())) return null;
+    let a = asOf.getFullYear() - d.getFullYear(); const m = asOf.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && asOf.getDate() < d.getDate())) a--;
+    return a;
   }
-
-  function ageAsOf(dobStr, asOf){
-    const dob = new Date(dobStr + 'T00:00:00');
-    if (isNaN(dob.getTime())) return null;
-    let age = asOf.getFullYear() - dob.getFullYear();
-    const m = asOf.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && asOf.getDate() < dob.getDate())) age--;
-    return age;
+  const check = {
+    name: (v) => !v ? 'Requerido.' : (!NAME_RE.test(v) ? 'Solo letras.' : ''),
+    doc: (v, tipo) => {
+      if (!v) return 'Requerido.';
+      if (tipo === 'DNI') return DNI_RE.test(v) ? '' : 'DNI de 8 dígitos.';
+      if (tipo) return CE_RE.test(v) ? '' : 'Entre 8 y 12 letras o números.';
+      return (DNI_RE.test(v) || CE_RE.test(v)) ? '' : 'DNI de 8 dígitos (o CE / pasaporte).';
+    },
+    dob: (v) => { if (!v) return 'Requerido.'; const a = ageAt(v); if (a === null || a > 100) return 'Fecha inválida.'; return a < 18 ? 'Tiene que ser mayor de 18.' : ''; },
+    email: (v, optional) => !v ? (optional ? '' : 'Requerido.') : (!EMAIL_RE.test(v) ? 'Correo inválido.' : ''),
+    phone: (v) => { const d = String(v || '').replace(/\D/g, ''); return !d ? 'Requerido.' : ((d.length < 7 || d.length > 15) ? 'Número inválido.' : ''); },
+    ig: (v) => !v ? 'Requerido.' : (!IG_RE.test(v) ? 'Usuario inválido.' : ''),
+  };
+  function setErr(input, msg){
+    input.classList.toggle('bad', !!msg);
+    const err = input.closest('.field').querySelector('.err');
+    if (err) err.textContent = msg || '';
   }
+  function liveClear(root){ root.addEventListener('input', (e) => { if (e.target.classList.contains('in')) setErr(e.target, ''); }); }
 
-  function readForm(){
-    return {
-      nombre: $('f-nombre').value.trim(),
-      apellido: $('f-apellido').value.trim(),
-      dni: $('f-dni').value.trim().toUpperCase(),
-      dob: $('f-dob').value,
-      email: $('f-email').value.trim().toLowerCase(),
-      phone: $('f-phone').value.trim(),
-      instagram: cleanIg($('f-ig').value),
-      accepted: $('f-accept').checked,
+  // El QR llega por correo: un dominio mal escrito es una entrada perdida.
+  const DOMAIN_FIX = { 'gmial.com':'gmail.com', 'gmal.com':'gmail.com', 'gmai.com':'gmail.com', 'gmail.co':'gmail.com', 'gmail.con':'gmail.com', 'gnail.com':'gmail.com', 'gmaill.com':'gmail.com', 'hotmial.com':'hotmail.com', 'hotmal.com':'hotmail.com', 'hotmail.con':'hotmail.com', 'hotmail.co':'hotmail.com', 'outlok.com':'outlook.com', 'outlook.con':'outlook.com', 'yahooo.com':'yahoo.com', 'yaho.com':'yahoo.com', 'icloud.con':'icloud.com', 'iclod.com':'icloud.com' };
+  function wireEmailSuggest(input){
+    const box = input.closest('.field').querySelector('.suggest'); if (!box) return;
+    const run = () => {
+      const v = input.value.trim().toLowerCase(); const at = v.lastIndexOf('@');
+      const fix = at > 0 && DOMAIN_FIX[v.slice(at + 1)];
+      if (!fix) { box.textContent = ''; return; }
+      const better = v.slice(0, at + 1) + fix;
+      box.innerHTML = '¿Quisiste decir <button type="button">' + esc(better) + '</button>?';
+      box.querySelector('button').onclick = () => { input.value = better; box.textContent = ''; setErr(input, ''); };
     };
+    input.addEventListener('blur', run);
+    input.addEventListener('input', () => { if (box.textContent) run(); });
   }
-
-  function validateField(id, d){
-    switch (id) {
-      case 'f-nombre': return !d.nombre ? 'Requerido.' : (!NAME_RE.test(d.nombre) ? 'Solo letras.' : '');
-      case 'f-apellido': return !d.apellido ? 'Requerido.' : (!NAME_RE.test(d.apellido) ? 'Solo letras.' : '');
-      case 'f-dni': return !d.dni ? 'Requerido.' : (!DOC_RE.test(d.dni) ? 'DNI de 8 dígitos (o CE / pasaporte).' : '');
-      case 'f-dob': {
-        if (!d.dob) return 'Requerido.';
-        const asOf = eventInfo.dateIso ? new Date(eventInfo.dateIso + 'T00:00:00') : new Date();
-        const age = ageAsOf(d.dob, asOf);
-        if (age === null || age > 100) return 'Fecha inválida.';
-        if (age < 18) return 'Tienes que ser mayor de 18.';
-        return '';
-      }
-      case 'f-email': return !d.email ? 'Requerido.' : (!EMAIL_RE.test(d.email) ? 'Correo inválido.' : '');
-      case 'f-phone': {
-        const digits = d.phone.replace(/\D/g, '');
-        return !digits ? 'Requerido.' : ((digits.length < 7 || digits.length > 15) ? 'Número inválido.' : '');
-      }
-      case 'f-ig': return !d.instagram ? 'Requerido.' : (!IG_RE.test(d.instagram) ? 'Usuario inválido.' : '');
-    }
-    return '';
-  }
-
-  function setErr(id, msg){
-    $(id).classList.toggle('has-error', !!msg);
-    const el = document.querySelector('.pd-err[data-for="' + id + '"]');
-    if (el) el.textContent = msg || '';
-  }
-
-  const FIELD_IDS = ['f-nombre', 'f-apellido', 'f-dni', 'f-dob', 'f-email', 'f-phone', 'f-ig'];
-  FIELD_IDS.forEach((id) => {
-    $(id).addEventListener('blur', () => { if ($(id).value) setErr(id, validateField(id, readForm())); });
-    $(id).addEventListener('input', () => setErr(id, ''));
-  });
 
   const SERVER_ERRORS = {
-    missing_fields: 'Completa todos los campos.',
-    not_accepted: 'Marca la casilla para continuar.',
-    invalid_name: 'Revisa tu nombre y apellidos.',
-    invalid_document: 'Revisa tu DNI.',
-    invalid_phone: 'Revisa tu número.',
-    invalid_instagram: 'Revisa tu usuario de Instagram.',
-    invalid_dob: 'Revisa tu fecha de nacimiento.',
-    underage: 'El evento es solo para mayores de 18.',
-    invalid_email: 'Ese correo no es válido o no recibe mensajes. Usa otro.',
-    code_not_found: 'Ese código no existe.',
-    code_used: 'Ese código ya fue utilizado.',
-    code_revoked: 'Ese código ya no es válido.',
+    missing_fields: 'Completa todos los campos.', not_accepted: 'Marca la casilla para continuar.',
+    invalid_name: 'Revisa los nombres y apellidos.', invalid_document: 'Revisa el número de documento.',
+    invalid_phone: 'Revisa el número de celular.', invalid_instagram: 'Revisa tu usuario de Instagram.',
+    invalid_dob: 'Revisa la fecha de nacimiento.', underage: 'El evento es solo para mayores de 18.',
+    invalid_email: 'Ese correo no es válido o no recibe mensajes. Usa otro.', missing_buyer_email: 'Falta el correo del comprador.',
+    duplicate_document: 'Hay dos asistentes con el mismo documento.', closed: 'La lista de free entry está cerrada.',
+    sold_out: 'No quedan suficientes entradas de ese tipo. Ajusta la cantidad.', sales_closed: 'La venta online está cerrada.',
+    table_taken: 'Alguien acaba de reservar esa mesa. No se te cobró: elige otra.', invalid_table: 'Esa mesa ya no está disponible.',
+    payment_failed: 'El pago no se pudo procesar.', payments_disabled: 'La venta online no está disponible ahora.',
   };
 
-  $('data-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const d = readForm();
-    let firstBad = null;
-    FIELD_IDS.forEach((id) => {
-      const m = validateField(id, d);
-      setErr(id, m);
-      if (m && !firstBad) firstBad = id;
-    });
-    const msg = $('form-msg');
-    if (firstBad) { msg.textContent = 'Revisa los campos marcados.'; $(firstBad).focus(); return; }
-    if (!d.accepted) { msg.textContent = 'Marca la casilla para continuar.'; $('f-accept').focus(); return; }
+  /* ================= Free entry ================= */
+  $('free-btn').addEventListener('click', () => {
+    if (!cfg || !cfg.freeEntry.open) return;
+    openSheet(); go('v-free');
+    setTimeout(() => $('ff-nombre').focus({ preventScroll: true }), 60);
+  });
+  liveClear($('free-form'));
+  wireEmailSuggest($('ff-email'));
 
-    const btn = $('form-btn');
-    btn.disabled = true; btn.textContent = 'Generando…'; msg.textContent = '';
+  $('free-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = {
+      nombre: $('ff-nombre').value.trim(), apellido: $('ff-apellido').value.trim(),
+      dni: $('ff-dni').value.trim().toUpperCase(), dob: $('ff-dob').value,
+      email: $('ff-email').value.trim().toLowerCase(), phone: $('ff-phone').value.trim(),
+      instagram: cleanIg($('ff-ig').value), accepted: $('ff-accept').checked,
+    };
+    const checks = [['ff-nombre', check.name(f.nombre)], ['ff-apellido', check.name(f.apellido)], ['ff-email', check.email(f.email)],
+      ['ff-dni', check.doc(f.dni)], ['ff-dob', check.dob(f.dob)], ['ff-phone', check.phone(f.phone)], ['ff-ig', check.ig(f.instagram)]];
+    let first = null;
+    checks.forEach(([id, m]) => { setErr($(id), m); if (m && !first) first = id; });
+    const msg = $('free-msg');
+    if (first) { msg.textContent = 'Revisa los campos marcados.'; $(first).focus(); return; }
+    if (!f.accepted) { msg.textContent = 'Marca la casilla para continuar.'; return; }
+    const btn = $('free-submit');
+    btn.disabled = true; btn.textContent = 'Enviando…'; msg.textContent = '';
     try {
-      const r = await fetch('/api/redeem', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.assign({ code: currentCode }, d)),
-      });
-      const res = await r.json();
+      const r = await fetch('/api/register-free', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ ref }, f)) });
+      const d = await r.json();
       if (!r.ok) {
-        if (res.error === 'already_has_ticket') {
-          msg.textContent = res.field === 'email'
-            ? 'Ese correo ya tiene una entrada. Revisa tu bandeja.'
-            : 'Ese DNI ya tiene una entrada. Revisa el correo con el que te registraste.';
-        } else {
-          msg.textContent = SERVER_ERRORS[res.error] || 'Algo salió mal. Intenta de nuevo.';
-        }
-        if (res.error === 'invalid_email') setErr('f-email', 'Usa otro correo.');
+        msg.textContent = d.error === 'already_registered'
+          ? (d.field === 'email' ? 'Ese correo ya está en la lista de esta fecha.' : 'Ese documento ya está en la lista de esta fecha.')
+          : (SERVER_ERRORS[d.error] || 'Algo salió mal. Intenta de nuevo.');
+        if (d.error === 'invalid_email') setErr($('ff-email'), 'Usa otro correo.');
         return;
       }
-      renderTicket(res, d.email);
+      $('free-done-email').textContent = f.email;
+      if (d.validityLabel) $('free-done-validity').textContent = 'Free entry ' + d.validityLabel;
+      $('free-form').reset();
+      go('v-free-done');
     } catch (err) {
       msg.textContent = 'Error de conexión. Intenta de nuevo.';
     } finally {
-      btn.disabled = false; btn.textContent = 'Generar mi QR';
+      btn.disabled = false; btn.textContent = 'Apuntarme';
     }
   });
 
-  /* ---------------- Paso 3 ---------------- */
-  function renderTicket(res, email){
-    const t = res.ticket;
-    const ev = res.event || eventInfo;
-    $('ticket-tier').textContent = t.tierLabel || 'Invitación';
-    $('ticket-name').textContent = t.name;
-    $('ticket-qr').src = res.qr;
-    $('ticket-code').textContent = t.id;
-    $('ticket-date').textContent = ev.dateLabel || '';
-    $('ticket-address').textContent = ev.address || '';
-    $('ticket-address').href = ev.mapsUrl || '#';
-    $('ticket-address').parentNode.style.display = ev.address ? '' : 'none';
-    $('ticket-validity').textContent = t.validityLabel ? 'QR válido ' + t.validityLabel : '';
-    $('ticket-validity').style.display = t.validityLabel ? '' : 'none';
-    $('ticket-lead').textContent = (res.emailSent === false
-      ? 'No pudimos enviarlo a tu correo ahora. Toma una captura de esta pantalla y guarda el link de "Ver mi entrada".'
-      : 'También te lo enviamos a ' + email + '.') + ' Preséntalo con tu documento de identidad físico. Solo mayores de 18.';
-    $('ticket-link').href = '/entrada?t=' + encodeURIComponent(t.token);
-    show('step-ticket');
+  /* ================= Datos y pago ================= */
+  function personBlock(i, label, sub, opts){
+    const p = 'p' + i + '-';
+    const ac = (v) => (i === 0 ? v : 'off');
+    return '<div class="person" data-i="' + i + '"' + (opts.sku ? ' data-sku="' + esc(opts.sku) + '"' : '') + '>' +
+      '<div class="person-h"><p class="cap">' + esc(label) + '</p><p class="cap muted">' + esc(sub) + '</p></div><div class="fields">' +
+        '<div class="field"><label for="' + p + 'n">Nombre</label><input class="in" id="' + p + 'n" data-k="nombre" type="text" autocomplete="' + ac('given-name') + '" autocapitalize="words" /><p class="err"></p></div>' +
+        '<div class="field"><label for="' + p + 'a">Apellidos</label><input class="in" id="' + p + 'a" data-k="apellido" type="text" autocomplete="' + ac('family-name') + '" autocapitalize="words" /><p class="err"></p></div>' +
+        (i === 0 ? '<div class="field wide"><label for="' + p + 'e">Correo <small>· aquí llegan los QRs</small></label><input class="in" id="' + p + 'e" data-k="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" /><p class="err"></p><p class="suggest"></p></div>' : '') +
+        '<div class="field"><label for="' + p + 't">Documento</label><select class="in" id="' + p + 't" data-k="tipoDocumento"><option value="DNI">DNI</option><option value="CE">Carné de extranjería</option><option value="Pasaporte">Pasaporte</option></select><p class="err"></p></div>' +
+        '<div class="field"><label for="' + p + 'd">Número</label><input class="in" id="' + p + 'd" data-k="numeroDocumento" type="text" autocomplete="off" maxlength="12" /><p class="err"></p></div>' +
+        '<div class="field"><label for="' + p + 'b">Fecha de nacimiento</label><input class="in" id="' + p + 'b" data-k="dob" type="date" autocomplete="' + ac('bday') + '" /><p class="err"></p></div>' +
+        (i === 0
+          ? '<div class="field"><label for="' + p + 'p">Celular</label><input class="in" id="' + p + 'p" data-k="phone" type="tel" inputmode="tel" autocomplete="tel" /><p class="err"></p><p class="hint">Solo si hay un problema con tu compra.</p></div>'
+          : (opts.withEmail ? '<div class="field"><label for="' + p + 'e">Correo <small>· opcional, recibe su propio QR</small></label><input class="in" id="' + p + 'e" data-k="email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" /><p class="err"></p><p class="suggest"></p></div>' : '')) +
+      '</div></div>';
   }
 
-  $('another-btn').addEventListener('click', () => {
-    $('data-form').reset();
-    FIELD_IDS.forEach((id) => setErr(id, ''));
-    $('form-msg').textContent = '';
-    $('code-input').value = '';
-    currentCode = '';
-    try { history.replaceState(null, '', '/'); } catch (e) {}
-    show('step-code');
-    $('code-input').focus();
+  function openBuy(kind){
+    mode = kind;
+    let sub = 0; let rows = '';
+    if (kind === 'table') {
+      const u = unitById(selectedUnit); const tt = tableType(u.type);
+      sub = tt.price;
+      renderSteps($('buy-steps'), ['Elige', 'Datos', 'Pago'], 2);
+      $('buy-title').textContent = tt.name + ' ' + u.id;
+      $('buy-lead').textContent = 'Datos del titular. Con un solo QR entran hasta ' + tt.people + ' personas junto con el titular, a cualquier hora.';
+      rows = '<div class="summary-row"><span>' + esc(tt.name) + ' ' + esc(u.id) + ' · hasta ' + tt.people + ' personas</span><span>' + money(tt.price) + '</span></div>' +
+        '<div class="summary-row"><span>Incluye</span><span style="text-align:right;max-width:60%;">' + esc(tt.includes) + '</span></div>';
+      $('people').innerHTML = personBlock(0, 'Titular de la reserva', '', {});
+    } else {
+      const lines = cartLines();
+      sub = lines.reduce((a, l) => a + l.price * l.qty, 0);
+      renderSteps($('buy-steps'), ['Entradas', 'Datos', 'Pago'], 2);
+      $('buy-title').textContent = totalQty() > 1 ? 'Datos de los asistentes' : 'Tus datos';
+      $('buy-lead').textContent = 'Cada entrada va a nombre de una persona y se verifica con su documento en la puerta.';
+      rows = lines.map((l) => '<div class="summary-row"><span>' + l.qty + ' × ' + esc(l.name) + '</span><span>' + money(l.price * l.qty) + '</span></div>').join('');
+      let html = ''; let i = 0;
+      lines.forEach((l) => { for (let k = 0; k < l.qty; k++) { html += personBlock(i, i === 0 ? 'Tú · comprador' : 'Asistente ' + (i + 1), l.name, { sku: l.sku, withEmail: true }); i++; } });
+      $('people').innerHTML = html;
+    }
+    const p = priced(sub);
+    if (p.discount) rows += '<div class="summary-row"><span>Descuento de promotor</span><span>− ' + money(p.discount) + '</span></div>';
+    rows += '<div class="summary-row total"><span>Total</span><span>' + money(p.total) + '</span></div>';
+    $('buy-summary').innerHTML = rows;
+    $('buy-submit').textContent = 'Pagar ' + money(p.total);
+    $('buy-msg').textContent = '';
+    $('buy-accept').checked = false;
+    document.querySelectorAll('#people [data-k="email"]').forEach(wireEmailSuggest);
+    if (!$('sheet').classList.contains('is-open')) openSheet();
+    go('v-buy');
+    setTimeout(() => { const f = $('people').querySelector('.in'); if (f) f.focus({ preventScroll: true }); }, 60);
+  }
+  liveClear($('buy-form'));
+
+  function readPeople(){
+    let first = null;
+    const out = [...document.querySelectorAll('#people .person')].map((blk) => {
+      const i = parseInt(blk.dataset.i, 10);
+      const get = (k) => blk.querySelector('[data-k="' + k + '"]');
+      const a = {
+        sku: blk.dataset.sku || undefined,
+        nombre: get('nombre').value.trim(), apellido: get('apellido').value.trim(),
+        tipoDocumento: get('tipoDocumento').value, numeroDocumento: get('numeroDocumento').value.trim().toUpperCase(),
+        dob: get('dob').value, email: get('email') ? get('email').value.trim().toLowerCase() : '', phone: get('phone') ? get('phone').value.trim() : '',
+      };
+      const tests = [['nombre', check.name(a.nombre)], ['apellido', check.name(a.apellido)]];
+      if (get('email')) tests.push(['email', check.email(a.email, i !== 0)]);
+      tests.push(['numeroDocumento', check.doc(a.numeroDocumento, a.tipoDocumento)], ['dob', check.dob(a.dob)]);
+      if (get('phone')) tests.push(['phone', check.phone(a.phone)]);
+      tests.forEach(([k, m]) => { setErr(get(k), m); if (m && !first) first = get(k); });
+      return a;
+    });
+    const docs = out.map((a) => a.numeroDocumento.toLowerCase());
+    return { people: out, first, dup: docs.length !== new Set(docs).size };
+  }
+
+  $('buy-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { people, first, dup } = readPeople();
+    const msg = $('buy-msg');
+    if (first) { msg.textContent = 'Revisa los campos marcados.'; first.focus(); return; }
+    if (dup) { msg.textContent = SERVER_ERRORS.duplicate_document; return; }
+    if (!$('buy-accept').checked) { msg.textContent = 'Marca la casilla para continuar.'; return; }
+    if (!cfg.culqiPublicKey) { msg.textContent = 'La venta online no está disponible ahora. Escríbenos a info@paradisioclub.com.'; return; }
+    msg.textContent = '';
+    const btn = $('buy-submit'); btn.disabled = true;
+    try { await ensureCulqiLoaded(); }
+    catch (err) { btn.disabled = false; msg.textContent = 'No se pudo cargar el pago. Desactiva el bloqueador de anuncios o prueba en otro navegador.'; return; }
+    btn.disabled = false;
+    renderSteps($('buy-steps'), [mode === 'table' ? 'Elige' : 'Entradas', 'Datos', 'Pago'], 3);
+    payWithCulqi(people);
   });
 
-  /* ---------------- Arranque ---------------- */
-  // Link directo del promotor: paradisioclub.com/?c=CODIGO valida y salta al formulario.
-  const params = new URLSearchParams(location.search);
-  const preset = cleanCode(params.get('c') || params.get('code'));
-  if (preset) {
-    $('code-input').value = preset;
-    submitCode();
-  } else {
-    fetch('/api/invite?code=').then((r) => r.json()).then((d) => setEvent(d.event)).catch(() => {});
-    $('code-input').focus({ preventScroll: true });
+  /* ================= Culqi ================= */
+  function ensureCulqiLoaded(){
+    return new Promise((resolve, reject) => {
+      if (window.CulqiCheckout) return resolve();
+      const existing = document.querySelector('script[src="https://js.culqi.com/checkout-js"]');
+      if (!existing) {
+        const s = document.createElement('script'); s.src = 'https://js.culqi.com/checkout-js'; s.defer = true;
+        s.onload = () => resolve(); s.onerror = () => reject(new Error('culqi_load_failed'));
+        document.head.appendChild(s); return;
+      }
+      let tries = 0;
+      const iv = setInterval(() => { tries++; if (window.CulqiCheckout) { clearInterval(iv); resolve(); } else if (tries > 40) { clearInterval(iv); reject(new Error('culqi_load_timeout')); } }, 250);
+    });
   }
+  let activeCheckout = null;
+  let pendingPeople = null;
+  function currentTotal(){
+    if (mode === 'table') { const u = unitById(selectedUnit); return u ? priced(tableType(u.type).price).total : 0; }
+    return priced(cartLines().reduce((a, l) => a + l.price * l.qty, 0)).total;
+  }
+  function payWithCulqi(people){
+    if (activeCheckout) return;
+    pendingPeople = people;
+    const checkout = new window.CulqiCheckout(cfg.culqiPublicKey, {
+      settings: { title: 'Paradisio', currency: 'PEN', amount: Math.round(currentTotal() * 100) },
+      client: { email: people[0].email },
+      options: { lang: 'es', installments: false, modal: true, paymentMethods: { tarjeta: true, yape: false, billetera: false, bancaMovil: false, agente: false, cuotealo: false } },
+      appearance: {
+        theme: 'default', menuType: 'select', buttonCardPayText: 'Pagar', hiddenBanner: false, logo: location.origin + '/logo-white.png',
+        variables: { fontFamily: 'Jost, Futura, sans-serif', borderRadius: '0px', colorBackground: '#0E0D0D', colorPrimary: '#E2361F', colorText: '#F4F0EA' },
+        rules: { '.Culqi-Main-Container': { background: '#0E0D0D' }, '.Culqi-Button': { background: '#E2361F' }, '.Culqi-Input': { background: '#151413', border: '1px solid rgba(244,240,234,0.34)', color: '#F4F0EA' }, '.Culqi-Label': { color: '#A9A39A' } },
+      },
+    });
+    activeCheckout = checkout;
+    checkout.culqi = function(){ handleCulqi(checkout); };
+    checkout.open();
+  }
+
+  async function handleCulqi(checkout){
+    activeCheckout = null;
+    const msg = $('buy-msg');
+    if (!checkout.token) {
+      const detail = checkout.error && (checkout.error.user_message || checkout.error.merchant_message);
+      if (detail) msg.textContent = detail;
+      renderSteps($('buy-steps'), [mode === 'table' ? 'Elige' : 'Entradas', 'Datos', 'Pago'], 2);
+      return;
+    }
+    const token = checkout.token.id;
+    checkout.close();
+    const btn = $('buy-submit'); btn.disabled = true; btn.textContent = 'Procesando…';
+    try {
+      if (mode === 'table') {
+        const r = await fetch('/api/reserve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, unitId: selectedUnit, holder: pendingPeople[0], ref }) });
+        const d = await r.json();
+        if (!r.ok) return failPay(d);
+        renderDone([Object.assign({ qr: d.qr }, d.ticket)], null, d.emailSent !== false, pendingPeople[0].email);
+        const u = unitById(selectedUnit); if (u) u.sold = true;
+        selectedUnit = null; renderTables(); renderTablesCard();
+      } else {
+        const r = await fetch('/api/charge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, items: cartLines().map((l) => ({ sku: l.sku, qty: l.qty })), assistants: pendingPeople, ref }) });
+        const d = await r.json();
+        if (!r.ok) return failPay(d);
+        renderDone(d.tickets, d.order, true, pendingPeople[0].email);
+        cart = {}; syncQty(); syncBar();
+      }
+    } catch (err) {
+      msg.textContent = 'Error de conexión. Si se hizo el cobro, escríbenos a info@paradisioclub.com antes de intentar de nuevo.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Pagar ' + money(currentTotal());
+    }
+  }
+  function failPay(d){
+    $('buy-msg').textContent = (d.error === 'payment_failed' && d.detail) ? d.detail : (SERVER_ERRORS[d.error] || 'No se pudo completar. Intenta de nuevo.');
+    renderSteps($('buy-steps'), [mode === 'table' ? 'Elige' : 'Entradas', 'Datos', 'Pago'], 2);
+    if (d.error === 'table_taken' || d.error === 'invalid_table') { selectedUnit = null; load().then(() => go('v-tables')); }
+    else if (d.error === 'sold_out') load();
+  }
+  function renderDone(tickets, order, emailSent, email){
+    const isTable = mode === 'table';
+    $('buy-done-title').innerHTML = isTable ? 'Reserva <em>confirmada</em>' : 'Compra <em>confirmada</em>';
+    $('buy-done-lead').innerHTML = (emailSent
+      ? 'Te enviamos ' + (tickets.length > 1 ? 'las entradas' : 'tu QR') + ' a <strong>' + esc(email) + '</strong>. Revisa también spam y promociones.'
+      : 'No pudimos enviar el correo ahora. Toma captura de esta pantalla.') +
+      (isTable ? ' Con este QR entra todo tu grupo junto con el titular.' : ' Presenta cada QR con el documento físico de su titular.');
+    $('qr-list').innerHTML = tickets.map((t) =>
+      '<div class="qr-card"><p class="cap red">' + esc(t.skuLabel || '') + '</p>' +
+      '<div class="qr-frame" style="margin-top:14px;"><img src="' + t.qr + '" alt="Código QR de ' + esc(t.name) + '" width="210" height="210" /></div>' +
+      '<p class="qr-name">' + esc(t.name) + '</p><p class="qr-code">' + esc(t.id) + '</p>' +
+      (t.token ? '<p style="margin:12px 0 0;"><a class="cap muted" href="/entrada?t=' + encodeURIComponent(t.token) + '" target="_blank" rel="noopener" style="text-underline-offset:4px;">Ver entrada</a></p>' : '') + '</div>').join('');
+    const ord = $('buy-done-order');
+    if (order && order.token && tickets.length > 1) { ord.hidden = false; ord.href = '/orden?t=' + encodeURIComponent(order.token); } else ord.hidden = true;
+    go('v-buy-done');
+  }
+
+  /* ================= Arranque ================= */
+  initRef();
+  load();
 })();
 </script>
+<script src="https://js.culqi.com/checkout-js" defer onload="window.__culqiLoaded=true" onerror="window.__culqiLoadError=true"></script>
 </body>
 </html>

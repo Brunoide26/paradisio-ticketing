@@ -166,16 +166,20 @@
           </div>
         </div>
         <div class="cortesia-metrics">
-          <span>Vigentes: <strong id="cortesia-vigentes">—</strong> / <span id="cortesia-cap">—</span></span>
-          <span>counters.free (crudo): <strong id="cortesia-raw">—</strong></span>
+          <span>Registros: <strong id="cortesia-vigentes">—</strong></span>
+          <span>QR pendiente: <strong id="fe-pending">—</strong></span>
+          <span>QR enviado: <strong id="fe-sent">—</strong></span>
+          <span style="display:none;"><span id="cortesia-cap"></span><strong id="cortesia-raw"></strong></span>
         </div>
         <div class="cortesia-actions">
-          <button class="btn btn-pink" id="cortesia-open-btn">Abrir cortesías</button>
-          <button class="btn btn-ghost" id="cortesia-close-btn">Cerrar cortesías</button>
-          <button class="btn btn-ghost" id="cortesia-resync-btn">Resincronizar contador</button>
+          <button class="btn btn-pink" id="fe-send-btn">Enviar QRs pendientes</button>
+          <button class="btn btn-ghost" id="cortesia-open-btn">Abrir registro</button>
+          <button class="btn btn-ghost" id="cortesia-close-btn">Cerrar registro</button>
+          <button class="btn btn-ghost" id="cortesia-resync-btn" style="display:none;">Resincronizar contador</button>
         </div>
       </div>
-      <div class="hint">El control manual manda sobre el cierre automático por cap. "Vigentes" y "counters.free" deberían coincidir; si no, usa Resincronizar.</div>
+      <div class="hint" id="fe-send-progress"></div>
+      <div class="hint">Free Entry: quien se registra no recibe QR al toque. "Enviar QRs pendientes" les manda su QR por correo a todos (día previo al evento) y eso los aprueba. Para rechazar a alguien, anula su registro antes de enviar: los anulados no reciben nada.</div>
     </div>
 
     <div class="tabs">
@@ -183,7 +187,7 @@
       <button class="tab-btn" id="tab-reclamos">Reclamaciones</button>
       <button class="tab-btn" id="tab-puerta">Puerta en vivo</button>
       <button class="tab-btn" id="tab-promotores">Promotores</button>
-      <button class="tab-btn" id="tab-codigos">Códigos</button>
+      <button class="tab-btn" id="tab-codigos">Códigos (fechas pasadas)</button>
       <button class="tab-btn" id="tab-emision">Emisión manual</button>
     </div>
 
@@ -268,21 +272,16 @@
       <div class="stat-row" id="promo-totals"></div>
 
       <div class="puerta-chart-wrap" id="promo-give-card">
-        <p class="pd-eyebrow" style="margin-bottom:14px;">Dar códigos</p>
+        <p class="pd-eyebrow" style="margin-bottom:14px;">Links de promotores</p>
         <div class="toolbar">
-          <select id="promo-give-select" class="btn btn-ghost"></select>
-          <input type="number" id="promo-give-count" min="1" max="500" value="20" style="flex:0 0 110px;" />
-          <button class="btn btn-pink" id="promo-give-btn">Generar códigos</button>
+          <button class="btn btn-pink" id="promo-copy-all-links">Copiar todos los links</button>
         </div>
-        <div id="promo-give-result" style="display:none;">
-          <div class="codes-new" id="promo-give-codes"></div>
-          <div class="toolbar" style="margin-top:10px;">
-            <button class="btn btn-pink btn-sm" id="promo-give-copy-msg">Copiar mensajes para WhatsApp</button>
-            <button class="btn btn-ghost btn-sm" id="promo-give-copy-codes">Copiar solo códigos</button>
-            <button class="btn btn-ghost btn-sm" id="promo-give-copy-links">Copiar solo links</button>
-          </div>
+        <div class="hint">Cada promotor tiene su link (<span style="font-family:monospace;">paradisioclub.com/?ref=CODIGO</span>). Todo lo que saque alguien que entró por ese link (free entry, entradas y mesas) queda a su nombre. Desactivar o eliminar un promotor hace que su link deje de atribuir.</div>
+        <!-- Restos del sistema de códigos (fechas pasadas): ocultos -->
+        <div style="display:none;">
+          <select id="promo-give-select"></select><input type="number" id="promo-give-count" /><button id="promo-give-btn"></button>
+          <div id="promo-give-result"><div id="promo-give-codes"></div><button id="promo-give-copy-msg"></button><button id="promo-give-copy-codes"></button><button id="promo-give-copy-links"></button></div>
         </div>
-        <div class="hint">Cada código es para una persona y queda a nombre del promotor. Se pasan tal cual o como link (<span style="font-family:monospace;">/?c=CODIGO</span>), que abre el formulario con el código puesto.</div>
       </div>
 
       <div class="toolbar">
@@ -296,22 +295,23 @@
           <thead>
             <tr>
               <th class="sortable-th" data-sort="name">Promotor <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="codigos">Códigos dados <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="invitaciones">QRs sacados <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="codigosLibres">Sin usar <span class="sort-arrow"></span></th>
+              <th>Link</th>
+              <th class="sortable-th" data-sort="invitaciones">Free entry <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="pagadas">Pagadas <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="mesas">Mesas <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="ingreso">Ventas S/ <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="ingresaron">Ingresaron <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="aTiempo">Antes 11 <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="tardeCobrado">Después · pagó <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="tardeGratis">Después · gratis <span class="sort-arrow"></span></th>
               <th>Asistencia</th>
-              <th></th>
               <th>Activo</th>
             </tr>
           </thead>
           <tbody id="promotores-table-body"></tbody>
         </table>
       </div>
-      <div class="hint">"QRs sacados" = personas que canjearon un código del promotor. "Ingresaron" cuenta a todos los que entraron, antes o después de las 11 (pagando o gratis, según lo que marcó la puerta). "Asistencia" = ingresaron / QRs sacados. Desactivar un promotor no borra sus entradas ya emitidas.</div>
+      <div class="hint">"Free entry" = registros desde su link (o códigos canjeados en fechas pasadas). "Ventas" = entradas pagadas + mesas. "Ingresaron" cuenta a todos los que entraron, antes o después de las 11. "Asistencia" = ingresaron / (free entry + pagadas). Desactivar un promotor no borra lo que ya trajo.</div>
     </div>
 
     <div id="codigos-panel" style="display:none;">
@@ -472,8 +472,9 @@
     const note = document.getElementById('event-note');
     note.textContent = isCurrentEvent() ? 'Fecha actual: aquí entran los QRs nuevos.' : 'Fecha pasada: solo consulta.';
     note.className = 'event-note' + (isCurrentEvent() ? '' : ' is-past');
-    // La caja de cortesías solo tiene sentido en la fecha que las usó.
-    const hasCortesia = !!ev.legacy || allTickets.some(t => t.type === 'free' && !t.manualIssue);
+    // La caja de registro (Free Entry) va en la fecha actual; en fechas
+    // pasadas sólo si usaron cortesías o free entry.
+    const hasCortesia = isCurrentEvent() || !!ev.legacy || allTickets.some(t => (t.type === 'free' && !t.manualIssue) || t.type === 'promo');
     document.getElementById('cortesia-card').style.display = hasCortesia ? '' : 'none';
     renderStats(null, allTickets);
     if (hasCortesia) renderCortesiaCard(lastCortesiaStatus, allTickets);
@@ -537,7 +538,9 @@
       [anulados, 'QRs anulados', false],
       [vigentes, 'QRs vigentes', true],
     ];
-    if (has('promo')) cards.push([vig('promo'), 'Invitaciones vigentes', false]);
+    if (has('promo')) cards.push([vig('promo'), 'Free entry', false]);
+    if (has('promo')) cards.push([tickets.filter(t => t.type === 'promo' && t.pending && !t.voided).length, 'QR pendiente', false]);
+    if (has('table')) cards.push([vig('table'), 'Mesas vendidas', false]);
     if (has('free')) cards.push([vig('free'), 'Cortesías vigentes', false]);
     if (has('paid')) cards.push([vig('paid'), 'Pagadas vigentes', false]);
     if (has('vip')) cards.push([vig('vip'), 'VIP vigentes', false]);
@@ -559,10 +562,17 @@
   // otherwise the two numbers would never be directly comparable for drift.
   function renderCortesiaCard(status, tickets){
     if (!status) return;
-    const vigentes = tickets.filter(t => t.type === 'free' && !t.voided).length;
+    const fe = tickets.filter(t => t.type === 'promo' && !t.voided);
+    const vigentes = fe.length;
+    const fePending = fe.filter(t => t.pending).length;
+    document.getElementById('fe-pending').textContent = fePending;
+    document.getElementById('fe-sent').textContent = vigentes - fePending;
+    const sendBtn = document.getElementById('fe-send-btn');
+    sendBtn.disabled = !fePending || !isCurrentEvent() || feSending;
+    if (!feSending) sendBtn.textContent = fePending ? 'Enviar QRs pendientes (' + fePending + ')' : 'Sin QRs pendientes';
     const isOpen = status.state === 'open';
     document.getElementById('cortesia-dot').className = 'semaforo-dot ' + (isOpen ? 'semaforo-green' : 'semaforo-red');
-    document.getElementById('cortesia-label').textContent = isOpen ? 'Cortesías: ABIERTO' : 'Cortesías: CERRADO';
+    document.getElementById('cortesia-label').textContent = isOpen ? 'Registro Free Entry: ABIERTO' : 'Registro Free Entry: CERRADO';
     let reasonText = '';
     if (!isOpen) {
       reasonText = status.reason === 'manual'
@@ -578,7 +588,7 @@
   }
 
   document.getElementById('cortesia-open-btn').onclick = async function(){
-    if (!confirm('¿Abrir el registro de cortesías? Esto también anula cualquier cierre automático por cap.')) return;
+    if (!confirm('¿Abrir el registro de Free Entry?')) return;
     try {
       const r = await fetch('/api/admin-cortesia-toggle', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -592,7 +602,7 @@
   };
 
   document.getElementById('cortesia-close-btn').onclick = async function(){
-    if (!confirm('¿Cerrar el registro de cortesías? La card desaparecerá de la web y se rechazarán nuevas solicitudes.')) return;
+    if (!confirm('¿Cerrar el registro de Free Entry? La web mostrará "Registro cerrado" y se rechazarán nuevos registros.')) return;
     try {
       const r = await fetch('/api/admin-cortesia-toggle', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -602,6 +612,38 @@
       await loadData();
     } catch(e){
       alert('Error de conexión al cerrar cortesías');
+    }
+  };
+
+  // Envío de QRs del Free Entry en tandas (ver api/admin-send-qrs.js).
+  let feSending = false;
+  document.getElementById('fe-send-btn').onclick = async function(){
+    const pending = allTickets.filter(t => t.type === 'promo' && t.pending && !t.voided).length;
+    if (!pending) return;
+    if (!confirm('¿Enviar el QR por correo a los ' + pending + ' registrados pendientes? Cada uno queda aprobado al recibirlo.')) return;
+    const btn = this;
+    const progress = document.getElementById('fe-send-progress');
+    feSending = true; btn.disabled = true;
+    let sent = 0; const failed = []; const skip = [];
+    try {
+      for (let guard = 0; guard < 500; guard++) {
+        btn.textContent = 'Enviando… ' + sent + ' / ' + pending;
+        const r = await fetch('/api/admin-send-qrs', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ passcode: PASSCODE, action:'send', limit: 8, skip }) });
+        if (r.status === 401) { alert('Clave incorrecta'); break; }
+        const d = await r.json();
+        if (!d.ok) { alert('Se detuvo el envío. Vuelve a intentar.'); break; }
+        sent += d.sent;
+        (d.failed || []).forEach(f => { failed.push(f); skip.push(f.id); });
+        progress.textContent = 'Enviados: ' + sent + ' · Fallidos: ' + failed.length + ' · Faltan: ' + d.remaining;
+        if (!d.remaining) break;
+      }
+      progress.textContent = 'Listo. Enviados: ' + sent + (failed.length ? ' · No salieron ' + failed.length + ': ' + failed.map(f => f.email).join(', ') + ' (quedan pendientes, puedes reintentar)' : '');
+    } catch(e) {
+      progress.textContent = 'Error de conexión después de ' + sent + ' envíos. Vuelve a apretar el botón: sigue con los que faltan.';
+    } finally {
+      feSending = false;
+      await loadData();
     }
   };
 
@@ -857,7 +899,8 @@
 
   function ticketRowHtml(t){
     const typeBadge = t.type==='paid' ? '<span class="badge badge-paid">Pagada</span>'
-      : t.type==='promo' ? '<span class="badge badge-promo">Invitación</span>'
+      : t.type==='promo' ? (t.pending ? '<span class="badge badge-out">Free entry · QR pendiente</span>' : '<span class="badge badge-promo">Free entry</span>')
+      : t.type==='table' ? '<span class="badge badge-paid">Mesa ' + escapeHtml(t.unitId||'') + ' · ' + (t.partySize||1) + 'p</span>'
       : t.type==='vip' ? '<span class="badge badge-paid">VIP</span>'
       : '<span class="badge badge-free">Gratis</span>';
     const igCell = t.instagram
@@ -899,7 +942,7 @@
       <td>${date}</td>
       <td>${statusBadge}${lateBadge}</td>
       <td>${emailStatusBadge(t)}</td>
-      <td style="white-space:nowrap;">${voidBtn}${t.email && !t.voided ? ` <button class="btn btn-ghost btn-sm" onclick="resendTicketQr('${t.id}', this)">Reenviar QR</button>` : ''}</td>
+      <td style="white-space:nowrap;">${voidBtn}${t.email && !t.voided ? ` <button class="btn btn-ghost btn-sm" onclick="resendTicketQr('${t.id}', this)">${t.pending ? 'Enviar QR' : 'Reenviar QR'}</button>` : ''}</td>
     </tr>`;
   }
 
@@ -1372,8 +1415,14 @@
   }
 
   function promoterLink(code){
-    return location.origin + '/p/' + code;
+    return location.origin + '/?ref=' + encodeURIComponent(code);
   }
+
+  document.getElementById('promo-copy-all-links').onclick = async function(){
+    const list = [...allPromoters].filter(p => p.active).sort((a, b) => a.name.localeCompare(b.name));
+    await copyText(list.map(p => p.name + ': ' + promoterLink(p.code)).join('\n'));
+    flash(this);
+  };
 
   function updateSortHeaders(){
     document.querySelectorAll('#promotores-panel .sortable-th').forEach(th => {
@@ -1388,25 +1437,23 @@
     renderPromoTotals();
     fillGiveSelect();
     if (list.length === 0) {
-      body.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#666;">Sin datos</td></tr>';
+      body.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#666;">Sin datos</td></tr>';
       updateSortHeaders();
       return;
     }
     body.innerHTML = list.map(p => `
       <tr${p.active ? '' : ' style="opacity:.5;"'}>
         <td>${escapeHtml(p.name)}<br><span style="font-family:monospace;color:#888;font-size:11px;">${escapeHtml(p.code)}</span></td>
-        <td>${p.codigos}</td>
-        <td><strong>${p.invitaciones}</strong></td>
-        <td>${p.codigosLibres}</td>
+        <td>${p.active ? `<button class="btn btn-ghost btn-sm" onclick="copyPromoterLink(this, '${p.code}')">Copiar link</button>` : '—'}</td>
+        <td><strong>${p.invitaciones}</strong>${p.pendientes ? '<br><span style="color:#888;font-size:11px;">' + p.pendientes + ' sin QR</span>' : ''}</td>
+        <td>${p.pagadas}</td>
+        <td>${p.mesas || 0}</td>
+        <td>${p.ingreso ? 'S/' + p.ingreso.toLocaleString('es-PE') : '—'}</td>
         <td><strong>${p.ingresaron}</strong></td>
         <td>${p.aTiempo}</td>
         <td>${p.tardeCobrado}</td>
         <td>${p.tardeGratis}</td>
-        <td>${p.invitaciones ? Math.round(p.ingresaron / p.invitaciones * 100) + '%' : '—'}</td>
-        <td style="white-space:nowrap;">
-          ${p.active ? `<button class="btn btn-pink btn-sm" onclick="giveCodesTo('${p.code}')">Dar códigos</button>` : ''}
-          <button class="btn btn-ghost btn-sm" onclick="viewCodesOf('${p.code}')">Ver códigos</button>
-        </td>
+        <td>${(p.invitaciones + p.pagadas) ? Math.round(p.ingresaron / (p.invitaciones + p.pagadas) * 100) + '%' : '—'}</td>
         <td>
           ${p.removed ? '<span style="color:#888;font-size:12px;">Eliminado</span>' : `
           <div style="display:flex;align-items:center;gap:12px;">
@@ -1425,8 +1472,10 @@
   function renderPromoTotals(){
     const sum = (k) => allPromoters.reduce((a, p) => a + (p[k] || 0), 0);
     const cards = [
-      [sum('codigos'), 'Códigos dados', false],
-      [sum('invitaciones'), 'QRs sacados', true],
+      [sum('invitaciones'), 'Free entry', true],
+      [sum('pagadas'), 'Pagadas', false],
+      [sum('mesas'), 'Mesas', false],
+      ['S/' + sum('ingreso').toLocaleString('es-PE'), 'Ventas', true],
       [sum('ingresaron'), 'Ingresaron', true],
       [sum('aTiempo'), 'Antes de las 11', false],
       [sum('tardeCobrado'), 'Después · pagó', false],
@@ -1502,7 +1551,7 @@
       const d = await r.json();
       input.value = '';
       await loadPromoters();
-      giveCodesTo(d.promoter.code);
+      alert('Promotor agregado. Su link: ' + promoterLink(d.promoter.code));
     } catch(e) { alert('Error de conexión.'); }
     finally { btn.disabled = false; }
   };
@@ -1569,10 +1618,10 @@
   document.getElementById('promotores-refresh-btn').onclick = loadPromoters;
 
   document.getElementById('promotores-export-btn').onclick = function(){
-    const headers = ['Codigo','Nombre','CodigosDados','QRsSacados','SinUsar','Ingresaron','Antes11','DespuesPago','DespuesGratis','Asistencia','Activo'];
+    const headers = ['Codigo','Nombre','Link','FreeEntry','SinQR','Pagadas','Mesas','VentasSoles','Ingresaron','Antes11','DespuesPago','DespuesGratis','Asistencia','Activo'];
     const rows = sortedPromoters().map(p => [
-      p.code, p.name, p.codigos, p.invitaciones, p.codigosLibres, p.ingresaron, p.aTiempo, p.tardeCobrado, p.tardeGratis,
-      p.invitaciones ? Math.round(p.ingresaron / p.invitaciones * 100) + '%' : '', p.active ? 'si' : 'no'
+      p.code, p.name, promoterLink(p.code), p.invitaciones, p.pendientes || 0, p.pagadas, p.mesas || 0, p.ingreso, p.ingresaron, p.aTiempo, p.tardeCobrado, p.tardeGratis,
+      (p.invitaciones + p.pagadas) ? Math.round(p.ingresaron / (p.invitaciones + p.pagadas) * 100) + '%' : '', p.active ? 'si' : 'no'
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

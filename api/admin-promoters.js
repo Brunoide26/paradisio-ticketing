@@ -52,6 +52,8 @@ module.exports = async (req, res) => {
       const cortesias = own.filter((t) => t.type === 'free').length;
       const pagadas = own.filter((t) => t.type === 'paid').length;
       const invitaciones = own.filter((t) => t.type === 'promo').length;
+      const pendientes = own.filter((t) => t.type === 'promo' && t.pending).length;
+      const mesas = own.filter((t) => t.type === 'table').length;
       const personas = cortesias + pagadas + invitaciones;
       const ownCodes = invites.filter((i) => i.promoterCode === p.code && !i.revoked);
       const codigos = ownCodes.length;
@@ -67,7 +69,14 @@ module.exports = async (req, res) => {
         const key = t.orderId || t.id;
         if (!paidOrderAmounts.has(key)) paidOrderAmounts.set(key, t.amount || 0);
       });
-      const ingreso = [...paidOrderAmounts.values()].reduce((sum, a) => sum + a, 0);
+      // Las entradas pagadas guardan su propio monto (una por asistente); las
+      // órdenes viejas (28/08) guardaban el total de la orden en cada ticket,
+      // de ahí la deduplicación por orden de arriba para esas.
+      const ingresoEntradas = own.some((t) => t.type === 'paid' && t.sku)
+        ? own.filter((t) => t.type === 'paid').reduce((sum, t) => sum + (t.amount || 0), 0)
+        : [...paidOrderAmounts.values()].reduce((sum, a) => sum + a, 0);
+      const ingresoMesas = own.filter((t) => t.type === 'table').reduce((sum, t) => sum + (t.amount || 0), 0);
+      const ingreso = Math.round((ingresoEntradas + ingresoMesas) * 100) / 100;
       // Todo el que cruzó la puerta cuenta como ingreso, haya llegado a tiempo
       // o después del corte. Los tardíos se separan en cobrados y gratis
       // según lo que marcó el staff en el scanner.
@@ -79,7 +88,7 @@ module.exports = async (req, res) => {
       const conversion = personas > 0 ? Math.round((ingresaron / personas) * 1000) / 10 : 0;
       return {
         code: p.code, name: p.name, active: p.active,
-        cortesias, pagadas, invitaciones, codigos, codigosLibres, personas, ingreso, ingresaron, conversion,
+        cortesias, pagadas, invitaciones, pendientes, mesas, codigos, codigosLibres, personas, ingreso, ingresaron, conversion,
         aTiempo, tardeCobrado, tardeGratis, custom: !!p.custom, removed: !!p.removed,
       };
     });

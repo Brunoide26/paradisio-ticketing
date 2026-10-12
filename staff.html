@@ -256,6 +256,8 @@
           showOverlay('bad', 'Ya ingresó', 'YA INGRESÓ', d.ticket.name + ' (' + docLabel(d.ticket) + ') — a las ' + new Date(d.ticket.checkedInAt).toLocaleTimeString());
         } else if(d.reason === 'other_event'){
           showOverlay('bad', 'Otra fecha', 'QR DE OTRA FECHA', d.ticket.name + ' (' + docLabel(d.ticket) + ') — este QR no es para hoy');
+        } else if(d.reason === 'not_approved'){
+          showOverlay('bad', 'Free entry', 'NO APROBADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — su QR nunca se envió');
         } else if(d.reason === 'voided'){
           showOverlay('bad', 'Anulado', 'ANULADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — NO debe ingresar');
         } else if(d.reason === 'cortesia_expired'){
@@ -264,7 +266,7 @@
           // Pasado el corte el QR igual sirve para entrar: staff decide si
           // esta persona paga o entra gratis. Las dos opciones registran el
           // ingreso (cuenta como entrada para el promotor).
-          showOverlay('bad', d.ticket.type === 'promo' ? 'Invitación' : 'Cortesía', 'DESPUÉS DE HORA', d.ticket.name + ' (' + docLabel(d.ticket) + ') — ¿pagó entrada o entra gratis?', {
+          showOverlay('bad', d.ticket.type === 'promo' ? 'Free entry' : 'Cortesía', 'DESPUÉS DE HORA', d.ticket.name + ' (' + docLabel(d.ticket) + ') — ¿pagó entrada o entra gratis?', {
             label: 'Pagó entrada',
             onConfirm: function(){ doCheckin(ticketId, true, true); }
           }, {
@@ -276,7 +278,7 @@
         }
         return;
       }
-      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : d.ticket.type === 'promo' ? 'INVITACIÓN' : 'CORTESÍA';
+      const typeLabel = d.ticket.type === 'paid' ? 'PAGADA' : d.ticket.type === 'vip' ? 'VIP' : d.ticket.type === 'table' ? 'MESA ' + (d.ticket.unitId || '') + ' · ' + (d.ticket.partySize || 1) + ' PERSONAS' : d.ticket.type === 'promo' ? 'FREE ENTRY' : 'CORTESÍA';
       if(d.ticket.lateEntry){
         showOverlay('ok', d.ticket.lateCharged ? 'DESPUÉS DE HORA · PAGÓ' : 'DESPUÉS DE HORA · GRATIS', 'INGRESO REGISTRADO', d.ticket.name + ' — ' + docLabel(d.ticket));
       } else {

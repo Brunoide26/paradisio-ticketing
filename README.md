@@ -14,7 +14,7 @@
 - **Plano y reservas:** el mapa es el plano del local redibujado en vector (`planSvg` en `index.html`). Box 5 y 6 = **Box Paradisio** (10 personas, junto al DJ booth); Box 1 a 4 = **Box After Hours** (8 personas); 6 **Mesas** (6 personas) repartidas. Las posiciones de las mesas están en `TABLE_UNITS` (en % del plano).
 - **Precios, cupos, mesas y mapa:** `lib/catalog.js` (o variables `TICKET_TYPES_JSON`, `TABLE_TYPES_JSON`, `TABLE_UNITS_JSON` en Vercel). El servidor siempre cobra lo de ese archivo.
 - **Fecha:** igual que antes (`EVENT_DATE_ISO`, `EVENT_NAME`, `EVENT_DATE_LABEL`, `EVENT_SHORT_DATE`, `EVENT_ADDRESS`, `PROMO_ENTRY_CUTOFF`…). Todo va por fecha en el admin.
-- **La fecha del 17/10 se movió al sábado 24/10.** Todo lo emitido para el 17 (QRs canjeados con código, códigos y stats de promotores) cuenta como del 24 y esos QRs siguen entrando (`MOVED_EVENTS` en `lib/events.js`). Su correo decía 17: reenviarlo desde el admin ("Reenviar QR") manda la fecha nueva.
+- **Fecha actual: sábado 14 de noviembre, 9 PM** (free entry hasta las 11 p.m.). Las fechas del 17/10 y 24/10 se movieron aquí: todo lo emitido para ellas (QRs canjeados, registros, stats de promotores) cuenta como del 14/11 y esos QRs siguen entrando (`MOVED_EVENTS` en `lib/events.js`). Su correo decía la fecha vieja: reenviarlo desde el admin ("Reenviar QR") manda la nueva.
 
 ---
 

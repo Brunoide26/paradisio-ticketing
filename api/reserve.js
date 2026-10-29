@@ -1,5 +1,5 @@
 const {
-  createTicket, sendTicketEmail, calcAge, getClientIp, qrDataUrl, claimTable, releaseTable, tableKey, redis, EVENT_DATE_LABEL,
+  createTicket, MIN_AGE, sendTicketEmail, calcAge, getClientIp, qrDataUrl, claimTable, releaseTable, tableKey, redis, EVENT_DATE_LABEL,
 } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
 const { findTableUnit, isSalesOpen } = require('../lib/catalog');
@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
     const digits = h.phone.replace(/\D/g, '');
     if (digits.length < 7 || digits.length > 15) return res.status(400).json({ error: 'invalid_phone' });
     const age = calcAge(h.dob);
-    if (age === null || age < 18) return res.status(403).json({ error: 'underage' });
+    if (age === null || age < MIN_AGE) return res.status(403).json({ error: 'underage' });
     const emailCheck = await validateEmail(h.email);
     if (!emailCheck.ok) return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason });
 

@@ -395,7 +395,6 @@
         <section class="about" aria-labelledby="h-noche">
           <h2 class="sec-h" id="h-noche">La noche</h2>
           <p>Paradisio nace como una respuesta a la fiesta en Lima: un espacio donde conviven los amantes de la electrónica y quienes no terminan de encajar en un solo sonido.</p>
-          <p>Pensamos cada set como un viaje a través de distintos años y artistas. Los himnos del disco y del house son nuestra línea, y sobre ella sumamos italo disco, nu disco y dance.</p>
         </section>
       </main>
     </div>
@@ -661,10 +660,10 @@
     t.units.filter((u) => u.x != null).forEach((u) => {
       const tt = tableType(u.type);
       const aria = esc((tt ? tt.name : '') + ' ' + unitLabel(u) + (u.sold ? ', reservado' : (tt ? ', hasta ' + tt.people + ' personas, ' + money(tt.price) : '')));
-      const short = u.type === 'mesa' ? u.id : unitLabel(u);
+      const short = /^mesa/.test(u.type) ? u.id : unitLabel(u);
       html += '<g class="unit' + (u.sold ? ' is-sold' : '') + '" style="--c:' + esc((tt && tt.color) || '#F4F0EA') + '" data-id="' + esc(u.id) + '" role="button" tabindex="' + (u.sold ? -1 : 0) + '" aria-label="' + aria + '">' +
         '<title>' + aria + '</title><rect x="' + u.x + '" y="' + u.y + '" width="' + u.w + '" height="' + u.h + '" rx="1"/>' +
-        '<text x="' + (u.x + u.w / 2) + '" y="' + (u.y + u.h / 2 + (u.type === 'mesa' ? .75 : .85)) + '" text-anchor="middle"' + (u.type === 'mesa' ? ' style="font-size:2.1px"' : '') + '>' + esc(short) + '</text></g>';
+        '<text x="' + (u.x + u.w / 2) + '" y="' + (u.y + u.h / 2 + (/^mesa/.test(u.type) ? .75 : .85)) + '" text-anchor="middle"' + (/^mesa/.test(u.type) ? ' style="font-size:2.1px"' : '') + '>' + esc(short) + '</text></g>';
     });
     $('map-legend').innerHTML = t.types.map((tt) => '<span><i style="background:' + esc(tt.color || '#F4F0EA') + ';border-color:' + esc(tt.color || '#F4F0EA') + '"></i>' + esc(tt.name) + '</span>').join('') +
       '<span><i style="background:#1b1a19;border-color:#36322f"></i>Reservado</span>';

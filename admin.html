@@ -276,7 +276,7 @@
         <div class="toolbar">
           <button class="btn btn-pink" id="promo-copy-all-links">Copiar todos los links</button>
         </div>
-        <div class="hint">Cada promotor tiene su link (<span style="font-family:monospace;">paradisioclub.com/?ref=CODIGO</span>). Todo lo que saque alguien que entró por ese link (free entry, entradas y mesas) queda a su nombre. Desactivar o eliminar un promotor hace que su link deje de atribuir.</div>
+        <div class="hint">Cada promotor tiene su link (<span style="font-family:monospace;">paradisioclub.com/?ref=CODIGO</span>). Todo lo que saque alguien que entró por ese link (Free Entry, entradas y mesas) queda a su nombre. Desactivar o eliminar un promotor hace que su link deje de atribuir.</div>
         <!-- Restos del sistema de códigos (fechas pasadas): ocultos -->
         <div style="display:none;">
           <select id="promo-give-select"></select><input type="number" id="promo-give-count" /><button id="promo-give-btn"></button>
@@ -296,7 +296,7 @@
             <tr>
               <th class="sortable-th" data-sort="name">Promotor <span class="sort-arrow"></span></th>
               <th>Link</th>
-              <th class="sortable-th" data-sort="invitaciones">Free entry <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="invitaciones">Free Entry <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="pagadas">Pagadas <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="mesas">Mesas <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="ingreso">Ventas S/ <span class="sort-arrow"></span></th>
@@ -311,7 +311,7 @@
           <tbody id="promotores-table-body"></tbody>
         </table>
       </div>
-      <div class="hint">"Free entry" = registros desde su link (o códigos canjeados en fechas pasadas). "Ventas" = entradas pagadas + mesas. "Ingresaron" cuenta a todos los que entraron, antes o después de las 11. "Asistencia" = ingresaron / (free entry + pagadas). Desactivar un promotor no borra lo que ya trajo.</div>
+      <div class="hint">"Free Entry" = registros desde su link (o códigos canjeados en fechas pasadas). "Ventas" = entradas pagadas + mesas. "Ingresaron" cuenta a todos los que entraron, antes o después de las 11. "Asistencia" = ingresaron / (Free Entry + pagadas). Desactivar un promotor no borra lo que ya trajo.</div>
     </div>
 
     <div id="codigos-panel" style="display:none;">
@@ -538,7 +538,7 @@
       [anulados, 'QRs anulados', false],
       [vigentes, 'QRs vigentes', true],
     ];
-    if (has('promo')) cards.push([vig('promo'), 'Free entry', false]);
+    if (has('promo')) cards.push([vig('promo'), 'Free Entry', false]);
     if (has('promo')) cards.push([tickets.filter(t => t.type === 'promo' && t.pending && !t.voided).length, 'QR pendiente', false]);
     if (has('table')) cards.push([vig('table'), 'Mesas vendidas', false]);
     if (has('free')) cards.push([vig('free'), 'Cortesías vigentes', false]);
@@ -899,7 +899,7 @@
 
   function ticketRowHtml(t){
     const typeBadge = t.type==='paid' ? '<span class="badge badge-paid">Pagada</span>'
-      : t.type==='promo' ? (t.pending ? '<span class="badge badge-out">Free entry · QR pendiente</span>' : '<span class="badge badge-promo">Free entry</span>')
+      : t.type==='promo' ? (t.pending ? '<span class="badge badge-out">Free Entry · QR pendiente</span>' : '<span class="badge badge-promo">Free Entry</span>')
       : t.type==='table' ? '<span class="badge badge-paid">Mesa ' + escapeHtml(t.unitId||'') + ' · ' + (t.partySize||1) + 'p</span>'
       : t.type==='vip' ? '<span class="badge badge-paid">VIP</span>'
       : '<span class="badge badge-free">Gratis</span>';
@@ -1472,7 +1472,7 @@
   function renderPromoTotals(){
     const sum = (k) => allPromoters.reduce((a, p) => a + (p[k] || 0), 0);
     const cards = [
-      [sum('invitaciones'), 'Free entry', true],
+      [sum('invitaciones'), 'Free Entry', true],
       [sum('pagadas'), 'Pagadas', false],
       [sum('mesas'), 'Mesas', false],
       ['S/' + sum('ingreso').toLocaleString('es-PE'), 'Ventas', true],

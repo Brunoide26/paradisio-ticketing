@@ -4,12 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Paradisio by Jägermeister</title>
-<meta name="description" content="Paradisio by Jägermeister. Disco, house, italo y dance en Barranco. Free entry hasta las 11 p.m., entradas y mesas." />
+<meta name="description" content="Paradisio by Jägermeister. Latin house, afro house y house en Barranco. Free Entry hasta las 11 p.m., entradas y mesas." />
 
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paradisioclub.com/" />
 <meta property="og:title" content="Paradisio by Jägermeister" />
-<meta property="og:description" content="Free entry hasta las 11 p.m. Entradas y mesas." />
+<meta property="og:description" content="Free Entry hasta las 11 p.m. Entradas y mesas." />
 <meta property="og:image:alt" content="Paradisio" />
 <meta property="og:image" content="https://paradisioclub.com/og-paradisio.png" />
 <meta property="og:image:width" content="1200" />
@@ -353,13 +353,13 @@
         <p class="ref-chip" id="ref-chip">Vas de parte de <strong id="ref-name"></strong></p>
 
         <section class="sec" aria-labelledby="h-listas">
-          <h2 class="sec-h" id="h-listas">Free entry</h2>
+          <h2 class="sec-h" id="h-listas">Free Entry</h2>
           <div class="cards">
             <div class="card" id="free-card">
               <div class="card-l"><span class="badge">GRATIS</span></div>
               <div class="card-r">
                 <div class="card-top">
-                  <p class="card-name">Lista free</p>
+                  <p class="card-name">Lista Free</p>
                   <button class="btn btn-red" type="button" id="free-btn">Apuntarme</button>
                 </div>
                 <p class="card-desc" id="free-desc">Hasta las 11:00 p.m. Tu QR llega por correo días antes del evento.</p>
@@ -445,7 +445,7 @@
       <!-- Free entry -->
       <div class="view" id="v-free">
         <h2 class="h2">Apúntate a la lista</h2>
-        <p class="lead">Free entry hasta las 11:00 p.m. Completa tus datos tal como figuran en tu documento: te lo pedirán en la puerta.</p>
+        <p class="lead">Free Entry hasta las 11:00 p.m. Completa tus datos tal como figuran en tu documento: te lo pedirán en la puerta.</p>
         <form id="free-form" novalidate>
           <div class="fields">
             <div class="field"><label for="ff-nombre">Nombre</label><input class="in" id="ff-nombre" type="text" autocomplete="given-name" autocapitalize="words" /><p class="err"></p></div>
@@ -466,7 +466,7 @@
         <div class="done-mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
         <h2>Gracias por <em>registrarte</em></h2>
         <p>Tu invitación será aprobada y enviada días previos al evento a <strong id="free-done-email"></strong>.</p>
-        <div class="box"><p class="cap" id="free-done-date"></p><p class="cap red" id="free-done-validity">Free entry hasta las 11:00 p.m.</p></div>
+        <div class="box"><p class="cap" id="free-done-date"></p><p class="cap red" id="free-done-validity">Free Entry hasta las 11:00 p.m.</p></div>
         <p style="font-size:13px;">Revisa también spam y promociones. Si no te llega, escríbenos a info@paradisioclub.com.</p>
         <div class="actions" style="max-width:360px;margin-left:auto;margin-right:auto;"><button class="btn btn-block" type="button" data-close>Volver al evento</button></div>
       </div>
@@ -554,7 +554,7 @@
   function renderFree(){
     const fe = cfg.freeEntry;
     $('free-desc').textContent = fe.description;
-    $('free-done-validity').textContent = 'Free entry ' + fe.validityLabel;
+    $('free-done-validity').textContent = 'Free Entry ' + fe.validityLabel;
     if (!fe.open) { $('free-card').classList.add('is-off'); $('free-btn').disabled = true; $('free-btn').textContent = 'Cerrada'; }
   }
 
@@ -720,7 +720,7 @@
   /* ================= Hoja y pasos ================= */
   let returnFocus = null;
   const history = [];
-  const TITLES = { 'v-tables': 'Reserva', 'v-free': 'Free entry', 'v-free-done': 'Free entry', 'v-buy': 'Tus datos', 'v-buy-done': 'Listo' };
+  const TITLES = { 'v-tables': 'Reserva', 'v-free': 'Free Entry', 'v-free-done': 'Free Entry', 'v-buy': 'Tus datos', 'v-buy-done': 'Listo' };
   function openSheet(){
     returnFocus = document.activeElement;
     history.length = 0;
@@ -818,7 +818,7 @@
     invalid_phone: 'Revisa el número de celular.', invalid_instagram: 'Revisa tu usuario de Instagram.',
     invalid_dob: 'Revisa la fecha de nacimiento.', underage: 'El evento es solo para mayores de 21.',
     invalid_email: 'Ese correo no es válido o no recibe mensajes. Usa otro.', missing_buyer_email: 'Falta el correo del comprador.',
-    duplicate_document: 'Hay dos asistentes con el mismo documento.', closed: 'La lista de free entry está cerrada.',
+    duplicate_document: 'Hay dos asistentes con el mismo documento.', closed: 'La Lista Free está cerrada.',
     sold_out: 'No quedan suficientes entradas de ese tipo. Ajusta la cantidad.', sales_closed: 'La venta online está cerrada.',
     table_taken: 'Alguien acaba de reservar esa mesa. No se te cobró: elige otra.', invalid_table: 'Esa mesa ya no está disponible.',
     payment_failed: 'El pago no se pudo procesar.', payments_disabled: 'La venta online no está disponible ahora.',
@@ -861,7 +861,7 @@
         return;
       }
       $('free-done-email').textContent = f.email;
-      if (d.validityLabel) $('free-done-validity').textContent = 'Free entry ' + d.validityLabel;
+      if (d.validityLabel) $('free-done-validity').textContent = 'Free Entry ' + d.validityLabel;
       $('free-form').reset();
       go('v-free-done');
     } catch (err) {

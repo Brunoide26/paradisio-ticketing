@@ -257,7 +257,7 @@
         } else if(d.reason === 'other_event'){
           showOverlay('bad', 'Otra fecha', 'QR DE OTRA FECHA', d.ticket.name + ' (' + docLabel(d.ticket) + ') — este QR no es para hoy');
         } else if(d.reason === 'not_approved'){
-          showOverlay('bad', 'Free entry', 'NO APROBADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — su QR nunca se envió');
+          showOverlay('bad', 'Free Entry', 'NO APROBADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — su QR nunca se envió');
         } else if(d.reason === 'voided'){
           showOverlay('bad', 'Anulado', 'ANULADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — NO debe ingresar');
         } else if(d.reason === 'cortesia_expired'){
@@ -269,7 +269,7 @@
           // Early Entry (pagada, vale hasta las 12): después de esa hora se
           // cobra la diferencia o se deja pasar igual.
           const isPaid = d.ticket.type === 'paid';
-          showOverlay('bad', isPaid ? (d.ticket.skuLabel || 'Entrada') : (d.ticket.type === 'promo' ? 'Free entry' : 'Cortesía'), 'DESPUÉS DE HORA',
+          showOverlay('bad', isPaid ? (d.ticket.skuLabel || 'Entrada') : (d.ticket.type === 'promo' ? 'Free Entry' : 'Cortesía'), 'DESPUÉS DE HORA',
             d.ticket.name + ' (' + docLabel(d.ticket) + ') — ' + (isPaid ? '¿pagó la diferencia o entra igual?' : '¿pagó entrada o entra gratis?'), {
             label: isPaid ? 'Pagó diferencia' : 'Pagó entrada',
             onConfirm: function(){ doCheckin(ticketId, true, true); }

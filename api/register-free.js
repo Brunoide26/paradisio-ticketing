@@ -1,5 +1,5 @@
 const {
-  createTicket, calcAge, isCortesiaSoldOut, findConflictingFreeTicket, getClientIp, PROMO_VALIDITY_LABEL,
+  createTicket, MIN_AGE, calcAge, isCortesiaSoldOut, findConflictingFreeTicket, getClientIp, PROMO_VALIDITY_LABEL,
 } = require('../lib/tickets');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
 
     const age = calcAge(dob);
     if (age === null) return res.status(400).json({ error: 'invalid_dob' });
-    if (age < 18) return res.status(403).json({ error: 'underage' });
+    if (age < MIN_AGE) return res.status(403).json({ error: 'underage' });
 
     if (await isCortesiaSoldOut()) return res.status(409).json({ error: 'closed' });
 

@@ -1,5 +1,5 @@
 const {
-  createTicket, sendTicketEmail, qrDataUrl, calcAge, findConflictingFreeTicket, getClientIp,
+  createTicket, MIN_AGE, sendTicketEmail, qrDataUrl, calcAge, findConflictingFreeTicket, getClientIp,
   EVENT_NAME, EVENT_DATE_LABEL, EVENT_ADDRESS, EVENT_MAPS_URL, ticketTypeLabel, ticketValidityLabel, genTicketId,
 } = require('../lib/tickets');
 const { validateEmail } = require('../lib/email-validation');
@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
 
     const age = calcAge(dob);
     if (age === null) return res.status(400).json({ error: 'invalid_dob' });
-    if (age < 18) return res.status(403).json({ error: 'underage' });
+    if (age < MIN_AGE) return res.status(403).json({ error: 'underage' });
 
     const emailCheck = await validateEmail(email);
     if (!emailCheck.ok) return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason });

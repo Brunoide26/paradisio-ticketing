@@ -26,13 +26,16 @@
 <meta name="theme-color" content="#000000" />
 
 <link rel="preload" href="/fonts/Inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/PlusJakartaSans.woff2" as="font" type="font/woff2" crossorigin />
 <style>
   @font-face { font-family:'Inter'; src:url('/fonts/Inter-latin.woff2') format('woff2'); font-weight:100 900; font-style:normal; font-display:swap; }
+  @font-face { font-family:'Plus Jakarta Sans'; src:url('/fonts/PlusJakartaSans.woff2') format('woff2'); font-weight:200 800; font-style:normal; font-display:swap; }
   :root {
     --bg:#000000; --card:#0E0D0D; --card-2:#151413; --ink:#F4F0EA; --muted:#A9A39A; --faint:#5F5A55;
     --red:#E2361F; --red-hover:#F2552F; --line:rgba(244,240,234,0.14); --line-strong:rgba(244,240,234,0.34);
     --sans:'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     --serif:var(--sans);
+    --display:'Plus Jakarta Sans', 'Inter', 'Helvetica Neue', Arial, sans-serif;
     --gut:18px;
   }
   *, *::before, *::after { box-sizing:border-box; }
@@ -94,7 +97,7 @@
   .when p span { color:var(--muted); font-weight:400; }
   .share { background:none; border:none; padding:6px 0; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--ink); text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--faint); }
   .share svg { width:16px; height:16px; }
-  .title { font-family:var(--sans); font-weight:700; font-size:clamp(34px, 9vw, 48px); line-height:1.05; margin:16px 0 0; letter-spacing:-.03em; }
+  .title { font-family:var(--display); font-weight:700; font-size:clamp(34px, 9vw, 48px); line-height:1.05; margin:16px 0 0; letter-spacing:-.03em; }
   .title em { font-style:normal; font-weight:500; font-size:.5em; display:block; margin-top:6px; color:#D9D3CA; letter-spacing:-.01em; }
   .venue { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-top:16px; }
   .venue p { margin:0; color:#E6E1D9; font-weight:500; }
@@ -107,19 +110,19 @@
 
   /* ---------- secciones de compra ---------- */
   .sec { padding-top:38px; }
-  .sec-h { font-family:var(--sans); font-weight:700; font-size:20px; letter-spacing:-.01em; text-transform:uppercase; margin:0 0 14px; }
+  .sec-h { font-family:var(--display); font-weight:700; font-size:20px; letter-spacing:0; text-transform:uppercase; margin:0 0 14px; }
   .cards { display:grid; gap:10px; }
-  .card { display:grid; grid-template-columns:84px 1fr; background:var(--card); border:1px solid var(--line); transition:border-color .2s; }
+  .card { display:grid; grid-template-columns:84px 1fr; background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; transition:border-color .2s; }
   .card.is-active { border-color:var(--ink); }
   .card.is-off { opacity:.5; }
   .card-l { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:16px 6px; border-right:1px solid var(--line); text-align:center; }
   .card-l svg { width:28px; height:28px; color:var(--muted); }
-  .card-l .price { font-family:var(--sans); font-weight:600; font-size:19px; letter-spacing:-.02em; line-height:1; white-space:nowrap; }
+  .card-l .price { font-family:var(--display); font-weight:700; font-size:20px; letter-spacing:-.01em; line-height:1; white-space:nowrap; }
   .card-l .from { font-size:12px; font-weight:500; color:var(--muted); margin-bottom:-4px; }
   .badge { padding:4px 9px; background:var(--ink); color:#0A0909; font-size:12px; font-weight:700; letter-spacing:.04em; border-radius:999px; }
   .card-r { padding:14px 14px 14px 16px; min-width:0; }
   .card-top { display:flex; justify-content:space-between; align-items:center; gap:10px; min-height:44px; padding-bottom:12px; border-bottom:1px solid var(--line); }
-  .card-name { margin:0; font-weight:600; font-size:17px; letter-spacing:-.01em; }
+  .card-name { margin:0; font-family:var(--display); font-weight:600; font-size:17px; letter-spacing:0; }
   .card-name .tag { display:inline-block; margin-left:6px; padding:2px 7px; font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; border-radius:999px; border:1px solid var(--red); color:var(--red); vertical-align:2px; font-weight:500; }
   .card-desc { margin:10px 0 0; color:#BDB7AE; font-size:14px; line-height:1.5; }
 
@@ -159,7 +162,7 @@
   .bar-inner { max-width:620px; margin:0 auto; display:flex; align-items:center; gap:16px; }
   .bar-sum { flex:1; min-width:0; }
   .bar-sum p { margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .bar-sum .total { font-family:var(--sans); font-weight:700; font-size:22px; line-height:1.15; letter-spacing:-.02em; }
+  .bar-sum .total { font-family:var(--display); font-weight:700; font-size:22px; line-height:1.15; letter-spacing:-.02em; }
   .bar-sum .what { font-size:13px; color:var(--muted); }
   .bar .btn { padding:14px 22px; }
 
@@ -186,7 +189,7 @@
   .steps li.now i { background:var(--ink); border-color:var(--ink); color:#0A0909; font-weight:600; }
   .steps .sep { flex:1; max-width:34px; height:1px; background:var(--line-strong); }
 
-  .h2 { font-family:var(--sans); font-weight:700; font-size:26px; letter-spacing:-.02em; line-height:1.1; margin:0 0 6px; }
+  .h2 { font-family:var(--display); font-weight:700; font-size:26px; letter-spacing:-.02em; line-height:1.1; margin:0 0 6px; }
   .h2 em { font-style:normal; }
   .lead { color:var(--muted); font-size:14px; margin:0 0 20px; }
 
@@ -198,7 +201,7 @@
   .map text { font-family:var(--sans); }
   .unit { cursor:pointer; outline:none; }
   .unit rect { fill:var(--c); fill-opacity:.16; stroke:var(--c); stroke-width:.45; transition:fill-opacity .2s; }
-  .unit text { fill:var(--ink); font-family:var(--sans); font-size:2.7px; font-weight:600; pointer-events:none; }
+  .unit text { fill:var(--ink); font-family:var(--display); font-size:2.4px; font-weight:600; pointer-events:none; }
   .unit:hover rect { fill-opacity:.32; }
   .unit.is-selected rect { fill-opacity:1; stroke:var(--ink); stroke-width:.6; }
   .unit.is-selected text { fill:#0A0909; }
@@ -210,6 +213,8 @@
   .plan-zone { fill:rgba(244,240,234,.035); stroke:rgba(244,240,234,.22); stroke-width:.3; }
   .plan-floor { fill:rgba(226,54,31,.05); stroke:rgba(226,54,31,.45); stroke-width:.35; stroke-dasharray:1.2 1; }
   .plan-dj { fill:rgba(226,54,31,.22); stroke:var(--red); stroke-width:.45; }
+  .plan-zone-line { fill:none; stroke:#3E7FB0; stroke-width:.35; }
+  .plan-txt.blue { fill:#6FA3C9; font-size:1.7px; }
   .plan-txt { fill:rgba(244,240,234,.5); font-family:var(--sans); font-size:2.3px; font-weight:600; letter-spacing:.25px; pointer-events:none; }
   .plan-txt.big { font-size:3.4px; letter-spacing:.8px; fill:rgba(244,240,234,.42); }
   .plan-txt.red { fill:var(--red); }
@@ -219,18 +224,22 @@
   .map-legend i.sold { background:#0a0a0a; border-color:#3a3633; }
   .t-list { display:grid; gap:10px; margin-top:22px; }
   @media (min-width:900px) { .t-list { margin-top:0; } }
-  .tcard { background:var(--card); border:1px solid var(--line); padding:16px 16px 14px; cursor:pointer; transition:border-color .2s; }
+  .tcard { position:relative; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 66px 16px 18px; cursor:pointer; transition:border-color .2s; }
   .tcard.is-active { border-color:var(--red); }
   .tcard.is-off { opacity:.45; cursor:default; }
   .tcard-h { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
-  .tcard-name { margin:0; font-weight:600; letter-spacing:.02em; text-transform:uppercase; font-size:15px; display:flex; align-items:center; gap:9px; }
-  .tcard-name i { width:10px; height:10px; border-radius:50%; display:inline-block; }
-  .tcard-price { font-family:var(--sans); font-weight:700; font-size:28px; letter-spacing:-.03em; margin:6px 0 0; line-height:1.1; }
-  .tcard-price small { font-family:var(--sans); font-weight:500; letter-spacing:0; font-size:14px; color:var(--muted); margin-left:6px; }
+  .tcard-name { margin:0; font-family:var(--display); font-weight:600; letter-spacing:.01em; text-transform:uppercase; font-size:14px; display:flex; align-items:center; gap:8px; color:#E6E1D9; }
+  .tcard-name i { width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .tcard-price { font-family:var(--display); font-weight:700; font-size:27px; letter-spacing:-.01em; margin:6px 0 0; line-height:1.1; display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; }
+  .tcard-price small { font-family:var(--display); font-weight:500; letter-spacing:0; font-size:13px; color:var(--muted); }
+  .tcard-price .tag-soft { font-family:var(--display); font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:4px 9px; border-radius:999px; background:rgba(143,193,212,.12); color:#BFE0EC; }
+  .tcard-go { position:absolute; right:16px; top:18px; width:38px; height:38px; border-radius:10px; border:none; background:var(--c); color:#0A0909; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .tcard-go svg { width:16px; height:16px; }
+  .tcard.is-off .tcard-go { display:none; }
   .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-  .chip { padding:4px 11px; background:var(--card-2); border:1px solid var(--line); border-radius:999px; font-size:13px; color:#D5CFC6; }
+  .chip { padding:4px 10px; background:var(--card-2); border:none; border-radius:999px; font-size:12px; color:#C9C3BA; }
   .units { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
-  .units button { min-width:46px; padding:7px 10px; background:none; border:1px solid var(--line-strong); cursor:pointer; font-size:13px; font-weight:600; border-radius:999px; }
+  .units button { min-width:44px; padding:6px 11px; background:none; border:1px solid var(--line-strong); cursor:pointer; font-size:13px; font-weight:600; border-radius:999px; }
   .units button:hover:not(:disabled) { border-color:var(--ink); }
   .units button.is-selected { background:var(--red); border-color:var(--red); color:#0A0909; }
   .units button:disabled { opacity:.35; text-decoration:line-through; cursor:default; }
@@ -243,7 +252,7 @@
   .summary-row span:first-child { color:var(--muted); }
   .summary-row.total { margin-top:8px; padding-top:10px; border-top:1px solid var(--line); font-size:16px; }
   .summary-row.total span { color:var(--ink) !important; }
-  .summary-row.total span:last-child { font-family:var(--sans); font-weight:700; font-size:22px; letter-spacing:-.02em; }
+  .summary-row.total span:last-child { font-family:var(--display); font-weight:700; font-size:22px; letter-spacing:-.02em; }
   .person { padding:22px 0 6px; border-top:1px solid var(--line); }
   .person:first-of-type { border-top:none; padding-top:0; }
   .person-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px; }
@@ -283,7 +292,7 @@
   /* confirmaciones */
   .done { text-align:center; padding-top:16px; }
   .done-mark { width:56px; height:56px; margin:0 auto 20px; border:1px solid var(--red); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--red); }
-  .done h2 { font-family:var(--sans); font-weight:700; letter-spacing:-.03em; font-size:clamp(30px, 7vw, 40px); line-height:1.1; margin:0; }
+  .done h2 { font-family:var(--display); font-weight:700; letter-spacing:-.03em; font-size:clamp(30px, 7vw, 40px); line-height:1.1; margin:0; }
   .done h2 em { font-style:normal; color:var(--red); }
   .done p { color:var(--muted); max-width:420px; margin:16px auto 0; }
   .done p strong { color:var(--ink); font-weight:500; }
@@ -317,8 +326,8 @@
           </div>
         </div>
         <div class="side-extra">
-          <p class="about-short">Disco y house de todas las épocas, con italo, nu disco y dance. Una noche para no dejar de bailar.</p>
-          <div class="pills"><span class="pill solid">+18 años</span><span class="pill">DNI físico</span><span class="pill">Disco · House</span></div>
+          <p class="about-short">Latin house, afro house y house toda la noche. Una noche para no dejar de bailar.</p>
+          <div class="pills"><span class="pill solid">+21 años</span><span class="pill">Latin House</span><span class="pill">Afro House</span><span class="pill">House</span><span class="pill">Smart Casual</span></div>
         </div>
       </aside>
 
@@ -338,8 +347,8 @@
           </a>
         </div>
         <div class="m-extra">
-          <p class="about-short">Disco y house de todas las épocas, con italo, nu disco y dance. Una noche para no dejar de bailar.</p>
-          <div class="pills"><span class="pill solid">+18 años</span><span class="pill">DNI físico</span><span class="pill">Disco · House</span></div>
+          <p class="about-short">Latin house, afro house y house toda la noche. Una noche para no dejar de bailar.</p>
+          <div class="pills"><span class="pill solid">+21 años</span><span class="pill">Latin House</span><span class="pill">Afro House</span><span class="pill">House</span><span class="pill">Smart Casual</span></div>
         </div>
         <p class="ref-chip" id="ref-chip">Vas de parte de <strong id="ref-name"></strong></p>
 
@@ -448,7 +457,7 @@
             <div class="field"><label for="ff-phone">Celular</label><input class="in" id="ff-phone" type="tel" inputmode="tel" autocomplete="tel" /><p class="err"></p><p class="hint">Solo para avisos de esta fecha.</p></div>
             <div class="field"><label for="ff-ig">Instagram</label><div class="pre"><span aria-hidden="true">@</span><input class="in" id="ff-ig" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" /></div><p class="err"></p></div>
           </div>
-          <label class="check"><input type="checkbox" id="ff-accept" /><span>Soy mayor de 18 años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a> y la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>.</span></label>
+          <label class="check"><input type="checkbox" id="ff-accept" /><span>Soy mayor de <span data-minage>21</span> años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a> y la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a>.</span></label>
           <p class="msg" id="free-msg" role="alert"></p>
           <div class="actions"><button class="btn btn-red btn-block" type="submit" id="free-submit">Apuntarme</button></div>
         </form>
@@ -471,7 +480,7 @@
         <div class="summary" id="buy-summary"></div>
         <form id="buy-form" novalidate>
           <div id="people"></div>
-          <label class="check"><input type="checkbox" id="buy-accept" /><span>Todos son mayores de 18 años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a>, la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a> y la <a href="/devoluciones" target="_blank" rel="noopener">política de devoluciones</a>.</span></label>
+          <label class="check"><input type="checkbox" id="buy-accept" /><span>Todos son mayores de <span data-minage>21</span> años y acepto los <a href="/terminos" target="_blank" rel="noopener">Términos</a>, la <a href="/privacidad" target="_blank" rel="noopener">Política de Privacidad</a> y la <a href="/devoluciones" target="_blank" rel="noopener">política de devoluciones</a>.</span></label>
           <p class="msg" id="buy-msg" role="alert"></p>
           <div class="actions"><button class="btn btn-red btn-block" type="submit" id="buy-submit">Pagar</button></div>
           <p class="fine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="5" y="11" width="14" height="10"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Pago seguro con tarjeta vía Culqi</p>
@@ -539,12 +548,13 @@
     $('venue').textContent = ev.address;
     $('maps-btn').href = ev.mapsUrl;
     $('free-done-date').textContent = ev.dateLabel;
+    if (cfg.minAge) document.querySelectorAll('[data-minage]').forEach((n) => { n.textContent = cfg.minAge; });
     renderFree(); renderTickets(); renderTablesCard(); renderTables();
   }
 
   function renderFree(){
     const fe = cfg.freeEntry;
-    $('free-desc').textContent = 'Entra gratis ' + fe.validityLabel + ' Tu QR llega por correo días antes del evento. Después de esa hora, S/\u00a0' + fe.doorPrice + ' en puerta.';
+    $('free-desc').textContent = fe.description;
     $('free-done-validity').textContent = 'Free entry ' + fe.validityLabel;
     if (!fe.open) { $('free-card').classList.add('is-off'); $('free-btn').disabled = true; $('free-btn').textContent = 'Cerrada'; }
   }
@@ -611,26 +621,22 @@
 
   // Plano del local en vector (grilla 100 x 100), redibujado del plano real.
   function planSvg(){
-    const pillar = (x, y) => '<rect class="plan-zone" x="' + (x - .8) + '" y="' + (y - .8) + '" width="1.6" height="1.6" style="fill:rgba(244,240,234,.3)"/>';
     return '' +
       // muros exteriores con la puerta de entrada abajo
       '<path class="plan-wall" d="M39.5 91.8 H2.2 V9.7 H97.8 V91.8 H52.5"/>' +
-      // anexo superior izquierdo y barra
-      '<path class="plan-line" d="M2.2 9.7 V2.5 H35.5 V9.7"/>' +
+      // barra
       '<rect class="plan-zone" x="5.5" y="11" width="25" height="3.4" rx=".6"/>' +
       '<path class="plan-zone" d="M10.5 20.5 H27 V16.8 H30.6 V24 H10.5 Z"/>' +
       '<text class="plan-txt" x="18" y="19.2" text-anchor="middle">BARRA</text>' +
       // DJ booth entre Box 5 y Box 6
-      '<rect class="plan-dj" x="64" y="12" width="13.5" height="8.6" rx="1"/>' +
-      '<text class="plan-txt red" x="70.75" y="16.2" text-anchor="middle" style="font-size:2.6px">DJ</text>' +
-      '<text class="plan-txt red" x="70.75" y="18.8" text-anchor="middle" style="font-size:1.6px">BOOTH</text>' +
-      // pista
-      '<rect class="plan-floor" x="30" y="27" width="54" height="30" rx="2"/>' +
-      '<text class="plan-txt big" x="57" y="43.4" text-anchor="middle">PISTA</text>' +
-      pillar(35.7, 36.4) + pillar(58.8, 36.4) + pillar(81.9, 36.4) + pillar(35.7, 60.9) + pillar(56.6, 60.9) +
+      '<rect class="plan-dj" x="65.2" y="12.7" width="11" height="7.2" rx="1"/>' +
+      '<text class="plan-txt red" x="70.7" y="16.3" text-anchor="middle" style="font-size:2.3px">DJ</text>' +
+      '<text class="plan-txt red" x="70.7" y="18.6" text-anchor="middle" style="font-size:1.4px">BOOTH</text>' +
+      // zona reservada (Box 1-4, Mesa 1 y 2)
+      '<path class="plan-zone-line" d="M2.2 43 H36 V70.3"/>' +
+      '<text class="plan-txt blue" x="4" y="41.6">ZONA RESERVADA</text>' +
       // servicio y baños
       '<rect class="plan-zone" x="58" y="61.5" width="39.8" height="11.5"/>' +
-      '<text class="plan-txt" x="77.9" y="68" text-anchor="middle">SERVICIO</text>' +
       '<rect class="plan-zone" x="58" y="76" width="30" height="15.8"/>' +
       '<text class="plan-txt" x="73" y="84.6" text-anchor="middle">BAÑOS</text>' +
       // entrada
@@ -657,8 +663,8 @@
       const aria = esc((tt ? tt.name : '') + ' ' + unitLabel(u) + (u.sold ? ', reservado' : (tt ? ', hasta ' + tt.people + ' personas, ' + money(tt.price) : '')));
       const short = u.type === 'mesa' ? u.id : unitLabel(u);
       html += '<g class="unit' + (u.sold ? ' is-sold' : '') + '" style="--c:' + esc((tt && tt.color) || '#F4F0EA') + '" data-id="' + esc(u.id) + '" role="button" tabindex="' + (u.sold ? -1 : 0) + '" aria-label="' + aria + '">' +
-        '<title>' + aria + '</title><rect x="' + u.x + '" y="' + u.y + '" width="' + u.w + '" height="' + u.h + '" rx="1.2"/>' +
-        '<text x="' + (u.x + u.w / 2) + '" y="' + (u.y + u.h / 2 + 1) + '" text-anchor="middle">' + esc(short) + '</text></g>';
+        '<title>' + aria + '</title><rect x="' + u.x + '" y="' + u.y + '" width="' + u.w + '" height="' + u.h + '" rx="1"/>' +
+        '<text x="' + (u.x + u.w / 2) + '" y="' + (u.y + u.h / 2 + (u.type === 'mesa' ? .75 : .85)) + '" text-anchor="middle"' + (u.type === 'mesa' ? ' style="font-size:2.1px"' : '') + '>' + esc(short) + '</text></g>';
     });
     $('map-legend').innerHTML = t.types.map((tt) => '<span><i style="background:' + esc(tt.color || '#F4F0EA') + ';border-color:' + esc(tt.color || '#F4F0EA') + '"></i>' + esc(tt.name) + '</span>').join('') +
       '<span><i style="background:#1b1a19;border-color:#36322f"></i>Reservado</span>';
@@ -672,11 +678,13 @@
     $('types').innerHTML = t.types.map((tt) => {
       const units = t.units.filter((u) => u.type === tt.type);
       const free = units.filter((u) => !u.sold);
-      return '<div class="tcard' + (free.length ? '' : ' is-off') + '" data-type="' + esc(tt.type) + '">' +
-        '<div class="tcard-h"><p class="tcard-name"><i style="background:' + esc(tt.color || '#F4F0EA') + '"></i>' + esc(tt.name) + '</p>' + (free.length ? '' : '<span class="cap muted">Agotado</span>') + '</div>' +
-        '<p class="tcard-price">' + money(tt.price) + '<small>' + tt.people + ' personas</small></p>' +
-        '<p class="card-desc" style="margin-top:8px;">' + esc(tt.people) + ' entradas + ' + esc(tt.includes) + '</p>' +
-        '<div class="chips"><span class="chip">' + money(Math.round(tt.price / tt.people)) + ' por persona</span>' + (tt.where ? '<span class="chip">' + esc(tt.where) + '</span>' : '') + '</div>' +
+      const color = esc(tt.color || '#F4F0EA');
+      return '<div class="tcard' + (free.length ? '' : ' is-off') + '" style="--c:' + color + '" data-type="' + esc(tt.type) + '">' +
+        '<div class="tcard-h"><p class="tcard-name"><i style="background:' + color + '"></i>' + esc(tt.name) + '</p>' + (free.length ? '' : '<span class="cap muted">Agotado</span>') + '</div>' +
+        '<p class="tcard-price">' + money(tt.price) + '<small>cada ' + tt.people + '</small></p>' +
+        '<button type="button" class="tcard-go" aria-label="Elegir ' + esc(tt.name) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>' +
+        '<div class="chips">' + (tt.where ? '<span class="chip">' + esc(tt.where) + '</span>' : '') + '<span class="chip">' + esc(tt.people) + ' entradas</span></div>' +
+        '<p class="card-desc" style="margin-top:10px;">' + esc(tt.includes) + '</p>' +
         '<div class="units" role="group" aria-label="Elige tu ' + esc(tt.name) + '">' +
           units.map((u) => '<button type="button" data-id="' + esc(u.id) + '"' + (u.sold ? ' disabled aria-label="' + esc(unitLabel(u)) + ' reservado"' : '') + '>' + esc(unitLabel(u)) + '</button>').join('') +
         '</div></div>';
@@ -777,7 +785,7 @@
       if (tipo) return CE_RE.test(v) ? '' : 'Entre 8 y 12 letras o números.';
       return (DNI_RE.test(v) || CE_RE.test(v)) ? '' : 'DNI de 8 dígitos (o CE / pasaporte).';
     },
-    dob: (v) => { if (!v) return 'Requerido.'; const a = ageAt(v); if (a === null || a > 100) return 'Fecha inválida.'; return a < 18 ? 'Tiene que ser mayor de 18.' : ''; },
+    dob: (v) => { if (!v) return 'Requerido.'; const a = ageAt(v); if (a === null || a > 100) return 'Fecha inválida.'; const min = (cfg && cfg.minAge) || 21; return a < min ? 'Tiene que ser mayor de ' + min + '.' : ''; },
     email: (v, optional) => !v ? (optional ? '' : 'Requerido.') : (!EMAIL_RE.test(v) ? 'Correo inválido.' : ''),
     phone: (v) => { const d = String(v || '').replace(/\D/g, ''); return !d ? 'Requerido.' : ((d.length < 7 || d.length > 15) ? 'Número inválido.' : ''); },
     ig: (v) => !v ? 'Requerido.' : (!IG_RE.test(v) ? 'Usuario inválido.' : ''),
@@ -809,7 +817,7 @@
     missing_fields: 'Completa todos los campos.', not_accepted: 'Marca la casilla para continuar.',
     invalid_name: 'Revisa los nombres y apellidos.', invalid_document: 'Revisa el número de documento.',
     invalid_phone: 'Revisa el número de celular.', invalid_instagram: 'Revisa tu usuario de Instagram.',
-    invalid_dob: 'Revisa la fecha de nacimiento.', underage: 'El evento es solo para mayores de 18.',
+    invalid_dob: 'Revisa la fecha de nacimiento.', underage: 'El evento es solo para mayores de 21.',
     invalid_email: 'Ese correo no es válido o no recibe mensajes. Usa otro.', missing_buyer_email: 'Falta el correo del comprador.',
     duplicate_document: 'Hay dos asistentes con el mismo documento.', closed: 'La lista de free entry está cerrada.',
     sold_out: 'No quedan suficientes entradas de ese tipo. Ajusta la cantidad.', sales_closed: 'La venta online está cerrada.',

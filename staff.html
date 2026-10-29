@@ -266,11 +266,15 @@
           // Pasado el corte el QR igual sirve para entrar: staff decide si
           // esta persona paga o entra gratis. Las dos opciones registran el
           // ingreso (cuenta como entrada para el promotor).
-          showOverlay('bad', d.ticket.type === 'promo' ? 'Free entry' : 'Cortesía', 'DESPUÉS DE HORA', d.ticket.name + ' (' + docLabel(d.ticket) + ') — ¿pagó entrada o entra gratis?', {
-            label: 'Pagó entrada',
+          // Early Entry (pagada, vale hasta las 12): después de esa hora se
+          // cobra la diferencia o se deja pasar igual.
+          const isPaid = d.ticket.type === 'paid';
+          showOverlay('bad', isPaid ? (d.ticket.skuLabel || 'Entrada') : (d.ticket.type === 'promo' ? 'Free entry' : 'Cortesía'), 'DESPUÉS DE HORA',
+            d.ticket.name + ' (' + docLabel(d.ticket) + ') — ' + (isPaid ? '¿pagó la diferencia o entra igual?' : '¿pagó entrada o entra gratis?'), {
+            label: isPaid ? 'Pagó diferencia' : 'Pagó entrada',
             onConfirm: function(){ doCheckin(ticketId, true, true); }
           }, {
-            label: 'Entra gratis',
+            label: isPaid ? 'Entra igual' : 'Entra gratis',
             onConfirm: function(){ doCheckin(ticketId, true, false); }
           });
         } else {

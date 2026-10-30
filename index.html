@@ -65,7 +65,7 @@
   .backdrop { display:none; }
   .grid { display:block; }
   @media (min-width:900px) {
-    .backdrop { display:block; position:fixed; inset:0; z-index:-1; background:url('/hero-photo.jpg') center/cover; filter:blur(40px) brightness(.25) saturate(.6); transform:scale(1.15); }
+    .backdrop { display:block; position:fixed; inset:0; z-index:-1; background:url('/flyer-jager.jpg') center/cover; filter:blur(40px) brightness(.25) saturate(.6); transform:scale(1.15); }
     .grid { display:grid; grid-template-columns:400px 1fr; gap:56px; padding:40px 32px 0; align-items:start; }
     .side { position:sticky; top:94px; }
   }
@@ -79,7 +79,8 @@
   @media (min-width:900px) { .flyer-logo { width:82%; } }
   .flyer-by { font-family:var(--sans); font-weight:500; font-size:20px; margin:0; letter-spacing:-.01em; }
   .flyer-date { margin-top:14px; }
-  .flyer.has-image .flyer-photo { filter:none; }
+  .flyer.has-image { aspect-ratio:4 / 5; }
+  .flyer.has-image .flyer-photo { filter:none; object-position:50% 50%; }
   .flyer.has-image::after, .flyer.has-image .flyer-inner { display:none; }
 
   .side-extra { padding:16px var(--gut) 0; }
@@ -318,8 +319,8 @@
     <div class="grid">
       <!-- Columna del flyer -->
       <aside class="side">
-        <div class="flyer" id="flyer">
-          <img class="flyer-photo" id="flyer-photo" src="/hero-photo.jpg" alt="" width="1920" height="1080" />
+        <div class="flyer has-image" id="flyer">
+          <img class="flyer-photo" id="flyer-photo" src="/flyer-jager.jpg" alt="Paradisio by Jägermeister · Sábado 14 de noviembre · Catalino Miranda 162 · Jonathan Gershman, Sandro Rodriguez, Alonsoo" width="1080" height="1350" fetchpriority="high" />
           <div class="flyer-inner">
             <img class="flyer-logo" src="/logo-script-white.png" alt="Paradisio" width="1200" height="388" />
             <p class="flyer-by">by Jägermeister</p>

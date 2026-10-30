@@ -1,7 +1,7 @@
 const { PAYMENTS_ENABLED } = require('../lib/config');
 const {
   EVENT_NAME, EVENT_DATE_LABEL, EVENT_SHORT_DATE, EVENT_DATE_ISO, EVENT_ADDRESS, EVENT_MAPS_URL, PROMO_VALIDITY_LABEL,
-  PAID_CAP, MIN_AGE, isCortesiaSoldOut, listEventTickets, soldTableUnits,
+  PAID_CAP, MIN_AGE, REGISTER_MIN_AGE, isCortesiaSoldOut, listEventTickets, soldTableUnits,
 } = require('../lib/tickets');
 const {
   getTicketTypes, TABLE_TYPES, TABLE_UNITS, TABLE_MAP, BOTELLAS_A_ELECCION, FREE_ENTRY, DOOR_PRICE_SOLES, MAX_TICKETS_PER_ORDER,
@@ -45,6 +45,7 @@ module.exports = async (req, res) => {
         address: EVENT_ADDRESS, mapsUrl: EVENT_MAPS_URL,
       },
       minAge: MIN_AGE,
+      registerMinAge: REGISTER_MIN_AGE,
       paymentsEnabled: PAYMENTS_ENABLED,
       culqiPublicKey: process.env.CULQI_PUBLIC_KEY || '',
       promoterDiscountRate: DISCOUNT_RATE,

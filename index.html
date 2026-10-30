@@ -784,7 +784,7 @@
       if (tipo) return CE_RE.test(v) ? '' : 'Entre 8 y 12 letras o números.';
       return (DNI_RE.test(v) || CE_RE.test(v)) ? '' : 'DNI de 8 dígitos (o CE / pasaporte).';
     },
-    dob: (v) => { if (!v) return 'Requerido.'; const a = ageAt(v); if (a === null || a > 100) return 'Fecha inválida.'; const min = (cfg && cfg.minAge) || 21; return a < min ? 'Tiene que ser mayor de ' + min + '.' : ''; },
+    dob: (v) => { if (!v) return 'Requerido.'; const a = ageAt(v); if (a === null || a > 100) return 'Fecha inválida.'; const min = (cfg && cfg.registerMinAge) || 18; return a < min ? 'Debes ser mayor de edad para registrarte.' : ''; },
     email: (v, optional) => !v ? (optional ? '' : 'Requerido.') : (!EMAIL_RE.test(v) ? 'Correo inválido.' : ''),
     phone: (v) => { const d = String(v || '').replace(/\D/g, ''); return !d ? 'Requerido.' : ((d.length < 7 || d.length > 15) ? 'Número inválido.' : ''); },
     ig: (v) => !v ? 'Requerido.' : (!IG_RE.test(v) ? 'Usuario inválido.' : ''),
@@ -816,7 +816,7 @@
     missing_fields: 'Completa todos los campos.', not_accepted: 'Marca la casilla para continuar.',
     invalid_name: 'Revisa los nombres y apellidos.', invalid_document: 'Revisa el número de documento.',
     invalid_phone: 'Revisa el número de celular.', invalid_instagram: 'Revisa tu usuario de Instagram.',
-    invalid_dob: 'Revisa la fecha de nacimiento.', underage: 'El evento es solo para mayores de 21.',
+    invalid_dob: 'Revisa la fecha de nacimiento.', underage: 'Debes ser mayor de edad para registrarte.',
     invalid_email: 'Ese correo no es válido o no recibe mensajes. Usa otro.', missing_buyer_email: 'Falta el correo del comprador.',
     duplicate_document: 'Hay dos asistentes con el mismo documento.', closed: 'La Lista Free está cerrada.',
     sold_out: 'No quedan suficientes entradas de ese tipo. Ajusta la cantidad.', sales_closed: 'La venta online está cerrada.',

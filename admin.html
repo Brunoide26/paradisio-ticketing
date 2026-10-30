@@ -204,12 +204,28 @@
           <option value="sent">Correo: enviado</option>
           <option value="failed">Correo: no salió</option>
         </select>
+        <select id="promo-filter" class="btn btn-ghost"><option value="">Promotor: todos</option></select>
+        <select id="qr-filter" class="btn btn-ghost">
+          <option value="">QR: todos</option>
+          <option value="pending">QR: por aprobar (pendiente)</option>
+          <option value="sent">QR: aprobado / enviado</option>
+          <option value="in">Ingresaron</option>
+        </select>
+        <select id="kind-filter" class="btn btn-ghost">
+          <option value="">Tipo: todos</option>
+          <option value="promo">Free Entry</option>
+          <option value="paid">Entradas pagadas</option>
+          <option value="table">Boxes y mesas</option>
+        </select>
+        <label class="btn btn-ghost" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="under21-filter" style="margin:0;" /> Menores de 21
+        </label>
         <label class="btn btn-ghost" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="suspicious-filter" style="margin:0;" /> Solo sospechosos
         </label>
         <button class="btn btn-ghost" id="view-toggle-btn">Vista: por orden</button>
         <button class="btn btn-pink" id="resend-failed-btn">Reenviar correos que no salieron</button>
-        <button class="btn btn-ghost" id="export-btn">Exportar CSV</button>
+        <button class="btn btn-ghost" id="export-btn">Exportar CSV (lo filtrado)</button>
         <button class="btn btn-pink" id="export-emails-btn">Exportar lista de correos</button>
         <button class="btn btn-ghost" id="refresh-btn">Actualizar</button>
       </div>
@@ -476,6 +492,7 @@
     // pasadas sólo si usaron cortesías o free entry.
     const hasCortesia = isCurrentEvent() || !!ev.legacy || allTickets.some(t => (t.type === 'free' && !t.manualIssue) || t.type === 'promo');
     document.getElementById('cortesia-card').style.display = hasCortesia ? '' : 'none';
+    fillPromoFilter();
     renderStats(null, allTickets);
     if (hasCortesia) renderCortesiaCard(lastCortesiaStatus, allTickets);
     renderManualIssueLists(allTickets);
@@ -514,6 +531,8 @@
       document.getElementById('dashboard-area').style.display = 'block';
       fillEventSelect();
       applyEventView();
+      // Nombres de promotores para el filtro de la pestaña Tickets.
+      if (!allPromoters.length) loadPromoters().then(fillPromoFilter).catch(() => {});
     } catch(e){
       alert('Error de conexión');
     }
@@ -920,9 +939,11 @@
     const suspiciousBadge = reasons
       ? ` <span class="badge badge-suspicious" title="${escapeHtml([...reasons].join(' · '))}">⚠ Revisar</span>`
       : '';
-    const ageWatchBadge = turns18BeforeEvent(t.dob)
+    const evAge = ageAtEvent(t);
+    const under21Badge = evAge !== null && evAge < 21 ? ` <span class="badge badge-age-watch" title="Tendrá ${evAge} años el día del evento">${evAge} años</span>` : '';
+    const ageWatchBadge = under21Badge || (turns18BeforeEvent(t.dob)
       ? ` <span class="badge badge-age-watch" title="Cumple 18 años entre hoy y el evento — verificar el documento con atención en puerta">🎂 Cumple 18 pronto</span>`
-      : '';
+      : '');
     // Va junto al estado y no reemplazándolo: "En puerta" sigue siendo cierto,
     // el badge sólo dice que ese ingreso fue después del corte.
     const lateBadge = t.lateEntry
@@ -956,9 +977,54 @@
   }
 
   function applySuspiciousFilter(tickets){
+    tickets = applyExtraFilters(tickets);
     if (!document.getElementById('suspicious-filter').checked) return tickets;
     return tickets.filter(t => suspiciousFlags.has(t.id));
   }
+
+  // Edad que tendrá el día del evento (para el filtro de menores de 21).
+  function ageAtEvent(t){
+    if (!t.dob) return null;
+    return ageAsOf(t.dob, new Date(EVENT_DATE_ISO + 'T00:00:00'));
+  }
+
+  // Filtros de promotor, estado del QR, tipo y menores de 21.
+  function applyExtraFilters(tickets){
+    const promo = document.getElementById('promo-filter').value;
+    const qr = document.getElementById('qr-filter').value;
+    const kind = document.getElementById('kind-filter').value;
+    const under21 = document.getElementById('under21-filter').checked;
+    return tickets.filter(t => {
+      if (promo === '__none' && t.promoterCode) return false;
+      if (promo && promo !== '__none' && t.promoterCode !== promo) return false;
+      if (qr === 'pending' && !(t.pending && !t.voided)) return false;
+      if (qr === 'sent' && (t.pending || t.voided)) return false;
+      if (qr === 'in' && !t.checkedIn) return false;
+      if (kind && t.type !== kind) return false;
+      if (under21) { const a = ageAtEvent(t); if (a === null || a >= 21) return false; }
+      return true;
+    });
+  }
+
+  function fillPromoFilter(){
+    const sel = document.getElementById('promo-filter');
+    const prev = sel.value;
+    const codes = new Map();
+    (allPromoters || []).forEach(p => codes.set(p.code, p.name));
+    allTickets.forEach(t => { if (t.promoterCode && !codes.has(t.promoterCode)) codes.set(t.promoterCode, t.promoterCode); });
+    const count = (c) => allTickets.filter(t => t.promoterCode === c && !t.voided).length;
+    sel.innerHTML = '<option value="">Promotor: todos</option><option value="__none">Sin promotor (directo)</option>' +
+      [...codes.entries()].sort((a, b) => a[1].localeCompare(b[1]))
+        .map(([c, n]) => '<option value="' + escapeHtml(c) + '">' + escapeHtml(n) + ' (' + count(c) + ')</option>').join('');
+    sel.value = [...sel.options].some(o => o.value === prev) ? prev : '';
+  }
+
+  window.viewPromoterTickets = function(code){
+    switchTab('tickets');
+    fillPromoFilter();
+    document.getElementById('promo-filter').value = code;
+    renderCurrentView(getSearchFilteredTickets());
+  };
 
   function renderTable(tickets){
     tickets = applySuspiciousFilter(applyEmailFilter(tickets));
@@ -1050,8 +1116,10 @@
     renderCurrentView(getSearchFilteredTickets());
   });
 
-  document.getElementById('suspicious-filter').addEventListener('change', function(){
-    renderCurrentView(getSearchFilteredTickets());
+  ['suspicious-filter', 'promo-filter', 'qr-filter', 'kind-filter', 'under21-filter'].forEach(id => {
+    document.getElementById(id).addEventListener('change', function(){
+      renderCurrentView(getSearchFilteredTickets());
+    });
   });
 
   document.getElementById('refresh-btn').onclick = loadData;
@@ -1062,14 +1130,15 @@
     // ahí corre las columnas posteriores respecto de exports anteriores.
     // Instagram, Promotor y CodigoInvitacion van al final para no correr las
     // columnas de exports anteriores.
-    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso','Instagram','Promotor','CodigoInvitacion','DespuesDeHora'];
-    const rows = allTickets.map(t => [
+    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso','Instagram','Promotor','CodigoInvitacion','DespuesDeHora','Entrada','EstadoQR','EdadEnEvento'];
+    const rows = applySuspiciousFilter(applyEmailFilter(getSearchFilteredTickets())).map(t => [
       t.id, t.name, t.dni, t.dob, t.phone, t.email, t.type, t.amount, t.orderId || '',
       t.createdAt, t.checkedIn ? 'si' : 'no', t.checkedInAt || '', t.lateEntry ? 'si' : 'no',
       t.voided ? 'si' : 'no', t.emailStatus || 'pending',
       suspiciousFlags.has(t.id) ? [...suspiciousFlags.get(t.id)].join('; ') : '',
       t.instagram ? '@' + t.instagram : '', t.promoterCode || '', t.inviteCode || '',
-      t.lateEntry ? (t.lateCharged ? 'pago' : 'gratis') : ''
+      t.lateEntry ? (t.lateCharged ? 'pago' : 'gratis') : '',
+      t.skuLabel || '', t.voided ? 'anulado' : (t.pending ? 'pendiente' : 'enviado'), ageAtEvent(t) ?? ''
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1447,7 +1516,7 @@
     body.innerHTML = list.map(p => `
       <tr${p.active ? '' : ' style="opacity:.5;"'}>
         <td>${escapeHtml(p.name)}<br><span style="font-family:monospace;color:#888;font-size:11px;">${escapeHtml(p.code)}</span></td>
-        <td>${p.active ? `<button class="btn btn-ghost btn-sm" onclick="copyPromoterLink(this, '${p.code}')">Copiar link</button>` : '—'}</td>
+        <td style="white-space:nowrap;">${p.active ? `<span style="font-family:monospace;font-size:11px;color:#aaa;">${escapeHtml(promoterLink(p.code).replace(/^https?:\/\//, ''))}</span><br><button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="copyPromoterLink(this, '${p.code}')">Copiar link</button>` : '—'} <button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="viewPromoterTickets('${p.code}')">Ver registros</button></td>
         <td><strong>${p.invitaciones}</strong>${p.pendientes ? '<br><span style="color:#888;font-size:11px;">' + p.pendientes + ' sin QR</span>' : ''}</td>
         <td>${p.pagadas}</td>
         <td>${p.mesas || 0}</td>
@@ -1554,7 +1623,8 @@
       const d = await r.json();
       input.value = '';
       await loadPromoters();
-      alert('Promotor agregado. Su link: ' + promoterLink(d.promoter.code));
+      try { await navigator.clipboard.writeText(promoterLink(d.promoter.code)); } catch (e) {}
+      alert('Promotor agregado. Su link (ya copiado): ' + promoterLink(d.promoter.code));
     } catch(e) { alert('Error de conexión.'); }
     finally { btn.disabled = false; }
   };

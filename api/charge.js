@@ -1,5 +1,5 @@
 const {
-  createTicket, MIN_AGE, reserveOrderIdentity, createOrder, sendPurchaseReceiptEmail, calcAge, PAID_CAP,
+  createTicket, REGISTER_MIN_AGE, reserveOrderIdentity, createOrder, sendPurchaseReceiptEmail, calcAge, PAID_CAP,
   getClientIp, listEventTickets, EVENT_DATE_LABEL,
 } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
@@ -76,7 +76,7 @@ module.exports = async (req, res) => {
         if (!emailCheck.ok) return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason, index: i });
       }
       const age = calcAge(a.dob);
-      if (age === null || age < MIN_AGE) return res.status(403).json({ error: 'underage', index: i });
+      if (age === null || age < REGISTER_MIN_AGE) return res.status(403).json({ error: 'underage', index: i });
     }
     const docKeys = cleaned.map((a) => a.numeroDocumento.toLowerCase());
     if (new Set(docKeys).size !== docKeys.length) return res.status(400).json({ error: 'duplicate_document' });

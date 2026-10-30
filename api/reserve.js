@@ -1,5 +1,5 @@
 const {
-  createTicket, MIN_AGE, sendTicketEmail, calcAge, getClientIp, qrDataUrl, claimTable, releaseTable, tableKey, redis, EVENT_DATE_LABEL,
+  createTicket, MIN_AGE, sendPurchaseReceiptEmail, calcAge, getClientIp, claimTable, releaseTable, tableKey, redis, EVENT_DATE_LABEL,
 } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
 const { findTableUnit, isSalesOpen } = require('../lib/catalog');
@@ -101,6 +101,8 @@ module.exports = async (req, res) => {
       partySize: unit.typeInfo.people,
       promoterCode: promoter ? promoter.code : null,
       ip: getClientIp(req),
+      // Sin QR al toque: se envía días antes del evento, previa aprobación.
+      pending: true,
     });
     ticket.culqiChargeId = culqiData.id;
     await redis.set('ticket:' + ticket.id, ticket);
@@ -108,15 +110,21 @@ module.exports = async (req, res) => {
 
     let emailSent = true;
     try {
-      await sendTicketEmail(ticket);
+      await sendPurchaseReceiptEmail({
+        to: h.email, name: h.nombre,
+        lines: [{ label: ticket.skuLabel, amount: unit.typeInfo.price }]
+          .concat(chargeCents < subtotalCents ? [{ label: 'Descuento de promotor', amount: (chargeCents - subtotalCents) / 100 }] : []),
+        total: chargeCents / 100,
+        isTable: true,
+      });
     } catch (emailErr) {
       emailSent = false;
-      console.error('Email send failed:', emailErr);
+      console.error('Receipt email failed:', emailErr);
     }
 
     return res.status(200).json({
-      ticket: { id: ticket.id, name: ticket.name, token: ticket.token, skuLabel: ticket.skuLabel, partySize: ticket.partySize },
-      qr: await qrDataUrl(ticket.id),
+      ticket: { name: ticket.name, skuLabel: ticket.skuLabel, partySize: ticket.partySize },
+      pending: true,
       emailSent,
       eventDateLabel: EVENT_DATE_LABEL,
     });

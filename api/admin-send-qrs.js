@@ -1,6 +1,8 @@
-const { listEventTickets, sendTicketEmail } = require('../lib/tickets');
+const { listEventTickets, sendTicketEmail, getOrder } = require('../lib/tickets');
 
-// Envío de los QRs del Free Entry, desde el admin, días antes del evento.
+// Envío de los QRs pendientes (Free Entry, entradas pagadas y reservas),
+// desde el admin, días antes del evento. Ninguno recibe su QR al registrarse
+// o comprar: lo recibe aquí, y eso lo aprueba.
 //   { passcode, action: 'status' }           -> cuántos pendientes / enviados
 //   { passcode, action: 'send', limit: 8 }   -> envía la próxima tanda
 //
@@ -9,8 +11,20 @@ const { listEventTickets, sendTicketEmail } = require('../lib/tickets');
 // hasta que 'remaining' llega a 0. Enviar el QR es lo que aprueba el
 // registro (sendTicketEmail le quita el pending). Los anulados no se envían:
 // para rechazar a alguien antes del envío, se anula su registro.
-function isPendingFree(t) {
-  return t.type === 'promo' && t.pending && !t.voided;
+const QR_TYPES = ['promo', 'paid', 'table'];
+function isPending(t) {
+  return QR_TYPES.includes(t.type) && t.pending && !t.voided;
+}
+
+// Un asistente de una compra que no dejó correo recibe su QR en el correo
+// del comprador.
+async function destinationOf(t) {
+  if (t.email) return null;
+  if (t.orderId) {
+    const order = await getOrder(t.orderId);
+    if (order && order.buyerEmail) return order.buyerEmail;
+  }
+  throw new Error('Sin correo para enviar el QR');
 }
 
 module.exports = async (req, res) => {
@@ -20,8 +34,8 @@ module.exports = async (req, res) => {
     if (passcode !== process.env.STAFF_PASSCODE) return res.status(401).json({ error: 'unauthorized' });
 
     const tickets = await listEventTickets();
-    const freeEntries = tickets.filter((t) => t.type === 'promo' && !t.voided);
-    const pending = freeEntries.filter(isPendingFree)
+    const withQr = tickets.filter((t) => QR_TYPES.includes(t.type) && !t.voided);
+    const pending = withQr.filter(isPending)
       // Primero los que se registraron antes.
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
@@ -35,7 +49,8 @@ module.exports = async (req, res) => {
       let sent = 0;
       for (const t of batch) {
         try {
-          await sendTicketEmail(t);
+          const to = await destinationOf(t);
+          await sendTicketEmail(t, to ? { to } : {});
           sent++;
         } catch (err) {
           failed.push({ id: t.id, email: t.email, reason: String(err.message || err).slice(0, 200) });
@@ -48,8 +63,8 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       ok: true,
       pending: pending.length,
-      approved: freeEntries.filter((t) => !t.pending).length,
-      total: freeEntries.length,
+      approved: withQr.filter((t) => !t.pending).length,
+      total: withQr.length,
     });
   } catch (err) {
     console.error(err);

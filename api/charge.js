@@ -1,6 +1,6 @@
 const {
-  createTicket, MIN_AGE, reserveOrderIdentity, createOrder, sendTicketEmail, sendOrderEmail, calcAge, PAID_CAP,
-  getClientIp, qrDataUrl, listEventTickets, EVENT_DATE_LABEL,
+  createTicket, MIN_AGE, reserveOrderIdentity, createOrder, sendPurchaseReceiptEmail, calcAge, PAID_CAP,
+  getClientIp, listEventTickets, EVENT_DATE_LABEL,
 } = require('../lib/tickets');
 const { PAYMENTS_ENABLED } = require('../lib/config');
 const { findTicketType, MAX_TICKETS_PER_ORDER } = require('../lib/catalog');
@@ -140,6 +140,8 @@ module.exports = async (req, res) => {
         orderId,
         ip,
         promoterCode: promoter ? promoter.code : null,
+        // Sin QR al toque: se envía días antes del evento, previa aprobación.
+        pending: true,
       });
       t.culqiChargeId = culqiData.id;
       tickets.push(t);
@@ -159,21 +161,28 @@ module.exports = async (req, res) => {
       discountAmount: appliedDiscountCents / 100,
     });
 
+    // Confirmación de compra (sin QR) al comprador. Los QRs salen después,
+    // desde el admin ("Enviar QRs pendientes").
+    let emailSent = true;
     try {
-      await Promise.all([
-        ...tickets.filter((t) => t.email).map((t) => sendTicketEmail(t)),
-        tickets.length > 1 ? sendOrderEmail(order, tickets) : Promise.resolve(),
-      ]);
+      await sendPurchaseReceiptEmail({
+        to: buyer.email,
+        name: buyer.nombre,
+        lines: lines.map((l) => ({ label: `${l.qty} × ${l.type.name}`, amount: l.type.price * l.qty }))
+          .concat(appliedDiscountCents ? [{ label: 'Descuento de promotor', amount: -appliedDiscountCents / 100 }] : []),
+        total: chargeCents / 100,
+        isTable: false,
+      });
     } catch (emailErr) {
-      console.error('Email send failed:', emailErr);
+      emailSent = false;
+      console.error('Receipt email failed:', emailErr);
     }
 
-    const ticketsWithQr = await Promise.all(tickets.map(async (t) => ({
-      id: t.id, name: t.name, token: t.token, skuLabel: t.skuLabel, qr: await qrDataUrl(t.id),
-    })));
     return res.status(200).json({
-      order: { id: order.id, token: order.token, amount: order.amount, qty: order.qty },
-      tickets: ticketsWithQr,
+      order: { id: order.id, amount: order.amount, qty: order.qty },
+      tickets: tickets.map((t) => ({ name: t.name, skuLabel: t.skuLabel })),
+      pending: true,
+      emailSent,
       eventDateLabel: EVENT_DATE_LABEL,
     });
   } catch (err) {

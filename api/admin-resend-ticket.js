@@ -1,4 +1,4 @@
-const { getTicket, sendTicketEmail } = require('../lib/tickets');
+const { getTicket, getOrder, sendTicketEmail } = require('../lib/tickets');
 
 // Re-sends the existing QR email for any ticket, unchanged (same ticket,
 // same QR, same token). Used from the admin panel's manual-issue lists
@@ -14,10 +14,16 @@ module.exports = async (req, res) => {
 
     const ticket = await getTicket(ticketId);
     if (!ticket) return res.status(404).json({ error: 'not_found' });
-    if (!ticket.email) return res.status(400).json({ error: 'no_email' });
+    // Sin correo propio (asistente de una compra): va al correo del comprador.
+    let to = ticket.email;
+    if (!to && ticket.orderId) {
+      const order = await getOrder(ticket.orderId);
+      to = order && order.buyerEmail;
+    }
+    if (!to) return res.status(400).json({ error: 'no_email' });
 
     try {
-      await sendTicketEmail(ticket);
+      await sendTicketEmail(ticket, { to });
     } catch (sendErr) {
       // Devuelve el motivo real de Resend (cuota, dominio, etc.) para verlo en el admin.
       return res.status(200).json({ ok: false, error: 'send_failed', reason: sendErr.message });

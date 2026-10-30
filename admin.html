@@ -179,7 +179,7 @@
         </div>
       </div>
       <div class="hint" id="fe-send-progress"></div>
-      <div class="hint">Free Entry: quien se registra no recibe QR al toque. "Enviar QRs pendientes" les manda su QR por correo a todos (día previo al evento) y eso los aprueba. Para rechazar a alguien, anula su registro antes de enviar: los anulados no reciben nada.</div>
+      <div class="hint">Nadie recibe su QR al registrarse o comprar (Free Entry, entradas y reservas): al comprar solo les llega la confirmación. "Enviar QRs pendientes" les manda su QR por correo a todos días antes del evento y eso los aprueba. Para rechazar a alguien, anúlalo antes de enviar (si pagó, el reembolso es manual en Culqi). Un asistente sin correo recibe su QR en el correo del comprador.</div>
     </div>
 
     <div class="tabs">
@@ -539,7 +539,7 @@
       [vigentes, 'QRs vigentes', true],
     ];
     if (has('promo')) cards.push([vig('promo'), 'Free Entry', false]);
-    if (has('promo')) cards.push([tickets.filter(t => t.type === 'promo' && t.pending && !t.voided).length, 'QR pendiente', false]);
+    cards.push([tickets.filter(t => ['promo', 'paid', 'table'].includes(t.type) && t.pending && !t.voided).length, 'QR pendiente', false]);
     if (has('table')) cards.push([vig('table'), 'Mesas vendidas', false]);
     if (has('free')) cards.push([vig('free'), 'Cortesías vigentes', false]);
     if (has('paid')) cards.push([vig('paid'), 'Pagadas vigentes', false]);
@@ -562,11 +562,13 @@
   // otherwise the two numbers would never be directly comparable for drift.
   function renderCortesiaCard(status, tickets){
     if (!status) return;
+    // Registros Free Entry de la fecha, y QRs pendientes de TODO (free, entradas y reservas).
     const fe = tickets.filter(t => t.type === 'promo' && !t.voided);
     const vigentes = fe.length;
-    const fePending = fe.filter(t => t.pending).length;
+    const withQr = tickets.filter(t => ['promo', 'paid', 'table'].includes(t.type) && !t.voided);
+    const fePending = withQr.filter(t => t.pending).length;
     document.getElementById('fe-pending').textContent = fePending;
-    document.getElementById('fe-sent').textContent = vigentes - fePending;
+    document.getElementById('fe-sent').textContent = withQr.length - fePending;
     const sendBtn = document.getElementById('fe-send-btn');
     sendBtn.disabled = !fePending || !isCurrentEvent() || feSending;
     if (!feSending) sendBtn.textContent = fePending ? 'Enviar QRs pendientes (' + fePending + ')' : 'Sin QRs pendientes';
@@ -618,7 +620,7 @@
   // Envío de QRs del Free Entry en tandas (ver api/admin-send-qrs.js).
   let feSending = false;
   document.getElementById('fe-send-btn').onclick = async function(){
-    const pending = allTickets.filter(t => t.type === 'promo' && t.pending && !t.voided).length;
+    const pending = allTickets.filter(t => ['promo', 'paid', 'table'].includes(t.type) && t.pending && !t.voided).length;
     if (!pending) return;
     if (!confirm('¿Enviar el QR por correo a los ' + pending + ' registrados pendientes? Cada uno queda aprobado al recibirlo.')) return;
     const btn = this;
@@ -898,9 +900,10 @@
   }
 
   function ticketRowHtml(t){
-    const typeBadge = t.type==='paid' ? '<span class="badge badge-paid">Pagada</span>'
+    const pendingTag = t.pending && !t.voided && t.type !== 'promo' ? ' <span class="badge badge-out">QR pendiente</span>' : '';
+    const typeBadge = t.type==='paid' ? '<span class="badge badge-paid">' + escapeHtml(t.skuLabel || 'Pagada') + '</span>' + pendingTag
       : t.type==='promo' ? (t.pending ? '<span class="badge badge-out">Free Entry · QR pendiente</span>' : '<span class="badge badge-promo">Free Entry</span>')
-      : t.type==='table' ? '<span class="badge badge-paid">Mesa ' + escapeHtml(t.unitId||'') + ' · ' + (t.partySize||1) + 'p</span>'
+      : t.type==='table' ? '<span class="badge badge-paid">' + escapeHtml(t.unitId||'') + ' · ' + (t.partySize||1) + 'p</span>' + pendingTag
       : t.type==='vip' ? '<span class="badge badge-paid">VIP</span>'
       : '<span class="badge badge-free">Gratis</span>';
     const igCell = t.instagram
@@ -942,7 +945,7 @@
       <td>${date}</td>
       <td>${statusBadge}${lateBadge}</td>
       <td>${emailStatusBadge(t)}</td>
-      <td style="white-space:nowrap;">${voidBtn}${t.email && !t.voided ? ` <button class="btn btn-ghost btn-sm" onclick="resendTicketQr('${t.id}', this)">${t.pending ? 'Enviar QR' : 'Reenviar QR'}</button>` : ''}</td>
+      <td style="white-space:nowrap;">${voidBtn}${(t.email || t.orderId) && !t.voided ? ` <button class="btn btn-ghost btn-sm" onclick="resendTicketQr('${t.id}', this)">${t.pending ? 'Enviar QR' : 'Reenviar QR'}</button>` : ''}</td>
     </tr>`;
   }
 

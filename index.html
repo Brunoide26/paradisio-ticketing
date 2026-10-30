@@ -39,6 +39,7 @@
     --gut:18px;
   }
   *, *::before, *::after { box-sizing:border-box; }
+  [hidden] { display:none !important; }
   html { -webkit-text-size-adjust:100%; }
   body {
     margin:0; background:var(--bg); color:var(--ink);
@@ -492,8 +493,7 @@
         <p id="buy-done-lead"></p>
         <div class="qr-list" id="qr-list"></div>
         <div class="actions" style="max-width:360px;margin-left:auto;margin-right:auto;">
-          <a class="btn btn-block" id="buy-done-order" href="#" target="_blank" rel="noopener" hidden>Ver todas mis entradas</a>
-          <button class="btn btn-block" type="button" data-close style="margin-top:10px;border-color:transparent;color:var(--muted);">Volver al evento</button>
+          <button class="btn btn-block" type="button" data-close>Volver al evento</button>
         </div>
       </div>
     </div>
@@ -885,7 +885,7 @@
         '<div class="field"><label for="' + p + 'b">Fecha de nacimiento</label><input class="in" id="' + p + 'b" data-k="dob" type="date" autocomplete="' + ac('bday') + '" /><p class="err"></p></div>' +
         (i === 0
           ? '<div class="field"><label for="' + p + 'p">Celular</label><input class="in" id="' + p + 'p" data-k="phone" type="tel" inputmode="tel" autocomplete="tel" /><p class="err"></p><p class="hint">Solo si hay un problema con tu compra.</p></div>'
-          : (opts.withEmail ? '<div class="field"><label for="' + p + 'e">Correo <small>· opcional, recibe su propio QR</small></label><input class="in" id="' + p + 'e" data-k="email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" /><p class="err"></p><p class="suggest"></p></div>' : '')) +
+          : (opts.withEmail ? '<div class="field"><label for="' + p + 'e">Correo <small>· opcional; si no, su QR llega a tu correo</small></label><input class="in" id="' + p + 'e" data-k="email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" /><p class="err"></p><p class="suggest"></p></div>' : '')) +
       '</div></div>';
   }
 
@@ -897,7 +897,7 @@
       sub = tt.price;
       renderSteps($('buy-steps'), ['Elige', 'Datos', 'Pago'], 2);
       $('buy-title').textContent = tt.name + ' · ' + unitLabel(u);
-      $('buy-lead').textContent = 'Datos del titular. Con un solo QR entran hasta ' + tt.people + ' personas junto con el titular, a cualquier hora.';
+      $('buy-lead').textContent = 'Datos del titular. Con un solo QR entran hasta ' + tt.people + ' personas junto con el titular, a cualquier hora. El QR llega por correo días antes del evento, previa aprobación.';
       rows = '<div class="summary-row"><span>' + esc(tt.name) + ' · ' + esc(unitLabel(u)) + ' · hasta ' + tt.people + ' personas</span><span>' + money(tt.price) + '</span></div>' +
         '<div class="summary-row"><span>Incluye</span><span style="text-align:right;max-width:62%;">' + tt.people + ' entradas, ' + esc(tt.includes) + '</span></div>';
       $('people').innerHTML = personBlock(0, 'Titular de la reserva', '', {});
@@ -906,7 +906,7 @@
       sub = lines.reduce((a, l) => a + l.price * l.qty, 0);
       renderSteps($('buy-steps'), ['Entradas', 'Datos', 'Pago'], 2);
       $('buy-title').textContent = totalQty() > 1 ? 'Datos de los asistentes' : 'Tus datos';
-      $('buy-lead').textContent = 'Cada entrada va a nombre de una persona y se verifica con su documento en la puerta.';
+      $('buy-lead').textContent = 'Cada entrada va a nombre de una persona y se verifica con su documento en la puerta. Los QRs llegan por correo días antes del evento, previa aprobación.';
       rows = lines.map((l) => '<div class="summary-row"><span>' + l.qty + ' × ' + esc(l.name) + '</span><span>' + money(l.price * l.qty) + '</span></div>').join('');
       let html = ''; let i = 0;
       lines.forEach((l) => { for (let k = 0; k < l.qty; k++) { html += personBlock(i, i === 0 ? 'Tú · comprador' : 'Asistente ' + (i + 1), l.name, { sku: l.sku, withEmail: true }); i++; } });
@@ -1020,14 +1020,14 @@
         const r = await fetch('/api/reserve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, unitId: selectedUnit, holder: pendingPeople[0], ref }) });
         const d = await r.json();
         if (!r.ok) return failPay(d);
-        renderDone([Object.assign({ qr: d.qr }, d.ticket)], null, d.emailSent !== false, pendingPeople[0].email);
+        renderDone([d.ticket], null, d.emailSent !== false, pendingPeople[0].email);
         const u = unitById(selectedUnit); if (u) u.sold = true;
         selectedUnit = null; renderTables(); renderTablesCard();
       } else {
         const r = await fetch('/api/charge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, items: cartLines().map((l) => ({ sku: l.sku, qty: l.qty })), assistants: pendingPeople, ref }) });
         const d = await r.json();
         if (!r.ok) return failPay(d);
-        renderDone(d.tickets, d.order, true, pendingPeople[0].email);
+        renderDone(d.tickets, d.order, d.emailSent !== false, pendingPeople[0].email);
         cart = {}; syncQty(); syncBar();
       }
     } catch (err) {
@@ -1042,20 +1042,21 @@
     if (d.error === 'table_taken' || d.error === 'invalid_table') { selectedUnit = null; load().then(() => go('v-tables')); }
     else if (d.error === 'sold_out') load();
   }
+  // Ni las compras ni las reservas muestran QR: el QR llega por correo días
+  // antes del evento, previa aprobación (igual que la Lista Free).
   function renderDone(tickets, order, emailSent, email){
     const isTable = mode === 'table';
-    $('buy-done-title').innerHTML = isTable ? 'Reserva <em>confirmada</em>' : 'Compra <em>confirmada</em>';
-    $('buy-done-lead').innerHTML = (emailSent
-      ? 'Te enviamos ' + (tickets.length > 1 ? 'las entradas' : 'tu QR') + ' a <strong>' + esc(email) + '</strong>. Revisa también spam y promociones.'
-      : 'No pudimos enviar el correo ahora. Toma captura de esta pantalla.') +
-      (isTable ? ' Con este QR entra todo tu grupo junto con el titular.' : ' Presenta cada QR con el documento físico de su titular.');
-    $('qr-list').innerHTML = tickets.map((t) =>
-      '<div class="qr-card"><p class="cap red">' + esc(t.skuLabel || '') + '</p>' +
-      '<div class="qr-frame" style="margin-top:14px;"><img src="' + t.qr + '" alt="Código QR de ' + esc(t.name) + '" width="210" height="210" /></div>' +
-      '<p class="qr-name">' + esc(t.name) + '</p><p class="qr-code">' + esc(t.id) + '</p>' +
-      (t.token ? '<p style="margin:12px 0 0;"><a class="cap muted" href="/entrada?t=' + encodeURIComponent(t.token) + '" target="_blank" rel="noopener" style="text-underline-offset:4px;">Ver entrada</a></p>' : '') + '</div>').join('');
-    const ord = $('buy-done-order');
-    if (order && order.token && tickets.length > 1) { ord.hidden = false; ord.href = '/orden?t=' + encodeURIComponent(order.token); } else ord.hidden = true;
+    $('buy-done-title').innerHTML = isTable ? 'Gracias por tu <em>reserva</em>' : 'Gracias por tu <em>compra</em>';
+    $('buy-done-lead').innerHTML =
+      (isTable ? 'Tu reserva está confirmada. El QR de tu reserva' : 'Tu compra está confirmada. ' + (tickets.length > 1 ? 'Tus entradas' : 'Tu entrada')) +
+      ' será' + (!isTable && tickets.length > 1 ? 'n enviadas' : (isTable ? ' enviado' : ' enviada')) +
+      ' a <strong>' + esc(email) + '</strong> días previos al evento, previa aprobación.' +
+      (emailSent ? ' Ya te llegó la confirmación de pago a ese correo.' : '');
+    $('qr-list').innerHTML = '<div class="summary" style="text-align:left;margin:0 auto;max-width:420px;">' +
+      tickets.map((t) => '<div class="summary-row"><span>' + esc(t.name) + '</span><span>' + esc(t.skuLabel || '') + '</span></div>').join('') +
+      '</div>' +
+      '<p style="font-size:13px;">' + (isTable ? 'Con ese QR entra todo tu grupo junto al titular.' : 'Cada QR va a nombre de su asistente y se presenta con su documento físico.') +
+      ' Revisa también spam y promociones.</p>';
     go('v-buy-done');
   }
 

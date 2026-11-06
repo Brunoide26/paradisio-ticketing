@@ -5,7 +5,7 @@ const { PAYMENTS_ENABLED } = require('../lib/config');
 const { findTableUnit, isSalesOpen } = require('../lib/catalog');
 const { CURRENT_EVENT_ID } = require('../lib/events');
 const { validateEmail } = require('../lib/email-validation');
-const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
+const { isValidNamePart, isValidDocument, cleanInstagram, isValidInstagram } = require('../lib/identity-validation');
 const { resolveActivePromoter, applyDiscount } = require('../lib/promoters');
 
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
@@ -18,7 +18,7 @@ const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
 //   4. emitir UN QR a nombre del titular, válido para todo su grupo.
 //
 // body: { token, unitId, holder: { nombre, apellido, tipoDocumento,
-//         numeroDocumento, dob, email, phone }, ref }
+//         numeroDocumento, dob, email, phone, instagram }, ref }
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   if (!PAYMENTS_ENABLED || !isSalesOpen()) return res.status(403).json({ error: 'sales_closed' });
@@ -37,14 +37,16 @@ module.exports = async (req, res) => {
       dob: String(holder.dob || ''),
       email: String(holder.email || '').trim().toLowerCase(),
       phone: String(holder.phone || '').replace(/[^\d+]/g, ''),
+      instagram: cleanInstagram(holder.instagram),
     };
-    if (!h.nombre || !h.apellido || !TIPO_DOCUMENTO.includes(h.tipoDocumento) || !h.numeroDocumento || !h.dob || !h.email || !h.phone) {
+    if (!h.nombre || !h.apellido || !TIPO_DOCUMENTO.includes(h.tipoDocumento) || !h.numeroDocumento || !h.dob || !h.email || !h.phone || !h.instagram) {
       return res.status(400).json({ error: 'missing_fields' });
     }
     if (!isValidNamePart(h.nombre) || !isValidNamePart(h.apellido)) return res.status(400).json({ error: 'invalid_name' });
     if (!isValidDocument(h.numeroDocumento, h.tipoDocumento)) return res.status(400).json({ error: 'invalid_document' });
     const digits = h.phone.replace(/\D/g, '');
     if (digits.length < 7 || digits.length > 15) return res.status(400).json({ error: 'invalid_phone' });
+    if (!isValidInstagram(h.instagram)) return res.status(400).json({ error: 'invalid_instagram' });
     const age = calcAge(h.dob);
     if (age === null || age < REGISTER_MIN_AGE) return res.status(403).json({ error: 'underage' });
     const emailCheck = await validateEmail(h.email);
@@ -90,6 +92,7 @@ module.exports = async (req, res) => {
       name: `${h.nombre} ${h.apellido}`,
       email: h.email,
       phone: h.phone,
+      instagram: h.instagram,
       dni: h.numeroDocumento,
       docType: h.tipoDocumento,
       dob: h.dob,

@@ -5,7 +5,7 @@
 `paradisioclub.com` es la página de **Paradisio by Jägermeister** (formato tipo WHAN/Discofobia): flyer, fecha, lugar con "Cómo llegar", y tres bloques de compra.
 
 1. **Free entry (lista):** la persona se apunta con nombre, apellidos, correo, DNI, fecha de nacimiento, celular e Instagram. **No recibe QR al toque**: ve "Gracias por registrarte, tu invitación será aprobada y enviada días previos al evento". Válido hasta las 11 p.m. (`PROMO_VALIDITY_LABEL` / `PROMO_ENTRY_CUTOFF`).
-2. **Entradas pagadas:** selector +/− por tipo, barra fija con el total, datos nominales por asistente y pago con tarjeta (Culqi). El QR sale en pantalla y por correo.
+2. **Entradas pagadas:** selector +/− por tipo, barra fija con el total, datos nominales por asistente y pago con tarjeta (Culqi). **Cada asistente** (no solo el comprador) debe poner documento, fecha de nacimiento, correo, celular e Instagram; el servidor rechaza la compra si falta alguno. El titular de una mesa también pone su Instagram. El QR sale en pantalla y por correo.
 3. **Mesas y boxes:** "Ver mapa" abre el plano; se elige una mesa (en el mapa o por tipo), se ponen los datos del titular y se paga. La mesa queda tomada con un candado atómico antes de cobrar (no se vende dos veces). Un solo QR para todo el grupo; el scanner muestra "MESA X · N PERSONAS".
 
 - **Links de promotores:** cada promotor tiene `paradisioclub.com/?ref=CODIGO` (o `/p/CODIGO`). Todo lo que saque esa persona —free entry, entradas y mesas— queda a su nombre (el ref se recuerda 7 días en el navegador). Se copian desde `/admin` → Promotores → "Copiar link" o "Copiar todos los links". Descuento por link: apagado (`PROMOTER_DISCOUNT_RATE`, ej. `0.10`).

@@ -329,7 +329,7 @@
         </div>
         <div class="side-extra">
           <p class="about-short">Latin house, afro house y house toda la noche. Una noche para no dejar de bailar.</p>
-          <div class="pills"><span class="pill solid">+21 años</span><span class="pill">Latin House</span><span class="pill">Afro House</span><span class="pill">House</span><span class="pill">Smart Casual</span></div>
+          <div class="pills"><span class="pill solid">+21 años</span><span class="pill">Smart Casual</span></div>
         </div>
       </aside>
 
@@ -350,7 +350,7 @@
         </div>
         <div class="m-extra">
           <p class="about-short">Latin house, afro house y house toda la noche. Una noche para no dejar de bailar.</p>
-          <div class="pills"><span class="pill solid">+21 años</span><span class="pill">Latin House</span><span class="pill">Afro House</span><span class="pill">House</span><span class="pill">Smart Casual</span></div>
+          <div class="pills"><span class="pill solid">+21 años</span><span class="pill">Smart Casual</span></div>
         </div>
         <p class="ref-chip" id="ref-chip">Vas de parte de <strong id="ref-name"></strong></p>
 
@@ -880,13 +880,12 @@
       '<div class="person-h"><p class="cap">' + esc(label) + '</p><p class="cap muted">' + esc(sub) + '</p></div><div class="fields">' +
         '<div class="field"><label for="' + p + 'n">Nombre</label><input class="in" id="' + p + 'n" data-k="nombre" type="text" autocomplete="' + ac('given-name') + '" autocapitalize="words" /><p class="err"></p></div>' +
         '<div class="field"><label for="' + p + 'a">Apellidos</label><input class="in" id="' + p + 'a" data-k="apellido" type="text" autocomplete="' + ac('family-name') + '" autocapitalize="words" /><p class="err"></p></div>' +
-        (i === 0 ? '<div class="field wide"><label for="' + p + 'e">Correo <small>· aquí llegan los QRs</small></label><input class="in" id="' + p + 'e" data-k="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" /><p class="err"></p><p class="suggest"></p></div>' : '') +
+        '<div class="field wide"><label for="' + p + 'e">Correo <small>· ' + (i === 0 ? 'aquí llega tu QR y el resumen de la compra' : 'aquí llega su QR') + '</small></label><input class="in" id="' + p + 'e" data-k="email" type="email" inputmode="email" autocomplete="' + ac('email') + '" autocapitalize="off" spellcheck="false" /><p class="err"></p><p class="suggest"></p></div>' +
         '<div class="field"><label for="' + p + 't">Documento</label><select class="in" id="' + p + 't" data-k="tipoDocumento"><option value="DNI">DNI</option><option value="CE">Carné de extranjería</option><option value="Pasaporte">Pasaporte</option></select><p class="err"></p></div>' +
         '<div class="field"><label for="' + p + 'd">Número</label><input class="in" id="' + p + 'd" data-k="numeroDocumento" type="text" autocomplete="off" maxlength="12" /><p class="err"></p></div>' +
         '<div class="field"><label for="' + p + 'b">Fecha de nacimiento</label><input class="in" id="' + p + 'b" data-k="dob" type="date" autocomplete="' + ac('bday') + '" /><p class="err"></p></div>' +
-        (i === 0
-          ? '<div class="field"><label for="' + p + 'p">Celular</label><input class="in" id="' + p + 'p" data-k="phone" type="tel" inputmode="tel" autocomplete="tel" /><p class="err"></p><p class="hint">Solo si hay un problema con tu compra.</p></div>'
-          : (opts.withEmail ? '<div class="field"><label for="' + p + 'e">Correo <small>· opcional; si no, su QR llega a tu correo</small></label><input class="in" id="' + p + 'e" data-k="email" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" /><p class="err"></p><p class="suggest"></p></div>' : '')) +
+        '<div class="field"><label for="' + p + 'p">Celular</label><input class="in" id="' + p + 'p" data-k="phone" type="tel" inputmode="tel" autocomplete="' + ac('tel') + '" /><p class="err"></p></div>' +
+        '<div class="field"><label for="' + p + 'g">Instagram</label><div class="pre"><span aria-hidden="true">@</span><input class="in" id="' + p + 'g" data-k="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" /></div><p class="err"></p></div>' +
       '</div></div>';
   }
 
@@ -907,7 +906,7 @@
       sub = lines.reduce((a, l) => a + l.price * l.qty, 0);
       renderSteps($('buy-steps'), ['Entradas', 'Datos', 'Pago'], 2);
       $('buy-title').textContent = totalQty() > 1 ? 'Datos de los asistentes' : 'Tus datos';
-      $('buy-lead').textContent = 'Cada entrada va a nombre de una persona y se verifica con su documento en la puerta. Los QRs llegan por correo días antes del evento, previa aprobación.';
+      $('buy-lead').textContent = 'Cada entrada va a nombre de una persona: completa los datos de cada asistente (documento, correo, celular e Instagram). Se verifica con su documento en la puerta. Los QRs llegan por correo días antes del evento, previa aprobación.';
       rows = lines.map((l) => '<div class="summary-row"><span>' + l.qty + ' × ' + esc(l.name) + '</span><span>' + money(l.price * l.qty) + '</span></div>').join('');
       let html = ''; let i = 0;
       lines.forEach((l) => { for (let k = 0; k < l.qty; k++) { html += personBlock(i, i === 0 ? 'Tú · comprador' : 'Asistente ' + (i + 1), l.name, { sku: l.sku, withEmail: true }); i++; } });
@@ -936,12 +935,12 @@
         sku: blk.dataset.sku || undefined,
         nombre: get('nombre').value.trim(), apellido: get('apellido').value.trim(),
         tipoDocumento: get('tipoDocumento').value, numeroDocumento: get('numeroDocumento').value.trim().toUpperCase(),
-        dob: get('dob').value, email: get('email') ? get('email').value.trim().toLowerCase() : '', phone: get('phone') ? get('phone').value.trim() : '',
+        dob: get('dob').value, email: get('email').value.trim().toLowerCase(), phone: get('phone').value.trim(),
+        instagram: cleanIg(get('instagram').value),
       };
-      const tests = [['nombre', check.name(a.nombre)], ['apellido', check.name(a.apellido)]];
-      if (get('email')) tests.push(['email', check.email(a.email, i !== 0)]);
-      tests.push(['numeroDocumento', check.doc(a.numeroDocumento, a.tipoDocumento)], ['dob', check.dob(a.dob)]);
-      if (get('phone')) tests.push(['phone', check.phone(a.phone)]);
+      const tests = [['nombre', check.name(a.nombre)], ['apellido', check.name(a.apellido)], ['email', check.email(a.email)],
+        ['numeroDocumento', check.doc(a.numeroDocumento, a.tipoDocumento)], ['dob', check.dob(a.dob)],
+        ['phone', check.phone(a.phone)], ['instagram', check.ig(a.instagram)]];
       tests.forEach(([k, m]) => { setErr(get(k), m); if (m && !first) first = get(k); });
       return a;
     });

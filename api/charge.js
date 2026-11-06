@@ -5,7 +5,7 @@ const {
 const { PAYMENTS_ENABLED } = require('../lib/config');
 const { findTicketType, MAX_TICKETS_PER_ORDER } = require('../lib/catalog');
 const { validateEmail } = require('../lib/email-validation');
-const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
+const { isValidNamePart, isValidDocument, cleanInstagram, isValidInstagram, isValidPhone } = require('../lib/identity-validation');
 const { resolveActivePromoter, applyDiscount } = require('../lib/promoters');
 
 const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
@@ -16,7 +16,10 @@ const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
 // del servidor, nunca del navegador.
 //
 // body: { token, items: [{ sku, qty }], assistants: [{ sku, nombre, apellido,
-//         tipoDocumento, numeroDocumento, dob, email }], ref }
+//         tipoDocumento, numeroDocumento, dob, email, phone, instagram }], ref }
+//
+// Todos los datos son obligatorios para CADA asistente (no solo el comprador):
+// documento, correo, celular e Instagram.
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   if (!PAYMENTS_ENABLED) return res.status(403).json({ error: 'payments_disabled' });
@@ -57,24 +60,21 @@ module.exports = async (req, res) => {
       dob: String(a.dob || ''),
       email: String(a.email || '').trim().toLowerCase(),
       phone: String(a.phone || '').replace(/[^\d+]/g, ''),
+      instagram: cleanInstagram(a.instagram),
     }));
 
     for (let i = 0; i < cleaned.length; i++) {
       const a = cleaned[i];
-      if (!a.nombre || !a.apellido || !TIPO_DOCUMENTO.includes(a.tipoDocumento) || !a.numeroDocumento || !a.dob) {
+      if (!a.nombre || !a.apellido || !TIPO_DOCUMENTO.includes(a.tipoDocumento) || !a.numeroDocumento || !a.dob
+        || !a.email || !a.phone || !a.instagram) {
         return res.status(400).json({ error: 'missing_fields', index: i });
       }
       if (!isValidNamePart(a.nombre) || !isValidNamePart(a.apellido)) return res.status(400).json({ error: 'invalid_name', index: i });
       if (!isValidDocument(a.numeroDocumento, a.tipoDocumento)) return res.status(400).json({ error: 'invalid_document', index: i });
-      if (i === 0 && !a.email) return res.status(400).json({ error: 'missing_buyer_email' });
-      if (i === 0) {
-        const digits = a.phone.replace(/\D/g, '');
-        if (digits.length < 7 || digits.length > 15) return res.status(400).json({ error: 'invalid_phone', index: 0 });
-      }
-      if (a.email) {
-        const emailCheck = await validateEmail(a.email);
-        if (!emailCheck.ok) return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason, index: i });
-      }
+      if (!isValidPhone(a.phone)) return res.status(400).json({ error: 'invalid_phone', index: i });
+      if (!isValidInstagram(a.instagram)) return res.status(400).json({ error: 'invalid_instagram', index: i });
+      const emailCheck = await validateEmail(a.email);
+      if (!emailCheck.ok) return res.status(400).json({ error: 'invalid_email', reason: emailCheck.reason, index: i });
       const age = calcAge(a.dob);
       if (age === null || age < REGISTER_MIN_AGE) return res.status(403).json({ error: 'underage', index: i });
     }
@@ -129,7 +129,8 @@ module.exports = async (req, res) => {
       const t = await createTicket({
         name: `${a.nombre} ${a.apellido}`.trim(),
         email: a.email,
-        phone: a === buyer ? a.phone : '',
+        phone: a.phone,
+        instagram: a.instagram,
         dni: a.numeroDocumento,
         docType: a.tipoDocumento,
         dob: a.dob,

@@ -174,8 +174,8 @@
         </div>
         <div class="cortesia-actions">
           <button class="btn btn-pink" id="fe-send-btn">Enviar QRs pendientes</button>
-          <button class="btn btn-ghost" id="cortesia-open-btn">Abrir registro</button>
-          <button class="btn btn-ghost" id="cortesia-close-btn">Cerrar registro</button>
+          <button class="btn btn-ghost" id="cortesia-open-btn">Abrir lista general</button>
+          <button class="btn btn-ghost" id="cortesia-close-btn">Cerrar lista general</button>
           <button class="btn btn-ghost" id="cortesia-resync-btn" style="display:none;">Resincronizar contador</button>
         </div>
       </div>
@@ -292,9 +292,10 @@
         <p class="pd-eyebrow" style="margin-bottom:14px;">Portal de promotores · <a href="/promotor" target="_blank" rel="noopener" style="color:#ccc;">paradisioclub.com/promotor</a></p>
         <div class="toolbar">
           <button class="btn btn-pink" id="portal-create-logins">Crear accesos</button>
-          <button class="btn btn-ghost" id="portal-copy-users">Copiar usuarios</button>
+          <button class="btn btn-ghost" id="portal-copy-users">Copiar todos los accesos</button>
+          <button class="btn btn-ghost" id="portal-redo-hidden" style="display:none;">Rehacer claves ocultas</button>
         </div>
-        <div class="hint">Cada promotor entra con su usuario y clave, genera sus códigos (cupo base <span id="portal-default-quota">80</span>) y los manda por WhatsApp. Quien usa un código queda registrado a su nombre, pendiente hasta que mandes los QRs. Los códigos sirven hasta el <span id="portal-deadline">sáb 14/11, 8 p.m.</span> "Crear accesos" genera la clave de quien todavía no tiene una; las claves se ven <strong>solo una vez</strong> (si alguien la pierde, "Nueva clave" en su fila).</div>
+        <div class="hint">Cada promotor entra con su usuario y clave, genera sus códigos (cupo base <span id="portal-default-quota">80</span>) y los manda por WhatsApp. Quien usa un código queda registrado a su nombre, pendiente hasta que mandes los QRs. Los códigos sirven hasta el <span id="portal-deadline">sáb 14/11, 8 p.m.</span> "Crear accesos" genera la clave de quien todavía no tiene una. Usuario y clave de cada uno están en la columna "Acceso" de la tabla ("Copiar" arma el mensaje para WhatsApp).</div>
         <div id="portal-logins" style="display:none;">
           <div class="codes-new" id="portal-logins-text"></div>
           <div class="toolbar" style="margin-top:10px;"><button class="btn btn-ghost btn-sm" id="portal-logins-copy">Copiar todo</button></div>
@@ -570,12 +571,14 @@
     const tardePago = tardios.filter(t => t.lateCharged).length;
 
     const cards = [
-      [generados, 'QRs generados', false],
-      [anulados, 'QRs anulados', false],
-      [vigentes, 'QRs vigentes', true],
+      [generados, 'Registros generados', false],
+      [anulados, 'Registros anulados', false],
+      [vigentes, 'Registros vigentes', true],
     ];
+    const conQr = tickets.filter(t => ['promo', 'paid', 'table'].includes(t.type) && !t.voided);
     if (has('promo')) cards.push([vig('promo'), 'Free Entry', false]);
-    cards.push([tickets.filter(t => ['promo', 'paid', 'table'].includes(t.type) && t.pending && !t.voided).length, 'QR pendiente', false]);
+    cards.push([conQr.filter(t => !t.pending).length, 'QRs enviados', false]);
+    cards.push([conQr.filter(t => t.pending).length, 'QR pendiente', false]);
     if (has('table')) cards.push([vig('table'), 'Mesas vendidas', false]);
     if (has('free')) cards.push([vig('free'), 'Cortesías vigentes', false]);
     if (has('paid')) cards.push([vig('paid'), 'Pagadas vigentes', false]);
@@ -610,16 +613,14 @@
     if (!feSending) sendBtn.textContent = fePending ? 'Enviar QRs pendientes (' + fePending + ')' : 'Sin QRs pendientes';
     const isOpen = status.state === 'open';
     document.getElementById('cortesia-dot').className = 'semaforo-dot ' + (isOpen ? 'semaforo-green' : 'semaforo-red');
-    document.getElementById('cortesia-label').textContent = status.inviteOnly
-      ? 'Registro Free Entry: SOLO CON CÓDIGO DE PROMOTOR'
-      : (isOpen ? 'Registro Free Entry: ABIERTO' : 'Registro Free Entry: CERRADO');
-    if (status.inviteOnly) document.getElementById('cortesia-dot').className = 'semaforo-dot semaforo-green';
-    let reasonText = '';
-    if (!isOpen) {
-      reasonText = status.reason === 'manual'
-        ? 'Cerrado manualmente desde este panel'
-        : 'Cerrado automáticamente: se alcanzó el cap (FREE_CAP)';
-    }
+    document.getElementById('cortesia-label').textContent = isOpen
+      ? 'Lista Free general: ABIERTA'
+      : 'Lista Free general: CERRADA · solo con código de promotor';
+    const reasonText = isOpen
+      ? 'Cualquiera se puede registrar desde la página, con o sin código.'
+      : (status.reason === 'cap'
+        ? 'Se cerró sola al llegar al tope (FREE_CAP). Los códigos de promotor siguen funcionando.'
+        : 'En la página dice Sold out. Solo entran quienes tienen un código de promotor.');
     document.getElementById('cortesia-reason').textContent = reasonText;
     document.getElementById('cortesia-vigentes').textContent = vigentes;
     document.getElementById('cortesia-cap').textContent = status.freeCap;
@@ -629,7 +630,7 @@
   }
 
   document.getElementById('cortesia-open-btn').onclick = async function(){
-    if (!confirm('¿Abrir el registro de Free Entry?')) return;
+    if (!confirm('¿Abrir la Lista Free general? Cualquiera se podrá registrar desde la página, sin código.')) return;
     try {
       const r = await fetch('/api/admin-cortesia-toggle', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -643,7 +644,7 @@
   };
 
   document.getElementById('cortesia-close-btn').onclick = async function(){
-    if (!confirm('¿Cerrar el registro de Free Entry? La web mostrará "Registro cerrado" y se rechazarán nuevos registros.')) return;
+    if (!confirm('¿Cerrar la Lista Free general? La página dirá Sold out; los códigos de promotor siguen funcionando.')) return;
     try {
       const r = await fetch('/api/admin-cortesia-toggle', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -1489,6 +1490,7 @@
       if (r.status === 401) { alert('Clave incorrecta'); return; }
       const d = await r.json();
       allPromoters = d.promoters || [];
+      document.getElementById('portal-redo-hidden').style.display = allPromoters.some(p => !p.removed && p.hasLogin && !p.password) ? '' : 'none';
       if (d.defaultQuota) document.getElementById('portal-default-quota').textContent = d.defaultQuota;
       if (d.inviteDeadline) document.getElementById('portal-deadline').textContent = new Date(d.inviteDeadline).toLocaleString('es-PE', { timeZone:'America/Lima', weekday:'short', day:'numeric', month:'numeric', hour:'numeric', minute:'2-digit' });
       renderPromotoresTable();
@@ -1541,7 +1543,7 @@
         <td style="white-space:nowrap;">${p.active ? `<span style="font-family:monospace;font-size:11px;color:#aaa;">${escapeHtml(promoterLink(p.code).replace(/^https?:\/\//, ''))}</span><br><button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="copyPromoterLink(this, '${p.code}')">Copiar link</button>` : '—'} <button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="viewPromoterTickets('${p.code}')">Ver registros</button></td>
         <td style="white-space:nowrap;">${p.removed ? '—' : `<strong>${p.generated || 0}</strong> / ${p.quota}<br><button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="addQuota('${p.code}', ${p.quota})">+ cupo</button>`}</td>
         <td><strong>${p.registrados || 0}</strong>${p.registrados ? '<br><span style="color:#888;font-size:11px;">' + (p.aprobados || 0) + ' con QR</span>' : ''}</td>
-        <td style="white-space:nowrap;">${p.removed ? '—' : `<span style="font-family:monospace;font-size:12px;">${escapeHtml(p.username)}</span>${p.hasLogin ? '' : ' <span style="color:#e0c87f;font-size:11px;">sin clave</span>'}<br><button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="resetPromoterPassword('${p.code}')">Nueva clave</button>`}</td>
+        <td style="white-space:nowrap;">${p.removed ? '—' : `<span style="font-family:monospace;font-size:12px;">${escapeHtml(p.username)}</span><br><span style="font-family:monospace;font-size:12px;color:${p.password ? '#fff' : '#e0c87f'};">${p.password ? escapeHtml(p.password) : (p.hasLogin ? 'clave oculta' : 'sin clave')}</span><br>${p.password ? `<button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="copyAccess(this, '${p.code}')">Copiar</button> ` : ''}<button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="resetPromoterPassword('${p.code}')">Nueva clave</button>`}</td>
         <td><strong>${p.invitaciones}</strong>${p.pendientes ? '<br><span style="color:#888;font-size:11px;">' + p.pendientes + ' sin QR</span>' : ''}</td>
         <td>${p.pagadas}</td>
         <td>${p.mesas || 0}</td>
@@ -1734,9 +1736,29 @@
   document.getElementById('portal-logins-copy').onclick = async function(){
     await copyText(document.getElementById('portal-logins-text').textContent); flash(this);
   };
+  function accessText(p){
+    return 'Hola ' + p.name.split(' ')[0] + '! Ya tienes tu panel de Paradisio 🔥\nEntra a: ' + location.origin + '/promotor\nUsuario: ' + p.username + '\nClave: ' + p.password +
+      '\nAhí generas tus códigos (1 por persona, o varios de una para un grupo) y los mandas por WhatsApp.';
+  }
+  window.copyAccess = async function(btn, code){
+    const p = allPromoters.find(x => x.code === code);
+    if (!p || !p.password) return;
+    await copyText(accessText(p)); flash(btn);
+  };
   document.getElementById('portal-copy-users').onclick = async function(){
     const list = [...allPromoters].filter(p => p.active && !p.removed).sort((a, b) => a.name.localeCompare(b.name));
-    await copyText(list.map(p => p.name + ': ' + p.username).join('\n')); flash(this);
+    await copyText(list.map(p => p.name + '\nUsuario: ' + p.username + '\nClave: ' + (p.password || '(oculta: dale Nueva clave)')).join('\n\n')); flash(this);
+  };
+  document.getElementById('portal-redo-hidden').onclick = async function(){
+    if (!confirm('Esto le da una clave NUEVA a cada promotor cuya clave no se puede ver. Si ya les mandaste una clave, esa deja de funcionar. ¿Seguir?')) return;
+    const btn = this; btn.disabled = true;
+    try {
+      const r = await fetch('/api/admin-promoters', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, action:'create-logins', redoHidden: true }) });
+      if (!r.ok) { alert('No se pudieron rehacer las claves.'); return; }
+      await loadPromoters();
+    } catch(e) { alert('Error de conexión.'); }
+    finally { btn.disabled = false; }
   };
   document.getElementById('portal-create-logins').onclick = async function(){
     if (!confirm('¿Crear usuario y clave para los promotores que todavía no tienen? Las claves se muestran una sola vez.')) return;

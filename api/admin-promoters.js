@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
       return res.status(200).json(r);
     }
     if (action === 'create-logins') {
-      return res.status(200).json({ ok: true, created: await createMissingLogins() });
+      return res.status(200).json({ ok: true, created: await createMissingLogins({ onlyHidden: !!req.body.redoHidden }) });
     }
     if (action === 'reset-password') {
       const r = await resetPassword(req.body.code);

@@ -9,7 +9,6 @@ const {
 } = require('../lib/catalog');
 const { CURRENT_EVENT_ID } = require('../lib/events');
 const { DISCOUNT_RATE } = require('../lib/promoters');
-const { FREE_ENTRY_INVITE_ONLY } = require('../lib/promoter-portal');
 
 // Todo lo que la página pública necesita para pintarse: datos de la fecha,
 // entradas (con agotado / quedan pocas), free entry abierto o cerrado, y qué
@@ -39,6 +38,7 @@ module.exports = async (req, res) => {
 
     const sold = new Set(await soldTableUnits(CURRENT_EVENT_ID, TABLE_UNITS.map((u) => u.id)));
 
+    const freeOpen = !(await isCortesiaSoldOut());
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({
       event: {
@@ -52,11 +52,11 @@ module.exports = async (req, res) => {
       promoterDiscountRate: DISCOUNT_RATE,
       freeEntry: {
         name: FREE_ENTRY.name,
-        description: FREE_ENTRY.description,
+        description: freeOpen ? FREE_ENTRY.description.replace(/^Solo con invitación de un promotor\.\s*/, '') : FREE_ENTRY.description,
         validityLabel: PROMO_VALIDITY_LABEL,
-        // Sin código está cerrada; con un link /i/CODIGO la portada la abre.
-        open: !FREE_ENTRY_INVITE_ONLY && !(await isCortesiaSoldOut()),
-        inviteOnly: FREE_ENTRY_INVITE_ONLY,
+        // Lista general (sin código): la abre/cierra el admin. Con un link
+        // /i/CODIGO la portada deja registrarse aunque esté cerrada.
+        open: freeOpen,
         doorPrice: DOOR_PRICE_SOLES,
       },
       tickets,

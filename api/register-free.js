@@ -5,7 +5,7 @@ const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument } = require('../lib/identity-validation');
 const { FREE_ENTRY } = require('../lib/catalog');
 const { resolveActivePromoter } = require('../lib/promoters');
-const { checkPortalInvite, FREE_ENTRY_INVITE_ONLY } = require('../lib/promoter-portal');
+const { checkPortalInvite } = require('../lib/promoter-portal');
 const { claimInvite, releaseInvite, markInviteUsed } = require('../lib/invites');
 
 // "@usuario", "usuario", "instagram.com/usuario/" -> "usuario"
@@ -28,7 +28,7 @@ function cleanPhone(raw) {
 // Con código de invitación (body.code, del portal de promotores): el registro
 // queda a nombre del promotor dueño del código y el código se quema (un
 // código = una persona). Sin código: sólo si la lista pública está abierta
-// (FREE_ENTRY_INVITE_ONLY=false y el control de cortesías del admin abierto).
+// (botón "Abrir lista general" del admin; por defecto está cerrada).
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
     if (body.code) {
       invite = await checkPortalInvite(body.code);
       if (!invite.ok) return res.status(409).json({ error: 'code_' + invite.reason });
-    } else if (FREE_ENTRY_INVITE_ONLY || await isCortesiaSoldOut()) {
+    } else if (await isCortesiaSoldOut()) {
       return res.status(409).json({ error: 'closed' });
     }
 

@@ -1,16 +1,19 @@
-const { checkInvite } = require('../lib/invites');
-const { EVENT_NAME, EVENT_DATE_LABEL, EVENT_SHORT_DATE, EVENT_DATE_ISO } = require('../lib/tickets');
+const { checkPortalInvite } = require('../lib/promoter-portal');
 
-// Primer paso de la página principal: ¿este código existe y sigue libre?
-// Siempre 200 -- un código malo no es un error del request, es una respuesta.
-// Nunca dice de qué promotor es el código ni quién lo usó.
+// La portada llama aquí cuando alguien llega con el link de un código
+// (paradisioclub.com/i/CODIGO). Dice si el código sirve y de parte de qué
+// promotor viene (sólo su primer nombre, para "Invitación de Gonzalo").
+// Siempre 200: un código malo no es un error del request, es una respuesta.
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'method_not_allowed' });
   try {
-    const result = await checkInvite(req.query && req.query.code);
+    const r = await checkPortalInvite(req.query && req.query.code);
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({
-      ...result,
-      event: { name: EVENT_NAME, dateLabel: EVENT_DATE_LABEL, shortDate: EVENT_SHORT_DATE, dateIso: EVENT_DATE_ISO },
+      ok: r.ok,
+      reason: r.reason || null,
+      code: r.ok ? r.code : null,
+      promoter: r.promoter ? { code: r.promoter.code, firstName: r.promoter.firstName } : null,
     });
   } catch (err) {
     console.error(err);

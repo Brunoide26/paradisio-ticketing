@@ -4,6 +4,11 @@
 
 `paradisioclub.com` es la página de **Paradisio by Jägermeister** (formato tipo WHAN/Discofobia): flyer, fecha, lugar con "Cómo llegar", y tres bloques de compra.
 
+0. **Portal de promotores (`/promotor`) — desde el 14/11 la Lista Free es SOLO con código.** Cada promotor entra con usuario y clave, genera códigos de invitación (cupo base 80 por fecha) (de 1 en 1 o hasta 10 de una vez, para un grupo) y los manda por WhatsApp ("Your invite to Paradisio by Jägermeister 14.11" + link `paradisioclub.com/i/CODIGO`). Un código = una persona: quien lo usa se registra con todos sus datos, queda pendiente y a nombre del promotor. El promotor ve sus códigos (sin usar / en revisión / aprobado · QR enviado / no aprobado) con nombre, Instagram y fecha; no ve DNI, correo, celular ni si entró. Los códigos sirven hasta el sábado 14/11 a las 8 p.m. (`INVITE_DEADLINE`).
+   - **Accesos:** `/admin` → Promotores → "Crear accesos" (genera usuario y clave de quien no tiene; la clave se ve una sola vez). "Nueva clave" en la fila si alguien la pierde. El repo es público: las claves nunca van en el código, solo su hash en Redis.
+   - **Cupos:** columna "Códigos" (generados / cupo) → "+ cupo". "Registrados" = quienes usaron sus códigos (y cuántos ya tienen QR); "Ingresaron" = quienes entraron.
+   - **Equipo:** la lista fija está en `lib/promoters.js` (los que salieron tienen `retired: true`; lo que trajeron sigue a su nombre). Reabrir la lista pública sin código: `FREE_ENTRY_INVITE_ONLY=false`.
+   - **Horario del free:** QR válido hasta las 12:00 a.m. para todos (también los ya emitidos) y el correo del QR dice "We open doors · 11:00 p.m." (`PROMO_ENTRY_CUTOFF`, `PROMO_VALIDITY_LABEL`, `DOORS_OPEN_LABEL`).
 1. **Free entry (lista):** la persona se apunta con nombre, apellidos, correo, DNI, fecha de nacimiento, celular e Instagram. **No recibe QR al toque**: ve "Gracias por registrarte, tu invitación será aprobada y enviada días previos al evento". Válido hasta las 11 p.m. (`PROMO_VALIDITY_LABEL` / `PROMO_ENTRY_CUTOFF`).
 2. **Entradas pagadas:** selector +/− por tipo, barra fija con el total, datos nominales por asistente y pago con tarjeta (Culqi). **Cada asistente** (no solo el comprador) debe poner documento, fecha de nacimiento, correo, celular e Instagram; el servidor rechaza la compra si falta alguno. El titular de una mesa también pone su Instagram. El QR sale en pantalla y por correo.
 3. **Mesas y boxes:** "Ver mapa" abre el plano; se elige una mesa (en el mapa o por tipo), se ponen los datos del titular y se paga. La mesa queda tomada con un candado atómico antes de cobrar (no se vende dos veces). Un solo QR para todo el grupo; el scanner muestra "MESA X · N PERSONAS".
@@ -14,7 +19,7 @@
 - **Plano y reservas:** el mapa es el plano del local redibujado en vector (`planSvg` en `index.html`). Box 5 y 6 = **Box Paradisio** (10 personas, junto al DJ booth); Box 1 a 4 = **Box After Hours** (8 personas); 6 **Mesas** (6 personas) repartidas. Las posiciones de las mesas están en `TABLE_UNITS` (en % del plano).
 - **Precios, cupos, mesas y mapa:** `lib/catalog.js` (o variables `TICKET_TYPES_JSON`, `TABLE_TYPES_JSON`, `TABLE_UNITS_JSON` en Vercel). El servidor siempre cobra lo de ese archivo.
 - **Fecha:** igual que antes (`EVENT_DATE_ISO`, `EVENT_NAME`, `EVENT_DATE_LABEL`, `EVENT_SHORT_DATE`, `EVENT_ADDRESS`, `PROMO_ENTRY_CUTOFF`…). Todo va por fecha en el admin.
-- **Fecha actual: sábado 14 de noviembre, 9 PM** (free entry hasta las 11 p.m.). Las fechas del 17/10 y 24/10 se movieron aquí: todo lo emitido para ellas (QRs canjeados, registros, stats de promotores) cuenta como del 14/11 y esos QRs siguen entrando (`MOVED_EVENTS` en `lib/events.js`). Su correo decía la fecha vieja: reenviarlo desde el admin ("Reenviar QR") manda la nueva.
+- **Fecha actual: sábado 14 de noviembre, 11 PM** (free entry hasta las 12 a.m.). Las fechas del 17/10 y 24/10 se movieron aquí: todo lo emitido para ellas (QRs canjeados, registros, stats de promotores) cuenta como del 14/11 y esos QRs siguen entrando (`MOVED_EVENTS` en `lib/events.js`). Su correo decía la fecha vieja: reenviarlo desde el admin ("Reenviar QR") manda la nueva.
 
 ---
 

@@ -26,6 +26,10 @@ function cleanPhone(raw) {
 // nunca quema un código.
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+  // Retirado: los códigos de las fechas pasadas daban el QR al toque. Desde el
+  // 14/11 los códigos salen del portal de promotores y se usan en
+  // /api/register-free (registro pendiente de aprobación).
+  if (process.env.LEGACY_REDEEM_ENABLED !== 'true') return res.status(410).json({ error: 'code_expired' });
 
   try {
     const body = req.body || {};

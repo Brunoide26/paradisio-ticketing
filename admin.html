@@ -288,6 +288,19 @@
     <div id="promotores-panel" style="display:none;">
       <div class="stat-row" id="promo-totals"></div>
 
+      <div class="puerta-chart-wrap" id="portal-card">
+        <p class="pd-eyebrow" style="margin-bottom:14px;">Portal de promotores · <a href="/promotor" target="_blank" rel="noopener" style="color:#ccc;">paradisioclub.com/promotor</a></p>
+        <div class="toolbar">
+          <button class="btn btn-pink" id="portal-create-logins">Crear accesos</button>
+          <button class="btn btn-ghost" id="portal-copy-users">Copiar usuarios</button>
+        </div>
+        <div class="hint">Cada promotor entra con su usuario y clave, genera sus códigos (cupo base <span id="portal-default-quota">80</span>) y los manda por WhatsApp. Quien usa un código queda registrado a su nombre, pendiente hasta que mandes los QRs. Los códigos sirven hasta el <span id="portal-deadline">sáb 14/11, 8 p.m.</span> "Crear accesos" genera la clave de quien todavía no tiene una; las claves se ven <strong>solo una vez</strong> (si alguien la pierde, "Nueva clave" en su fila).</div>
+        <div id="portal-logins" style="display:none;">
+          <div class="codes-new" id="portal-logins-text"></div>
+          <div class="toolbar" style="margin-top:10px;"><button class="btn btn-ghost btn-sm" id="portal-logins-copy">Copiar todo</button></div>
+        </div>
+      </div>
+
       <div class="puerta-chart-wrap" id="promo-give-card">
         <p class="pd-eyebrow" style="margin-bottom:14px;">Links de promotores</p>
         <div class="toolbar">
@@ -313,12 +326,15 @@
             <tr>
               <th class="sortable-th" data-sort="name">Promotor <span class="sort-arrow"></span></th>
               <th>Link</th>
+              <th class="sortable-th" data-sort="generated">Códigos <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="registrados">Registrados <span class="sort-arrow"></span></th>
+              <th>Acceso</th>
               <th class="sortable-th" data-sort="invitaciones">Free Entry <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="pagadas">Pagadas <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="mesas">Mesas <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="ingreso">Ventas S/ <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="ingresaron">Ingresaron <span class="sort-arrow"></span></th>
-              <th class="sortable-th" data-sort="aTiempo">Antes 11 <span class="sort-arrow"></span></th>
+              <th class="sortable-th" data-sort="aTiempo">A tiempo <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="tardeCobrado">Después · pagó <span class="sort-arrow"></span></th>
               <th class="sortable-th" data-sort="tardeGratis">Después · gratis <span class="sort-arrow"></span></th>
               <th>Asistencia</th>
@@ -328,7 +344,7 @@
           <tbody id="promotores-table-body"></tbody>
         </table>
       </div>
-      <div class="hint">"Free Entry" = registros desde su link (o códigos canjeados en fechas pasadas). "Ventas" = entradas pagadas + mesas. "Ingresaron" cuenta a todos los que entraron, antes o después de las 11. "Asistencia" = ingresaron / (Free Entry + pagadas). Desactivar un promotor no borra lo que ya trajo.</div>
+      <div class="hint">"Códigos" = generados / cupo (con "+ cupo" le das más). "Registrados" = personas que usaron sus códigos (y cuántas ya tienen QR). "Free Entry" = todos sus registros de free entry (códigos + link). "Ventas" = entradas pagadas + mesas. "Ingresaron" cuenta a todos los que entraron, a tiempo (antes del corte del free) o después. "Asistencia" = ingresaron / (Free Entry + pagadas). Desactivar un promotor no borra lo que ya trajo.</div>
     </div>
 
     <div id="codigos-panel" style="display:none;">
@@ -594,7 +610,10 @@
     if (!feSending) sendBtn.textContent = fePending ? 'Enviar QRs pendientes (' + fePending + ')' : 'Sin QRs pendientes';
     const isOpen = status.state === 'open';
     document.getElementById('cortesia-dot').className = 'semaforo-dot ' + (isOpen ? 'semaforo-green' : 'semaforo-red');
-    document.getElementById('cortesia-label').textContent = isOpen ? 'Registro Free Entry: ABIERTO' : 'Registro Free Entry: CERRADO';
+    document.getElementById('cortesia-label').textContent = status.inviteOnly
+      ? 'Registro Free Entry: SOLO CON CÓDIGO DE PROMOTOR'
+      : (isOpen ? 'Registro Free Entry: ABIERTO' : 'Registro Free Entry: CERRADO');
+    if (status.inviteOnly) document.getElementById('cortesia-dot').className = 'semaforo-dot semaforo-green';
     let reasonText = '';
     if (!isOpen) {
       reasonText = status.reason === 'manual'
@@ -949,7 +968,7 @@
     // el badge sólo dice que ese ingreso fue después del corte.
     const lateBadge = t.lateEntry
       ? (t.type === 'promo'
-          ? ` <span class="badge badge-late" title="Entró después de las 11 pm">🌙 Después de hora · ${t.lateCharged ? 'pagó' : 'gratis'}</span>`
+          ? ` <span class="badge badge-late" title="Entró después del corte del free entry">🌙 Después de hora · ${t.lateCharged ? 'pagó' : 'gratis'}</span>`
           : ` <span class="badge badge-late" title="Cortesía vencida admitida en puerta con el botón &quot;Dejar entrar igual&quot; del scanner">🌙 Tardío</span>`)
       : '';
     return `<tr${rowClass}>
@@ -1470,6 +1489,8 @@
       if (r.status === 401) { alert('Clave incorrecta'); return; }
       const d = await r.json();
       allPromoters = d.promoters || [];
+      if (d.defaultQuota) document.getElementById('portal-default-quota').textContent = d.defaultQuota;
+      if (d.inviteDeadline) document.getElementById('portal-deadline').textContent = new Date(d.inviteDeadline).toLocaleString('es-PE', { timeZone:'America/Lima', weekday:'short', day:'numeric', month:'numeric', hour:'numeric', minute:'2-digit' });
       renderPromotoresTable();
     } catch(e) {
       alert('Error de conexión al cargar promotores');
@@ -1510,7 +1531,7 @@
     renderPromoTotals();
     fillGiveSelect();
     if (list.length === 0) {
-      body.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#666;">Sin datos</td></tr>';
+      body.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#666;">Sin datos</td></tr>';
       updateSortHeaders();
       return;
     }
@@ -1518,6 +1539,9 @@
       <tr${p.active ? '' : ' style="opacity:.5;"'}>
         <td>${escapeHtml(p.name)}<br><span style="font-family:monospace;color:#888;font-size:11px;">${escapeHtml(p.code)}</span></td>
         <td style="white-space:nowrap;">${p.active ? `<span style="font-family:monospace;font-size:11px;color:#aaa;">${escapeHtml(promoterLink(p.code).replace(/^https?:\/\//, ''))}</span><br><button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="copyPromoterLink(this, '${p.code}')">Copiar link</button>` : '—'} <button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="viewPromoterTickets('${p.code}')">Ver registros</button></td>
+        <td style="white-space:nowrap;">${p.removed ? '—' : `<strong>${p.generated || 0}</strong> / ${p.quota}<br><button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="addQuota('${p.code}', ${p.quota})">+ cupo</button>`}</td>
+        <td><strong>${p.registrados || 0}</strong>${p.registrados ? '<br><span style="color:#888;font-size:11px;">' + (p.aprobados || 0) + ' con QR</span>' : ''}</td>
+        <td style="white-space:nowrap;">${p.removed ? '—' : `<span style="font-family:monospace;font-size:12px;">${escapeHtml(p.username)}</span>${p.hasLogin ? '' : ' <span style="color:#e0c87f;font-size:11px;">sin clave</span>'}<br><button class="btn btn-ghost btn-sm" style="margin-top:4px;" onclick="resetPromoterPassword('${p.code}')">Nueva clave</button>`}</td>
         <td><strong>${p.invitaciones}</strong>${p.pendientes ? '<br><span style="color:#888;font-size:11px;">' + p.pendientes + ' sin QR</span>' : ''}</td>
         <td>${p.pagadas}</td>
         <td>${p.mesas || 0}</td>
@@ -1545,12 +1569,14 @@
   function renderPromoTotals(){
     const sum = (k) => allPromoters.reduce((a, p) => a + (p[k] || 0), 0);
     const cards = [
+      [sum('generated') + ' / ' + sum('quota'), 'Códigos', false],
+      [sum('registrados'), 'Registrados con código', true],
       [sum('invitaciones'), 'Free Entry', true],
       [sum('pagadas'), 'Pagadas', false],
       [sum('mesas'), 'Mesas', false],
       ['S/' + sum('ingreso').toLocaleString('es-PE'), 'Ventas', true],
       [sum('ingresaron'), 'Ingresaron', true],
-      [sum('aTiempo'), 'Antes de las 11', false],
+      [sum('aTiempo'), 'A tiempo', false],
       [sum('tardeCobrado'), 'Después · pagó', false],
       [sum('tardeGratis'), 'Después · gratis', false],
     ];
@@ -1624,8 +1650,13 @@
       const d = await r.json();
       input.value = '';
       await loadPromoters();
-      try { await navigator.clipboard.writeText(promoterLink(d.promoter.code)); } catch (e) {}
-      alert('Promotor agregado. Su link (ya copiado): ' + promoterLink(d.promoter.code));
+      if (d.access) {
+        showLogins([d.access]);
+        alert('Promotor agregado. Su usuario y clave están en "Portal de promotores", arriba. Cópialos ahora: la clave no se vuelve a mostrar.');
+      } else {
+        try { await navigator.clipboard.writeText(promoterLink(d.promoter.code)); } catch (e) {}
+        alert('Promotor agregado. Su link (ya copiado): ' + promoterLink(d.promoter.code));
+      }
     } catch(e) { alert('Error de conexión.'); }
     finally { btn.disabled = false; }
   };
@@ -1691,10 +1722,66 @@
 
   document.getElementById('promotores-refresh-btn').onclick = loadPromoters;
 
+  /* ---- Portal de promotores: accesos y cupos ---- */
+  function loginLine(a){
+    return a.name + '\nUsuario: ' + a.username + '\nClave: ' + a.password + '\nEntra a: ' + location.origin + '/promotor';
+  }
+  function showLogins(list){
+    document.getElementById('portal-logins-text').textContent = list.map(loginLine).join('\n\n');
+    document.getElementById('portal-logins').style.display = 'block';
+    document.getElementById('portal-card').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  document.getElementById('portal-logins-copy').onclick = async function(){
+    await copyText(document.getElementById('portal-logins-text').textContent); flash(this);
+  };
+  document.getElementById('portal-copy-users').onclick = async function(){
+    const list = [...allPromoters].filter(p => p.active && !p.removed).sort((a, b) => a.name.localeCompare(b.name));
+    await copyText(list.map(p => p.name + ': ' + p.username).join('\n')); flash(this);
+  };
+  document.getElementById('portal-create-logins').onclick = async function(){
+    if (!confirm('¿Crear usuario y clave para los promotores que todavía no tienen? Las claves se muestran una sola vez.')) return;
+    const btn = this; btn.disabled = true;
+    try {
+      const r = await fetch('/api/admin-promoters', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, action:'create-logins' }) });
+      if (!r.ok) { alert('No se pudieron crear los accesos.'); return; }
+      const d = await r.json();
+      if (!d.created.length) { alert('Todos los promotores ya tienen acceso. Para cambiar una clave usa "Nueva clave" en su fila.'); return; }
+      showLogins(d.created);
+      await loadPromoters();
+    } catch(e) { alert('Error de conexión.'); }
+    finally { btn.disabled = false; }
+  };
+  window.resetPromoterPassword = async function(code){
+    const p = allPromoters.find(x => x.code === code);
+    if (p && p.hasLogin && !confirm('¿Darle una clave nueva a ' + p.name + '? La anterior deja de funcionar.')) return;
+    try {
+      const r = await fetch('/api/admin-promoters', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, action:'reset-password', code }) });
+      if (!r.ok) { alert('No se pudo cambiar la clave.'); return; }
+      const d = await r.json();
+      showLogins([d.access]);
+      await loadPromoters();
+    } catch(e) { alert('Error de conexión.'); }
+  };
+  window.addQuota = async function(code, current){
+    const p = allPromoters.find(x => x.code === code);
+    const v = prompt('¿Cuántos códigos más le das a ' + (p ? p.name : code) + '? (hoy tiene ' + current + ')', '20');
+    if (v === null) return;
+    const add = parseInt(v, 10);
+    if (!add) { alert('Pon un número, por ejemplo 20.'); return; }
+    try {
+      const r = await fetch('/api/admin-promoters', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, action:'quota', code, add }) });
+      if (!r.ok) { alert('No se pudo cambiar el cupo.'); return; }
+      await loadPromoters();
+    } catch(e) { alert('Error de conexión.'); }
+  };
+
   document.getElementById('promotores-export-btn').onclick = function(){
-    const headers = ['Codigo','Nombre','Link','FreeEntry','SinQR','Pagadas','Mesas','VentasSoles','Ingresaron','Antes11','DespuesPago','DespuesGratis','Asistencia','Activo'];
+    const headers = ['Codigo','Nombre','Usuario','CodigosGenerados','Cupo','RegistradosConCodigo','AprobadosConCodigo','Link','FreeEntry','SinQR','Pagadas','Mesas','VentasSoles','Ingresaron','ATiempo','DespuesPago','DespuesGratis','Asistencia','Activo'];
     const rows = sortedPromoters().map(p => [
-      p.code, p.name, promoterLink(p.code), p.invitaciones, p.pendientes || 0, p.pagadas, p.mesas || 0, p.ingreso, p.ingresaron, p.aTiempo, p.tardeCobrado, p.tardeGratis,
+      p.code, p.name, p.username, p.generated || 0, p.quota, p.registrados || 0, p.aprobados || 0, promoterLink(p.code), p.invitaciones, p.pendientes || 0, p.pagadas, p.mesas || 0, p.ingreso, p.ingresaron, p.aTiempo, p.tardeCobrado, p.tardeGratis,
       (p.invitaciones + p.pagadas) ? Math.round(p.ingresaron / (p.invitaciones + p.pagadas) * 100) + '%' : '', p.active ? 'si' : 'no'
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');

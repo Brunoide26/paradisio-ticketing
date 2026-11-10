@@ -1,14 +1,27 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/p/:code", "destination": "/api/p/:code" }
+    {
+      "source": "/p/:code",
+      "destination": "/api/p/:code"
+    }
   ],
   "headers": [
     {
       "source": "/logo-white.png",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/i/:code",
+      "destination": "/?inv=:code",
+      "permanent": false
     }
   ]
 }

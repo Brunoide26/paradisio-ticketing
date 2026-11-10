@@ -9,6 +9,7 @@ const {
 } = require('../lib/catalog');
 const { CURRENT_EVENT_ID } = require('../lib/events');
 const { DISCOUNT_RATE } = require('../lib/promoters');
+const { FREE_ENTRY_INVITE_ONLY } = require('../lib/promoter-portal');
 
 // Todo lo que la página pública necesita para pintarse: datos de la fecha,
 // entradas (con agotado / quedan pocas), free entry abierto o cerrado, y qué
@@ -53,7 +54,9 @@ module.exports = async (req, res) => {
         name: FREE_ENTRY.name,
         description: FREE_ENTRY.description,
         validityLabel: PROMO_VALIDITY_LABEL,
-        open: !(await isCortesiaSoldOut()),
+        // Sin código está cerrada; con un link /i/CODIGO la portada la abre.
+        open: !FREE_ENTRY_INVITE_ONLY && !(await isCortesiaSoldOut()),
+        inviteOnly: FREE_ENTRY_INVITE_ONLY,
         doorPrice: DOOR_PRICE_SOLES,
       },
       tickets,

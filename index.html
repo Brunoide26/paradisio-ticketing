@@ -9,7 +9,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paradisioclub.com/" />
 <meta property="og:title" content="Paradisio by Jägermeister" />
-<meta property="og:description" content="Free Entry hasta las 11 p.m. Entradas y mesas." />
+<meta property="og:description" content="Entradas, mesas y free entry con invitación." />
 <meta property="og:image:alt" content="Paradisio" />
 <meta property="og:image" content="https://paradisioclub.com/og-paradisio.png" />
 <meta property="og:image:width" content="1200" />
@@ -110,6 +110,9 @@
   .ref-chip { display:none; margin-top:18px; padding:10px 14px; border-left:2px solid var(--red); background:var(--card); font-size:13px; color:var(--muted); }
   .ref-chip strong { color:var(--ink); font-weight:500; }
   .ref-chip.is-on { display:block; }
+  .ref-chip.is-bad { border-left-color:var(--muted); }
+  .invite-note { margin:0 0 14px; padding:10px 14px; border-left:2px solid var(--red); background:var(--card); font-size:13px; color:var(--muted); }
+  .invite-note strong { color:var(--ink); font-weight:500; }
 
   /* ---------- secciones de compra ---------- */
   .sec { padding-top:38px; }
@@ -363,7 +366,7 @@
                   <p class="card-name">Lista Free</p>
                   <button class="btn btn-red" type="button" id="free-btn">Apuntarme</button>
                 </div>
-                <p class="card-desc" id="free-desc">Hasta las 11:00 p.m. Tu QR llega por correo días antes del evento.</p>
+                <p class="card-desc" id="free-desc">Solo con invitación de un promotor. Hasta las 12:00 a.m.</p>
               </div>
             </div>
           </div>
@@ -446,7 +449,8 @@
       <!-- Free entry -->
       <div class="view" id="v-free">
         <h2 class="h2">Apúntate a la lista</h2>
-        <p class="lead">Free Entry hasta las 11:00 p.m. Completa tus datos tal como figuran en tu documento: te lo pedirán en la puerta.</p>
+        <p class="invite-note" id="ff-invite" hidden></p>
+        <p class="lead">Free Entry hasta las 12:00 a.m. Completa tus datos tal como figuran en tu documento: te lo pedirán en la puerta.</p>
         <form id="free-form" novalidate>
           <div class="fields">
             <div class="field"><label for="ff-nombre">Nombre</label><input class="in" id="ff-nombre" type="text" autocomplete="given-name" autocapitalize="words" /><p class="err"></p></div>
@@ -467,7 +471,7 @@
         <div class="done-mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
         <h2>Gracias por <em>registrarte</em></h2>
         <p>Tu invitación será aprobada y enviada días previos al evento a <strong id="free-done-email"></strong>.</p>
-        <div class="box"><p class="cap" id="free-done-date"></p><p class="cap red" id="free-done-validity">Free Entry hasta las 11:00 p.m.</p></div>
+        <div class="box"><p class="cap" id="free-done-date"></p><p class="cap red" id="free-done-validity">Free Entry hasta las 12:00 a.m.</p></div>
         <p style="font-size:13px;">Revisa también spam y promociones. Si no te llega, escríbenos a info@paradisioclub.com.</p>
         <div class="actions" style="max-width:360px;margin-left:auto;margin-right:auto;"><button class="btn btn-block" type="button" data-close>Volver al evento</button></div>
       </div>
@@ -511,6 +515,8 @@
   let selectedUnit = null; // mesa elegida
   let mode = null;         // 'tickets' | 'table'
   let ref = null;          // promotor (link ?ref=)
+  let inviteCode = null;   // código de invitación válido (link /i/CODIGO)
+  let inviteFrom = '';     // primer nombre del promotor del código
 
   /* ================= Promotor ================= */
   // El ref se recuerda 7 días: si la persona vuelve sin el link, sigue
@@ -535,6 +541,46 @@
     } catch (e) {}
   }
 
+  /* ================= Invitación (código de promotor) ================= */
+  // paradisioclub.com/i/CODIGO redirige a /?inv=CODIGO. Un código válido
+  // abre la Lista Free (que sin código está sold out) y deja el registro a
+  // nombre del promotor dueño del código.
+  const INVITE_BAD = {
+    used: 'Este código de invitación ya fue usado.',
+    closed: 'El registro con invitación ya cerró.',
+    expired: 'Este código de invitación no es para esta fecha.',
+    revoked: 'Este código de invitación ya no es válido.',
+    not_found: 'Este código de invitación no existe. Revisa el link.',
+  };
+  async function initInvite(){
+    const params = new URLSearchParams(location.search);
+    const code = cleanRef(params.get('inv') || params.get('i'));
+    if (!code) return;
+    let d = null;
+    try { d = await (await fetch('/api/invite?code=' + encodeURIComponent(code))).json(); } catch (e) { return; }
+    if (!d) return;
+    const chip = $('ref-chip');
+    if (d.ok) {
+      inviteCode = d.code;
+      inviteFrom = (d.promoter && d.promoter.firstName) || '';
+      if (d.promoter) {
+        ref = d.promoter.code;
+        try { localStorage.setItem(REF_KEY, JSON.stringify({ code: ref, at: Date.now() })); } catch (e) {}
+      }
+      chip.innerHTML = 'Tienes una invitación' + (inviteFrom ? ' de <strong>' + esc(inviteFrom) + '</strong>' : '') + ' para la Lista Free.';
+      chip.classList.add('is-on'); chip.classList.remove('is-bad');
+    } else {
+      chip.textContent = INVITE_BAD[d.reason] || INVITE_BAD.not_found;
+      chip.classList.add('is-on', 'is-bad');
+    }
+  }
+  function inviteNote(){
+    const n = $('ff-invite');
+    if (!inviteCode) { n.hidden = true; return; }
+    n.innerHTML = 'Invitación' + (inviteFrom ? ' de <strong>' + esc(inviteFrom) + '</strong>' : '') + ' · código <strong>' + esc(inviteCode) + '</strong>. Sirve para una sola persona.';
+    n.hidden = false;
+  }
+
   /* ================= Carga ================= */
   async function load(){
     const qa = new URLSearchParams(location.search).get('qa') === '1' ? '?qa=1' : '';
@@ -555,7 +601,10 @@
     const fe = cfg.freeEntry;
     $('free-desc').textContent = fe.description;
     $('free-done-validity').textContent = 'Free Entry ' + fe.validityLabel;
-    if (!fe.open) { $('free-card').classList.add('is-off'); $('free-btn').disabled = true; $('free-btn').textContent = 'Sold out'; }
+    const canRegister = fe.open || !!inviteCode;
+    $('free-card').classList.toggle('is-off', !canRegister);
+    $('free-btn').disabled = !canRegister;
+    $('free-btn').textContent = canRegister ? 'Apuntarme' : 'Sold out';
   }
 
   /* ================= Entradas ================= */
@@ -826,7 +875,8 @@
 
   /* ================= Free entry ================= */
   $('free-btn').addEventListener('click', () => {
-    if (!cfg || !cfg.freeEntry.open) return;
+    if (!cfg || !(cfg.freeEntry.open || inviteCode)) return;
+    inviteNote();
     openSheet(); go('v-free');
     setTimeout(() => $('ff-nombre').focus({ preventScroll: true }), 60);
   });
@@ -851,18 +901,20 @@
     const btn = $('free-submit');
     btn.disabled = true; btn.textContent = 'Enviando…'; msg.textContent = '';
     try {
-      const r = await fetch('/api/register-free', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ ref }, f)) });
+      const r = await fetch('/api/register-free', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ ref, code: inviteCode || undefined }, f)) });
       const d = await r.json();
       if (!r.ok) {
         msg.textContent = d.error === 'already_registered'
           ? (d.field === 'email' ? 'Ese correo ya está en la lista de esta fecha.' : 'Ese documento ya está en la lista de esta fecha.')
           : (SERVER_ERRORS[d.error] || 'Algo salió mal. Intenta de nuevo.');
         if (d.error === 'invalid_email') setErr($('ff-email'), 'Usa otro correo.');
+        if (/^code_/.test(d.error)) { msg.textContent = INVITE_BAD[d.error.slice(5)] || INVITE_BAD.not_found; inviteCode = null; renderFree(); }
         return;
       }
       $('free-done-email').textContent = f.email;
       if (d.validityLabel) $('free-done-validity').textContent = 'Free Entry ' + d.validityLabel;
       $('free-form').reset();
+      if (inviteCode) { inviteCode = null; $('ref-chip').classList.remove('is-on'); renderFree(); }
       go('v-free-done');
     } catch (err) {
       msg.textContent = 'Error de conexión. Intenta de nuevo.';
@@ -1060,8 +1112,9 @@
   }
 
   /* ================= Arranque ================= */
-  initRef();
-  load();
+  // Con link de invitación manda el promotor del código, no un ref guardado.
+  if (!new URLSearchParams(location.search).get('inv')) initRef();
+  initInvite().then(() => load()).then(() => { if (inviteCode && cfg) $('free-btn').click(); });
 })();
 </script>
 <script src="https://js.culqi.com/checkout-js" defer onload="window.__culqiLoaded=true" onerror="window.__culqiLoadError=true"></script>

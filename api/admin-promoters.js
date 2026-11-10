@@ -1,6 +1,7 @@
 const { listAllTickets } = require('../lib/tickets');
 const { listPromoters, addPromoter, removePromoter } = require('../lib/promoters');
 const { setInviteRevoked } = require('../lib/invites');
+const { addQuota, resetPassword, createMissingLogins, adminPortalStats, DEFAULT_QUOTA, INVITE_DEADLINE } = require('../lib/promoter-portal');
 const { listInvites } = require('../lib/invites');
 const { CURRENT_EVENT_ID, eventIdOfTicket, eventIdOfInvite } = require('../lib/events');
 
@@ -20,10 +21,28 @@ module.exports = async (req, res) => {
 
     // Agregar un promotor nuevo desde el admin (queda activo y listo para
     // recibir códigos, sin redeploy).
+    // Agregar devuelve también su usuario y clave del portal (se ven una vez).
     if (req.method === 'POST' && (req.body || {}).action === 'add') {
       const result = await addPromoter(req.body.name);
       if (!result.ok) return res.status(400).json({ error: result.reason });
-      return res.status(200).json({ ok: true, promoter: result.promoter });
+      const access = await resetPassword(result.promoter.code);
+      return res.status(200).json({ ok: true, promoter: result.promoter, access: access.ok ? access : null });
+    }
+
+    // Portal de promotores: sumar cupo de códigos, crear accesos, nueva clave.
+    const action = req.method === 'POST' ? (req.body || {}).action : null;
+    if (action === 'quota') {
+      const r = await addQuota(req.body.code, req.body.add);
+      if (!r.ok) return res.status(400).json({ error: r.reason });
+      return res.status(200).json(r);
+    }
+    if (action === 'create-logins') {
+      return res.status(200).json({ ok: true, created: await createMissingLogins() });
+    }
+    if (action === 'reset-password') {
+      const r = await resetPassword(req.body.code);
+      if (!r.ok) return res.status(404).json({ error: r.reason });
+      return res.status(200).json({ ok: true, access: r });
     }
 
     // Todo por fecha: sólo los tickets y códigos del evento pedido (por
@@ -47,7 +66,8 @@ module.exports = async (req, res) => {
     const promoters = allP.filter((p) => !p.removed
       || tickets.some((t) => t.promoterCode === p.code) || invites.some((i) => i.promoterCode === p.code));
 
-    const stats = promoters.map((p) => {
+    const portal = await Promise.all(promoters.map((p) => adminPortalStats(p.code, eventId)));
+    const stats = promoters.map((p, idx) => {
       const own = tickets.filter((t) => t.promoterCode === p.code && !t.voided);
       const cortesias = own.filter((t) => t.type === 'free').length;
       const pagadas = own.filter((t) => t.type === 'paid').length;
@@ -90,10 +110,13 @@ module.exports = async (req, res) => {
         code: p.code, name: p.name, active: p.active,
         cortesias, pagadas, invitaciones, pendientes, mesas, codigos, codigosLibres, personas, ingreso, ingresaron, conversion,
         aTiempo, tardeCobrado, tardeGratis, custom: !!p.custom, removed: !!p.removed,
+        // Portal: cupo y códigos de la fecha. registrados/aprobados/entraronCodigo
+        // cuentan sólo lo que entró con sus códigos.
+        ...portal[idx],
       };
     });
 
-    return res.status(200).json({ promoters: stats, eventId });
+    return res.status(200).json({ promoters: stats, eventId, defaultQuota: DEFAULT_QUOTA, inviteDeadline: INVITE_DEADLINE.toISOString() });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'server_error' });

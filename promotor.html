@@ -80,6 +80,15 @@
   .fresh { margin-top:16px; background:var(--card); border:1px solid var(--ink); border-radius:14px; padding:18px; }
   .fresh .code { font-family:var(--display); font-weight:700; font-size:30px; letter-spacing:.12em; margin:6px 0 2px; }
   .fresh .link { font-size:13px; color:var(--muted); word-break:break-all; margin:0 0 14px; }
+  .fresh-list { display:grid; gap:10px; margin:10px 0 16px; }
+  .fresh-list .code { font-size:22px; margin:0; }
+  .fresh-list .link { margin:0; }
+  .gen-row { display:flex; gap:10px; align-items:stretch; }
+  .gen-row .btn-red { flex:1; }
+  .qty { display:flex; align-items:center; border:1px solid var(--line-strong); border-radius:999px; flex:none; }
+  .qty button { width:44px; height:100%; min-height:52px; background:none; border:none; color:var(--ink); font-size:20px; cursor:pointer; }
+  .qty button:disabled { opacity:.3; cursor:default; }
+  .qty output { min-width:22px; text-align:center; font-family:var(--display); font-weight:700; font-size:18px; font-variant-numeric:tabular-nums; }
   .row { display:flex; gap:8px; flex-wrap:wrap; }
   .row .btn { flex:1; }
 
@@ -147,14 +156,20 @@
       <p class="note" id="s-approved"></p>
 
       <div class="gen">
-        <button class="btn btn-red btn-block" type="button" id="gen-btn">Generar código</button>
+        <div class="gen-row">
+          <div class="qty" aria-label="Cantidad de códigos">
+            <button type="button" id="q-minus" aria-label="Uno menos">−</button>
+            <output id="q-n" aria-live="polite">1</output>
+            <button type="button" id="q-plus" aria-label="Uno más">+</button>
+          </div>
+          <button class="btn btn-red" type="button" id="gen-btn">Generar 1 código</button>
+        </div>
         <p class="note" id="gen-note"></p>
       </div>
 
       <div class="fresh" id="fresh" hidden>
-        <p class="cap">Código nuevo</p>
-        <p class="code" id="fresh-code"></p>
-        <p class="link" id="fresh-link"></p>
+        <p class="cap" id="fresh-title">Código nuevo</p>
+        <div class="fresh-list" id="fresh-list"></div>
         <div class="row">
           <a class="btn btn-wa" id="fresh-wa" href="#" target="_blank" rel="noopener">Enviar por WhatsApp</a>
           <button class="btn" type="button" id="fresh-copy">Copiar</button>
@@ -208,7 +223,12 @@
     }
     toast('Copiado');
   }
+  const MAX_QTY = 10;
+  let qty = 1;
   const waText = (link) => WA_TEXT + '\n' + link;
+  // Varios códigos en un mensaje (para un grupo): uno por persona.
+  const waGroupText = (links) => links.length === 1 ? waText(links[0])
+    : WA_TEXT + '\nUn link por persona:\n\n' + links.map((l, i) => (i + 1) + '. ' + l).join('\n');
   const waHref = (link) => 'https://wa.me/?text=' + encodeURIComponent(waText(link));
   const fmt = (iso) => {
     try { return new Intl.DateTimeFormat('es-PE', { timeZone:'America/Lima', day:'numeric', month:'short', hour:'numeric', minute:'2-digit' }).format(new Date(iso)); }
@@ -263,9 +283,21 @@
       btn.disabled = false;
       note.textContent = 'Te quedan ' + left + '. Los códigos se pueden usar hasta el ' + fmt(d.deadline).replace(/\.$/, '') + '.';
     }
+    setQty(qty);
     $('ref-url').textContent = d.refLink;
     renderList();
   }
+
+  function setQty(n){
+    const left = data ? Math.max(1, data.quota - data.generated) : MAX_QTY;
+    qty = Math.max(1, Math.min(MAX_QTY, left, n));
+    $('q-n').textContent = qty;
+    $('q-minus').disabled = qty <= 1;
+    $('q-plus').disabled = qty >= Math.min(MAX_QTY, left);
+    if (!$('gen-btn').dataset.busy) $('gen-btn').textContent = 'Generar ' + qty + (qty === 1 ? ' código' : ' códigos');
+  }
+  $('q-minus').addEventListener('click', () => setQty(qty - 1));
+  $('q-plus').addEventListener('click', () => setQty(qty + 1));
 
   function renderList(){
     const codes = (data.codes || []).filter((c) => filter === 'all' || (filter === 'unused' ? c.status === 'unused' : c.status !== 'unused'));
@@ -317,26 +349,29 @@
   });
 
   $('gen-btn').addEventListener('click', async () => {
-    const btn = $('gen-btn'); btn.disabled = true; btn.textContent = 'Generando…';
+    const btn = $('gen-btn'); btn.disabled = true; btn.dataset.busy = '1'; btn.textContent = 'Generando…';
     try {
-      const { status, d } = await api({ action:'generate' });
+      const { status, d } = await api({ action:'generate', count: qty });
       if (status === 401) return signOut();
       if (d.dashboard) { data = d.dashboard; render(); }
       if (status !== 200) {
         toast(d.error === 'quota_reached' ? 'Llegaste a tu cupo de códigos.' : d.error === 'closed' ? 'El registro con invitación ya cerró.' : 'No se pudo generar. Intenta de nuevo.');
         return;
       }
-      const inv = d.invite;
-      $('fresh-code').textContent = inv.code;
-      $('fresh-link').textContent = inv.link;
-      $('fresh-wa').href = waHref(inv.link);
-      $('fresh-copy').dataset.link = inv.link;
+      const invs = d.invites || [];
+      const links = invs.map((i) => i.link);
+      $('fresh-title').textContent = invs.length === 1 ? 'Código nuevo' : invs.length + ' códigos nuevos · uno por persona';
+      $('fresh-list').innerHTML = invs.map((i) => '<div><p class="code">' + esc(i.code) + '</p><p class="link">' + esc(i.link) + '</p></div>').join('');
+      $('fresh-wa').href = 'https://wa.me/?text=' + encodeURIComponent(waGroupText(links));
+      $('fresh-wa').textContent = invs.length === 1 ? 'Enviar por WhatsApp' : 'Enviar los ' + invs.length + ' por WhatsApp';
+      $('fresh-copy').dataset.links = JSON.stringify(links);
+      if (d.requested && invs.length < d.requested) toast('Solo te quedaban ' + invs.length + '.');
       $('fresh').hidden = false;
       $('fresh').scrollIntoView({ behavior:'smooth', block:'center' });
     } catch (err) { toast('Sin conexión. Intenta de nuevo.'); }
-    finally { btn.textContent = 'Generar código'; if (data) render(); }
+    finally { delete btn.dataset.busy; if (data) render(); else setQty(qty); }
   });
-  $('fresh-copy').addEventListener('click', (e) => copy(waText(e.currentTarget.dataset.link)));
+  $('fresh-copy').addEventListener('click', (e) => { try { copy(waGroupText(JSON.parse(e.currentTarget.dataset.links || '[]'))); } catch (err) {} });
   $('ref-copy').addEventListener('click', () => { if (data) copy(data.refLink); });
   $('refresh').addEventListener('click', async () => { await load(); toast('Actualizado'); });
   $('logout').addEventListener('click', async () => { try { await api({ action:'logout' }); } catch (e) {} signOut(); });

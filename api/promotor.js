@@ -1,11 +1,11 @@
 const {
-  login, logout, sessionPromoter, generateInvite, promoterDashboard,
+  login, logout, sessionPromoter, generateInvites, promoterDashboard,
 } = require('../lib/promoter-portal');
 
 // API del portal de promotores (/promotor). Todo por POST:
 //   { action: 'login', username, password }  -> { token, promoter }
 //   { action: 'me' }        + Authorization: Bearer <token> -> panel
-//   { action: 'generate' }  + token -> un código nuevo (+ panel actualizado)
+//   { action: 'generate', count }  + token -> 1 a 10 códigos nuevos (+ panel actualizado)
 //   { action: 'logout' }    + token
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
@@ -30,12 +30,12 @@ module.exports = async (req, res) => {
     if (!promoter) return res.status(401).json({ error: 'unauthorized' });
 
     if (body.action === 'generate') {
-      const r = await generateInvite(promoter);
+      const r = await generateInvites(promoter, body.count);
       if (!r.ok) {
         const status = r.reason === 'server_error' ? 500 : 409;
         return res.status(status).json({ error: r.reason, dashboard: await promoterDashboard(promoter) });
       }
-      return res.status(200).json({ ok: true, invite: r.invite, dashboard: await promoterDashboard(promoter) });
+      return res.status(200).json({ ok: true, invites: r.invites, requested: r.requested, dashboard: await promoterDashboard(promoter) });
     }
 
     return res.status(200).json(await promoterDashboard(promoter));

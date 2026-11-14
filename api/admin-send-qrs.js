@@ -40,9 +40,15 @@ module.exports = async (req, res) => {
     const tickets = await listEventTickets();
     const withQr = tickets.filter((t) => QR_TYPES.includes(t.type) && !t.voided);
     const only = Array.isArray(req.body.ids) && req.body.ids.length ? new Set(req.body.ids) : null;
-    // Con ids: todos los elegidos que no estén anulados (cualquier tipo con QR).
-    // Sin ids: solo los pendientes.
-    const pending = (only ? tickets.filter((t) => only.has(t.id) && !t.voided) : withQr.filter(isPending))
+    // Con ids: todos los elegidos que no estén anulados (cualquier tipo con QR),
+    // MENOS los que ya recibieron su correo en esta misma corrida (runStart) o
+    // hace menos de 3 minutos. Sin esto, con más de 8 elegidos cada tanda
+    // volvía a tomar a los mismos 8 y les mandaba el QR una y otra vez.
+    // Sin ids: solo los pendientes (al enviarse dejan de serlo).
+    const runStart = Date.parse(req.body.runStart) || 0;
+    const recentCut = Math.max(runStart, Date.now() - 3 * 60 * 1000);
+    const sentRecently = (t) => t.emailSentAt && Date.parse(t.emailSentAt) >= recentCut;
+    const pending = (only ? tickets.filter((t) => only.has(t.id) && !t.voided && !sentRecently(t)) : withQr.filter(isPending))
       // Primero los que se registraron antes.
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
@@ -53,18 +59,20 @@ module.exports = async (req, res) => {
       const skip = new Set(Array.isArray(req.body.skip) ? req.body.skip : []);
       const batch = pending.filter((t) => !skip.has(t.id)).slice(0, limit);
       const failed = [];
+      const sentIds = [];
       let sent = 0;
       for (const t of batch) {
         try {
           const to = await destinationOf(t);
           await sendTicketEmail(t, to ? { to } : {});
           sent++;
+          sentIds.push(t.id);
         } catch (err) {
           failed.push({ id: t.id, email: t.email, reason: String(err.message || err).slice(0, 200) });
         }
       }
       const remaining = pending.filter((t) => !skip.has(t.id)).length - batch.length;
-      return res.status(200).json({ ok: true, sent, failed, remaining: Math.max(0, remaining) });
+      return res.status(200).json({ ok: true, sent, sentIds, failed, remaining: Math.max(0, remaining) });
     }
 
     return res.status(200).json({

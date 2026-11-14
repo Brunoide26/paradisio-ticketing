@@ -1259,7 +1259,7 @@
     // ahí corre las columnas posteriores respecto de exports anteriores.
     // Instagram, Promotor y CodigoInvitacion van al final para no correr las
     // columnas de exports anteriores.
-    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso','Instagram','Promotor','CodigoInvitacion','DespuesDeHora','Entrada','EstadoQR','EdadEnEvento'];
+    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso','Instagram','Promotor','CodigoInvitacion','DespuesDeHora','Entrada','EstadoQR','EdadEnEvento','HoraEnvioQR'];
     const rows = applySuspiciousFilter(applyEmailFilter(getSearchFilteredTickets())).map(t => [
       t.id, t.name, t.dni, t.dob, t.phone, t.email, t.type, t.amount, t.orderId || '',
       t.createdAt, t.checkedIn ? 'si' : 'no', t.checkedInAt || '', t.lateEntry ? 'si' : 'no',
@@ -1267,7 +1267,7 @@
       suspiciousFlags.has(t.id) ? [...suspiciousFlags.get(t.id)].join('; ') : '',
       t.instagram ? '@' + t.instagram : '', t.promoterCode || '', t.inviteCode || '',
       t.lateEntry ? (t.lateCharged ? 'pago' : 'gratis') : '',
-      t.skuLabel || '', t.voided ? 'anulado' : (t.pending ? 'pendiente' : 'enviado'), ageAtEvent(t) ?? ''
+      t.skuLabel || '', t.voided ? 'anulado' : (t.pending ? 'pendiente' : 'enviado'), ageAtEvent(t) ?? '', t.emailSentAt || ''
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

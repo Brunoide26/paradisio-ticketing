@@ -2,7 +2,7 @@ const {
   createTicket, REGISTER_MIN_AGE, reserveOrderIdentity, createOrder, sendPurchaseReceiptEmail, calcAge, PAID_CAP,
   getClientIp, listEventTickets, EVENT_DATE_LABEL,
 } = require('../lib/tickets');
-const { PAYMENTS_ENABLED } = require('../lib/config');
+const { PAYMENTS_ENABLED, TICKET_SALES_CLOSED } = require('../lib/config');
 const { findTicketType, MAX_TICKETS_PER_ORDER } = require('../lib/catalog');
 const { validateEmail } = require('../lib/email-validation');
 const { isValidNamePart, isValidDocument, cleanInstagram, isValidInstagram, isValidPhone } = require('../lib/identity-validation');
@@ -23,6 +23,7 @@ const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   if (!PAYMENTS_ENABLED) return res.status(403).json({ error: 'payments_disabled' });
+  if (TICKET_SALES_CLOSED) return res.status(403).json({ error: 'sales_closed' });
 
   try {
     const { token, items, assistants, ref } = req.body || {};

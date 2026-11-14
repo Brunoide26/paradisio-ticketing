@@ -1,4 +1,4 @@
-const { PAYMENTS_ENABLED } = require('../lib/config');
+const { PAYMENTS_ENABLED, TICKET_SALES_CLOSED, TABLES_SOLD_OUT } = require('../lib/config');
 const {
   EVENT_NAME, EVENT_DATE_LABEL, EVENT_SHORT_DATE, EVENT_DATE_ISO, EVENT_ADDRESS, EVENT_MAPS_URL, PROMO_VALIDITY_LABEL,
   PAID_CAP, MIN_AGE, REGISTER_MIN_AGE, isCortesiaSoldOut, listEventTickets, soldTableUnits,
@@ -27,6 +27,7 @@ module.exports = async (req, res) => {
       return {
         sku: t.sku, name: t.name, price: t.price, description: t.description,
         soldOut: capped <= 0,
+        closed: TICKET_SALES_CLOSED,
         // Sólo se avisa "últimas" cuando quedan pocas; el número exacto no sale.
         fewLeft: capped > 0 && capped <= 15,
         maxQty: Math.min(MAX_TICKETS_PER_ORDER, capped),
@@ -65,7 +66,8 @@ module.exports = async (req, res) => {
         map: TABLE_MAP,
         bottles: BOTELLAS_A_ELECCION,
         types: PAYMENTS_ENABLED ? TABLE_TYPES : [],
-        units: PAYMENTS_ENABLED ? TABLE_UNITS.map((u) => ({ ...u, sold: sold.has(u.id) })) : [],
+        units: PAYMENTS_ENABLED ? TABLE_UNITS.map((u) => ({ ...u, sold: TABLES_SOLD_OUT || sold.has(u.id) })) : [],
+        soldOut: TABLES_SOLD_OUT,
       },
     });
   } catch (err) {

@@ -1,7 +1,7 @@
 const {
   createTicket, REGISTER_MIN_AGE, sendPurchaseReceiptEmail, calcAge, getClientIp, claimTable, releaseTable, tableKey, redis, EVENT_DATE_LABEL,
 } = require('../lib/tickets');
-const { PAYMENTS_ENABLED } = require('../lib/config');
+const { PAYMENTS_ENABLED, TABLES_SOLD_OUT } = require('../lib/config');
 const { findTableUnit, isSalesOpen } = require('../lib/catalog');
 const { CURRENT_EVENT_ID } = require('../lib/events');
 const { validateEmail } = require('../lib/email-validation');
@@ -22,6 +22,7 @@ const TIPO_DOCUMENTO = ['DNI', 'CE', 'Pasaporte'];
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   if (!PAYMENTS_ENABLED || !isSalesOpen()) return res.status(403).json({ error: 'sales_closed' });
+  if (TABLES_SOLD_OUT) return res.status(409).json({ error: 'sold_out' });
 
   try {
     const { token, unitId, holder, ref } = req.body || {};

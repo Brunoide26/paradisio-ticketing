@@ -5,6 +5,9 @@ const { listEventTickets, sendTicketEmail, getOrder } = require('../lib/tickets'
 // o comprar: lo recibe aquí, y eso lo aprueba.
 //   { passcode, action: 'status' }           -> cuántos pendientes / enviados
 //   { passcode, action: 'send', limit: 8 }   -> envía la próxima tanda
+//   { passcode, action: 'send', ids: [...] }  -> SOLO a esos registros (las
+//        casillas del admin). Ids que no estén pendientes se ignoran: nunca
+//        se le manda a alguien que no se eligió.
 //
 // Se manda en tandas chicas porque Resend limita envíos por segundo y una
 // función de Vercel tiene tiempo máximo: el admin llama 'send' en bucle
@@ -35,7 +38,8 @@ module.exports = async (req, res) => {
 
     const tickets = await listEventTickets();
     const withQr = tickets.filter((t) => QR_TYPES.includes(t.type) && !t.voided);
-    const pending = withQr.filter(isPending)
+    const only = Array.isArray(req.body.ids) && req.body.ids.length ? new Set(req.body.ids) : null;
+    const pending = withQr.filter(isPending).filter((t) => !only || only.has(t.id))
       // Primero los que se registraron antes.
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 

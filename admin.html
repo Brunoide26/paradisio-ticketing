@@ -31,6 +31,11 @@
   .btn-pink { background:var(--pink); color:#fff; }
   .btn-ghost { background:transparent; border:1px solid var(--line); color:#ccc; }
   .btn-sm { padding:6px 12px; font-size:12px; }
+  .sel-box { width:18px; height:18px; accent-color:#FF2800; cursor:pointer; vertical-align:middle; }
+  tr.row-selected td { background:rgba(255,40,0,0.10); }
+  .sel-bar { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:150; display:flex; align-items:center; gap:12px;
+    background:#111; border:1px solid #FF2800; border-radius:14px; padding:10px 12px 10px 18px; box-shadow:0 10px 30px rgba(0,0,0,.6); font-size:14px; }
+  .sel-bar[hidden] { display:none; }
   .stat-row { display:flex; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
   .event-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px; padding:16px 20px; background:var(--card); border:1px solid var(--line); border-radius:10px; }
   .event-bar label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px; }
@@ -173,14 +178,17 @@
           <span style="display:none;"><span id="cortesia-cap"></span><strong id="cortesia-raw"></strong></span>
         </div>
         <div class="cortesia-actions">
-          <button class="btn btn-pink" id="fe-send-btn">Enviar QRs pendientes</button>
+          <button class="btn btn-pink" id="fe-send-selected-btn" disabled>Enviar QR a seleccionados (0)</button>
+          <button class="btn btn-ghost" id="fe-clear-sel-btn" style="display:none;">Quitar selección</button>
+          <button class="btn btn-ghost" id="fe-send-btn">Enviar a todos los pendientes</button>
           <button class="btn btn-ghost" id="cortesia-open-btn">Abrir lista general</button>
           <button class="btn btn-ghost" id="cortesia-close-btn">Cerrar lista general</button>
           <button class="btn btn-ghost" id="cortesia-resync-btn" style="display:none;">Resincronizar contador</button>
         </div>
       </div>
+      <div class="hint">Marca la casilla de cada persona en la tabla de abajo (solo aparece en los que tienen el QR pendiente) y dale "Enviar QR a seleccionados": le llega <strong>solo a ellos</strong>. "Enviar a todos los pendientes" manda a todos los que falten.</div>
       <div class="hint" id="fe-send-progress"></div>
-      <div class="hint">Nadie recibe su QR al registrarse o comprar (Free Entry, entradas y reservas): al comprar solo les llega la confirmación. "Enviar QRs pendientes" les manda su QR por correo a todos días antes del evento y eso los aprueba. Para rechazar a alguien, anúlalo antes de enviar (si pagó, el reembolso es manual en Culqi). Un asistente sin correo recibe su QR en el correo del comprador.</div>
+      <div class="hint">Nadie recibe su QR al registrarse o comprar (Free Entry, entradas y reservas): al comprar solo les llega la confirmación. Al enviarles el QR (a los marcados o a todos los pendientes) quedan aprobados. Para rechazar a alguien, anúlalo antes de enviar (si pagó, el reembolso es manual en Culqi). Un asistente sin correo recibe su QR en el correo del comprador.</div>
     </div>
 
     <div class="tabs">
@@ -234,6 +242,7 @@
         <table>
           <thead>
             <tr>
+              <th style="width:34px;"><input type="checkbox" id="sel-all" class="sel-box" title="Marcar todos los pendientes de esta lista" /></th>
               <th>Código</th><th>Nombre</th><th>DNI</th><th>F. Nac.</th><th>Teléfono</th><th>Email</th><th>Instagram</th>
               <th>Tipo</th><th>Promotor</th><th>Monto</th><th>ID de orden</th><th>Registrado</th><th>Estado</th><th>Correo</th><th>Acciones</th>
             </tr>
@@ -474,6 +483,11 @@
   </div>
 </footer>
 
+<div class="sel-bar" id="sel-bar" hidden>
+  <span id="sel-bar-text">0 seleccionados</span>
+  <button class="btn btn-pink btn-sm" id="sel-bar-send">Enviar QR</button>
+  <button class="btn btn-ghost btn-sm" id="sel-bar-clear">Quitar</button>
+</div>
 <script>
   let PASSCODE = '';
   let allTickets = [];      // tickets de la fecha seleccionada
@@ -610,7 +624,7 @@
     document.getElementById('fe-sent').textContent = withQr.length - fePending;
     const sendBtn = document.getElementById('fe-send-btn');
     sendBtn.disabled = !fePending || !isCurrentEvent() || feSending;
-    if (!feSending) sendBtn.textContent = fePending ? 'Enviar QRs pendientes (' + fePending + ')' : 'Sin QRs pendientes';
+    if (!feSending) sendBtn.textContent = fePending ? 'Enviar a todos los pendientes (' + fePending + ')' : 'Sin QRs pendientes';
     const isOpen = status.state === 'open';
     document.getElementById('cortesia-dot').className = 'semaforo-dot ' + (isOpen ? 'semaforo-green' : 'semaforo-red');
     document.getElementById('cortesia-label').textContent = isOpen
@@ -657,36 +671,89 @@
     }
   };
 
-  // Envío de QRs del Free Entry en tandas (ver api/admin-send-qrs.js).
+  // Envío de QRs en tandas (ver api/admin-send-qrs.js). Con ids, SOLO a esas
+  // personas (las casillas de la tabla); sin ids, a todos los pendientes.
   let feSending = false;
-  document.getElementById('fe-send-btn').onclick = async function(){
-    const pending = allTickets.filter(t => ['promo', 'paid', 'table'].includes(t.type) && t.pending && !t.voided).length;
-    if (!pending) return;
-    if (!confirm('¿Enviar el QR por correo a los ' + pending + ' registrados pendientes? Cada uno queda aprobado al recibirlo.')) return;
-    const btn = this;
+  const selectedIds = new Set();
+  let lastRendered = [];
+  function canSelect(t){
+    return ['promo', 'paid', 'table'].includes(t.type) && t.pending && !t.voided && isCurrentEvent();
+  }
+  function syncSelectionUi(){
+    // Si alguien dejó de estar pendiente (ya se le mandó, o se anuló), sale de la selección.
+    const byId = new Map(allTickets.map(t => [t.id, t]));
+    [...selectedIds].forEach(id => { const t = byId.get(id); if (!t || !canSelect(t)) selectedIds.delete(id); });
+    const n = selectedIds.size;
+    const b = document.getElementById('fe-send-selected-btn');
+    if (!feSending) b.textContent = 'Enviar QR a seleccionados (' + n + ')';
+    b.disabled = !n || feSending;
+    document.getElementById('fe-clear-sel-btn').style.display = n ? '' : 'none';
+    document.getElementById('sel-bar').hidden = !n || feSending;
+    document.getElementById('sel-bar-text').textContent = n + (n === 1 ? ' seleccionado' : ' seleccionados');
+    const visible = lastRendered.filter(canSelect);
+    const all = document.getElementById('sel-all');
+    all.checked = visible.length > 0 && visible.every(t => selectedIds.has(t.id));
+    all.indeterminate = !all.checked && visible.some(t => selectedIds.has(t.id));
+    all.disabled = !visible.length;
+  }
+  document.getElementById('table-body').addEventListener('change', function(e){
+    const box = e.target.closest('[data-sel]'); if (!box) return;
+    if (box.checked) selectedIds.add(box.dataset.sel); else selectedIds.delete(box.dataset.sel);
+    const tr = box.closest('tr'); if (tr) tr.classList.toggle('row-selected', box.checked);
+    syncSelectionUi();
+  });
+  document.getElementById('sel-all').addEventListener('change', function(){
+    const visible = lastRendered.filter(canSelect);
+    visible.forEach(t => { if (this.checked) selectedIds.add(t.id); else selectedIds.delete(t.id); });
+    renderCurrentView(getSearchFilteredTickets());
+  });
+  document.getElementById('sel-bar-send').onclick = function(){ document.getElementById('fe-send-selected-btn').click(); };
+  document.getElementById('sel-bar-clear').onclick = function(){ document.getElementById('fe-clear-sel-btn').click(); };
+  document.getElementById('fe-clear-sel-btn').onclick = function(){
+    selectedIds.clear(); renderCurrentView(getSearchFilteredTickets());
+  };
+
+  async function sendQrs(btn, total, ids){
     const progress = document.getElementById('fe-send-progress');
+    const label = btn.textContent;
     feSending = true; btn.disabled = true;
     let sent = 0; const failed = []; const skip = [];
     try {
       for (let guard = 0; guard < 500; guard++) {
-        btn.textContent = 'Enviando… ' + sent + ' / ' + pending;
+        btn.textContent = 'Enviando… ' + sent + ' / ' + total;
         const r = await fetch('/api/admin-send-qrs', { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ passcode: PASSCODE, action:'send', limit: 8, skip }) });
+          body: JSON.stringify({ passcode: PASSCODE, action:'send', limit: 8, skip, ids: ids || undefined }) });
         if (r.status === 401) { alert('Clave incorrecta'); break; }
         const d = await r.json();
         if (!d.ok) { alert('Se detuvo el envío. Vuelve a intentar.'); break; }
         sent += d.sent;
         (d.failed || []).forEach(f => { failed.push(f); skip.push(f.id); });
         progress.textContent = 'Enviados: ' + sent + ' · Fallidos: ' + failed.length + ' · Faltan: ' + d.remaining;
-        if (!d.remaining) break;
+        if (!d.remaining || !d.sent && !(d.failed || []).length) break;
       }
-      progress.textContent = 'Listo. Enviados: ' + sent + (failed.length ? ' · No salieron ' + failed.length + ': ' + failed.map(f => f.email).join(', ') + ' (quedan pendientes, puedes reintentar)' : '');
+      progress.textContent = 'Listo. Enviados: ' + sent + (failed.length ? ' · No salieron ' + failed.length + ': ' + failed.map(f => f.email).join(', ') + ' (siguen pendientes, puedes reintentar)' : '') +
+        '. En la columna "Correo" verás "Entregado" cuando llegue a su bandeja, o "Rebotado" si el correo no existe.';
     } catch(e) {
       progress.textContent = 'Error de conexión después de ' + sent + ' envíos. Vuelve a apretar el botón: sigue con los que faltan.';
     } finally {
-      feSending = false;
+      feSending = false; btn.textContent = label;
       await loadData();
     }
+  }
+
+  document.getElementById('fe-send-selected-btn').onclick = async function(){
+    const chosen = allTickets.filter(t => selectedIds.has(t.id) && canSelect(t));
+    if (!chosen.length) return;
+    const names = chosen.slice(0, 8).map(t => '• ' + t.name + ' (' + (t.email || 'correo del comprador') + ')').join('\n') + (chosen.length > 8 ? '\n… y ' + (chosen.length - 8) + ' más' : '');
+    if (!confirm('¿Enviar el QR SOLO a estas ' + chosen.length + ' personas?\n\n' + names + '\n\nA nadie más le llega. Cada una queda aprobada al recibirlo.')) return;
+    await sendQrs(this, chosen.length, chosen.map(t => t.id));
+  };
+
+  document.getElementById('fe-send-btn').onclick = async function(){
+    const pending = allTickets.filter(t => ['promo', 'paid', 'table'].includes(t.type) && t.pending && !t.voided).length;
+    if (!pending) return;
+    if (!confirm('¿Enviar el QR a TODOS los ' + pending + ' registrados pendientes (no solo a los marcados)? Cada uno queda aprobado al recibirlo.')) return;
+    await sendQrs(this, pending, null);
   };
 
   document.getElementById('cortesia-resync-btn').onclick = async function(){
@@ -972,7 +1039,11 @@
           ? ` <span class="badge badge-late" title="Entró después del corte del free entry">🌙 Después de hora · ${t.lateCharged ? 'pagó' : 'gratis'}</span>`
           : ` <span class="badge badge-late" title="Cortesía vencida admitida en puerta con el botón &quot;Dejar entrar igual&quot; del scanner">🌙 Tardío</span>`)
       : '';
-    return `<tr${rowClass}>
+    const selectable = canSelect(t);
+    const isSel = selectable && selectedIds.has(t.id);
+    const cls = [reasons ? 'row-flag' : '', isSel ? 'row-selected' : ''].filter(Boolean).join(' ');
+    return `<tr${cls ? ` class="${cls}"` : ''} data-id="${t.id}">
+      <td>${selectable ? `<input type="checkbox" class="sel-box" data-sel="${t.id}"${isSel ? ' checked' : ''} aria-label="Seleccionar ${escapeHtml(t.name)}" />` : ''}</td>
       <td style="font-family:monospace;">${t.id}</td>
       <td>${escapeHtml(t.name)}${suspiciousBadge}</td>
       <td>${escapeHtml(t.dni||'')}</td>
@@ -1051,17 +1122,19 @@
     tickets = applySuspiciousFilter(applyEmailFilter(tickets));
     const body = document.getElementById('table-body');
     if(tickets.length === 0){
-      body.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#666;">Sin resultados</td></tr>';
+      body.innerHTML = '<tr><td colspan="16" style="text-align:center;color:#666;">Sin resultados</td></tr>';
       return;
     }
+    lastRendered = tickets;
     body.innerHTML = tickets.map(ticketRowHtml).join('');
+    syncSelectionUi();
   }
 
   function renderTableGrouped(tickets){
     tickets = applySuspiciousFilter(applyEmailFilter(tickets));
     const body = document.getElementById('table-body');
     if(tickets.length === 0){
-      body.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#666;">Sin resultados</td></tr>';
+      body.innerHTML = '<tr><td colspan="16" style="text-align:center;color:#666;">Sin resultados</td></tr>';
       return;
     }
     const groups = new Map(); // orderId (or null) -> tickets[]
@@ -1075,14 +1148,16 @@
     const ungrouped = groups.get(null) || [];
     groups.forEach((groupTickets, orderId) => {
       if (orderId === null) return;
-      html += `<tr><td colspan="15" style="background:#000;font-family:monospace;font-size:11px;color:#888;letter-spacing:0.5px;">ORDEN ${escapeHtml(orderId)} · ${groupTickets.length} entrada${groupTickets.length>1?'s':''}</td></tr>`;
+      html += `<tr><td colspan="16" style="background:#000;font-family:monospace;font-size:11px;color:#888;letter-spacing:0.5px;">ORDEN ${escapeHtml(orderId)} · ${groupTickets.length} entrada${groupTickets.length>1?'s':''}</td></tr>`;
       html += groupTickets.map(ticketRowHtml).join('');
     });
     if (ungrouped.length) {
-      html += `<tr><td colspan="15" style="background:#000;font-family:monospace;font-size:11px;color:#888;letter-spacing:0.5px;">SIN ORDEN (cortesías / individuales)</td></tr>`;
+      html += `<tr><td colspan="16" style="background:#000;font-family:monospace;font-size:11px;color:#888;letter-spacing:0.5px;">SIN ORDEN (cortesías / individuales)</td></tr>`;
       html += ungrouped.map(ticketRowHtml).join('');
     }
+    lastRendered = tickets;
     body.innerHTML = html;
+    syncSelectionUi();
   }
 
   function renderCurrentView(tickets){
@@ -1533,7 +1608,7 @@
     renderPromoTotals();
     fillGiveSelect();
     if (list.length === 0) {
-      body.innerHTML = '<tr><td colspan="15" style="text-align:center;color:#666;">Sin datos</td></tr>';
+      body.innerHTML = '<tr><td colspan="16" style="text-align:center;color:#666;">Sin datos</td></tr>';
       updateSortHeaders();
       return;
     }

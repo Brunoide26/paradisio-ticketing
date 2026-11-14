@@ -1,5 +1,5 @@
 const { listAllTickets, getCounters, getCortesiaStatus } = require('../lib/tickets');
-const { CURRENT_EVENT_ID, eventIdOfTicket, listEvents } = require('../lib/events');
+const { CURRENT_EVENT_ID, eventIdOfTicket, movedFromOfTicket, listEvents } = require('../lib/events');
 
 module.exports = async (req, res) => {
   try {
@@ -10,7 +10,8 @@ module.exports = async (req, res) => {
     const tickets = await listAllTickets();
     // Cada ticket sale con su fecha resuelta (los viejos no la tenían
     // guardada); el admin filtra por fecha del lado del cliente.
-    tickets.forEach((t) => { t.eventId = eventIdOfTicket(t); });
+    // movedFrom: fecha original si era del 17/10 o 24/10 (ver lib/events.js).
+    tickets.forEach((t) => { const mf = movedFromOfTicket(t); if (mf) t.movedFrom = mf; t.eventId = eventIdOfTicket(t); });
     const counters = await getCounters();
     const cortesia = await getCortesiaStatus();
     const events = listEvents([...new Set(tickets.map((t) => t.eventId))]);

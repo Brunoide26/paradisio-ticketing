@@ -216,7 +216,9 @@
         <select id="promo-filter" class="btn btn-ghost"><option value="">Promotor: todos</option></select>
         <select id="qr-filter" class="btn btn-ghost">
           <option value="">QR: todos</option>
+          <option value="tosend">Falta el correo del Pre Opening (pendientes + fecha anterior)</option>
           <option value="pending">QR: por aprobar (pendiente)</option>
+          <option value="oldqr">QR de otra fecha (24/10), falta el correo nuevo</option>
           <option value="sent">QR: aprobado / enviado</option>
           <option value="in">Ingresaron</option>
         </select>
@@ -242,7 +244,7 @@
         <table>
           <thead>
             <tr>
-              <th style="width:34px;"><input type="checkbox" id="sel-all" class="sel-box" title="Marcar todos los pendientes de esta lista" /></th>
+              <th style="width:34px;"><input type="checkbox" id="sel-all" class="sel-box" title="Marcar a todos los de esta lista a los que les falta el correo del Pre Opening" /></th>
               <th>Código</th><th>Nombre</th><th>DNI</th><th>F. Nac.</th><th>Teléfono</th><th>Email</th><th>Instagram</th>
               <th>Tipo</th><th>Promotor</th><th>Monto</th><th>ID de orden</th><th>Registrado</th><th>Estado</th><th>Correo</th><th>Acciones</th>
             </tr>
@@ -676,6 +678,14 @@
   let feSending = false;
   const selectedIds = new Set();
   let lastRendered = [];
+  // Recibió su QR para una fecha que se movió (17/10 o 24/10) y todavía no
+  // recibió el correo del Pre Opening (enviado desde el 13/11).
+  const PREOPENING_SEND_START = '2026-11-13T05:00:00.000Z';
+  function oldQr(t){
+    return !!t.movedFrom && !t.pending && !t.voided && !(t.emailSentAt && t.emailSentAt >= PREOPENING_SEND_START);
+  }
+  // A quién le falta el correo de esta fecha: pendientes o QR de fecha anterior.
+  function needsSend(t){ return canSelect(t) && (t.pending || oldQr(t)); }
   function canSelect(t){
     // Cualquier registro no anulado de la fecha actual: si ya tenía su QR,
     // se le reenvía el mismo.
@@ -693,7 +703,7 @@
     document.getElementById('sel-bar').hidden = !n || feSending;
     document.getElementById('sel-bar-text').textContent = n + (n === 1 ? ' seleccionado' : ' seleccionados');
     // "Marcar todos" solo marca a los PENDIENTES de la lista (no reenvía en masa).
-    const visible = lastRendered.filter(t => canSelect(t) && t.pending);
+    const visible = lastRendered.filter(needsSend);
     const all = document.getElementById('sel-all');
     all.checked = visible.length > 0 && visible.every(t => selectedIds.has(t.id));
     all.indeterminate = !all.checked && visible.some(t => selectedIds.has(t.id));
@@ -706,7 +716,7 @@
     syncSelectionUi();
   });
   document.getElementById('sel-all').addEventListener('change', function(){
-    const visible = lastRendered.filter(t => canSelect(t) && t.pending);
+    const visible = lastRendered.filter(needsSend);
     visible.forEach(t => { if (this.checked) selectedIds.add(t.id); else selectedIds.delete(t.id); });
     renderCurrentView(getSearchFilteredTickets());
   });
@@ -758,8 +768,8 @@
   document.getElementById('fe-send-selected-btn').onclick = async function(){
     const chosen = allTickets.filter(t => selectedIds.has(t.id) && canSelect(t));
     if (!chosen.length) return;
-    const names = chosen.slice(0, 8).map(t => '• ' + t.name + ' (' + (t.email || 'correo del comprador') + ')' + (t.pending ? '' : ' · reenvío')).join('\n') + (chosen.length > 8 ? '\n… y ' + (chosen.length - 8) + ' más' : '');
-    const resends = chosen.filter(t => !t.pending).length;
+    const names = chosen.slice(0, 8).map(t => '• ' + t.name + ' (' + (t.email || 'correo del comprador') + ')' + (t.pending ? '' : oldQr(t) ? ' · tenía QR del ' + t.movedFrom : ' · reenvío')).join('\n') + (chosen.length > 8 ? '\n… y ' + (chosen.length - 8) + ' más' : '');
+    const resends = chosen.filter(t => !t.pending && !oldQr(t)).length;
     if (!confirm('¿Enviar el QR SOLO a estas ' + chosen.length + ' personas?\n\n' + names + '\n\nA nadie más le llega. Cada una queda aprobada al recibirlo.' + (resends ? '\n' + resends + ' ya tenían su QR: les llega de nuevo el mismo (el anterior sigue sirviendo).' : ''))) return;
     await sendQrs(this, chosen.length, chosen.map(t => t.id));
   };
@@ -1064,7 +1074,7 @@
     const isSel = selectable && selectedIds.has(t.id);
     const cls = [reasons ? 'row-flag' : '', isSel ? 'row-selected' : ''].filter(Boolean).join(' ');
     return `<tr${cls ? ` class="${cls}"` : ''} data-id="${t.id}">
-      <td style="text-align:center;">${selectable ? `<input type="checkbox" class="sel-box" data-sel="${t.id}"${isSel ? ' checked' : ''} aria-label="Seleccionar ${escapeHtml(t.name)}" />${!t.pending ? '<div style="font-size:9px;color:#6fcf8e;margin-top:2px;white-space:nowrap;">QR enviado</div>' : ''}` : (t.voided ? '<span style="font-size:9px;color:#888;">anulado</span>' : '')}</td>
+      <td style="text-align:center;">${selectable ? `<input type="checkbox" class="sel-box" data-sel="${t.id}"${isSel ? ' checked' : ''} aria-label="Seleccionar ${escapeHtml(t.name)}" />${oldQr(t) ? '<div style="font-size:9px;color:#e0c87f;margin-top:2px;white-space:nowrap;" title="Recibió el QR para el ' + escapeHtml(t.movedFrom) + ', falta el correo del Pre Opening">QR del ' + escapeHtml(t.movedFrom.slice(8,10) + '/' + t.movedFrom.slice(5,7)) + '</div>' : (!t.pending ? '<div style="font-size:9px;color:#6fcf8e;margin-top:2px;white-space:nowrap;">QR enviado</div>' : '')}` : (t.voided ? '<span style="font-size:9px;color:#888;">anulado</span>' : '')}</td>
       <td style="font-family:monospace;">${t.id}</td>
       <td>${escapeHtml(t.name)}${suspiciousBadge}</td>
       <td>${escapeHtml(t.dni||'')}</td>
@@ -1111,6 +1121,8 @@
       if (promo === '__none' && t.promoterCode) return false;
       if (promo && promo !== '__none' && t.promoterCode !== promo) return false;
       if (qr === 'pending' && !(t.pending && !t.voided)) return false;
+      if (qr === 'oldqr' && !oldQr(t)) return false;
+      if (qr === 'tosend' && !needsSend(t)) return false;
       if (qr === 'sent' && (t.pending || t.voided)) return false;
       if (qr === 'in' && !t.checkedIn) return false;
       if (kind && t.type !== kind) return false;

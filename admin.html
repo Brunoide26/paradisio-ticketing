@@ -182,6 +182,7 @@
           <button class="btn btn-ghost" id="fe-clear-sel-btn" style="display:none;">Quitar selección</button>
           <button class="btn btn-ghost" id="rej-send-btn" style="display:none;border-color:#E2361F;color:#E2361F;">Rechazar seleccionados (0)</button>
           <button class="btn btn-ghost" id="rej-preview-btn">Ver correo de rechazo</button>
+          <button class="btn btn-ghost" id="list-sel-toggle">Marcar desde lista</button>
           <button class="btn btn-ghost" id="fe-send-btn">Enviar a todos los pendientes</button>
           <button class="btn btn-ghost" id="cortesia-open-btn">Abrir lista general</button>
           <button class="btn btn-ghost" id="cortesia-close-btn">Cerrar lista general</button>
@@ -189,6 +190,12 @@
         </div>
       </div>
       <div class="hint">Marca la casilla de cada persona en la tabla de abajo y dale "Enviar QR a seleccionados": le llega <strong>solo a ellos</strong>. Si alguien ya tenía su QR ("QR enviado" bajo la casilla), se le reenvía el mismo. "Enviar a todos los pendientes" manda a todos los que falten.</div>
+      <div id="list-sel-box" style="display:none;margin-top:12px;">
+        <div class="hint">Pega correos o códigos (uno por línea, o copiados de una columna del Excel). Se marcan las casillas de esas personas; nada se envía hasta que aprietes un botón.</div>
+        <textarea id="list-sel-text" rows="6" style="width:100%;margin-top:6px;background:#111;color:#eee;border:1px solid #333;padding:8px;font-family:monospace;font-size:12px;"></textarea>
+        <button class="btn btn-ghost btn-sm" id="list-sel-apply" style="margin-top:6px;">Marcar</button>
+        <span class="hint" id="list-sel-result" style="margin-left:8px;"></span>
+      </div>
       <div class="hint" id="fe-send-progress"></div>
       <div class="hint">Nadie recibe su QR al registrarse o comprar (Free Entry, entradas y reservas): al comprar solo les llega la confirmación. Al enviarles el QR (a los marcados o a todos los pendientes) quedan aprobados. Para rechazar a alguien, anúlalo antes de enviar (si pagó, el reembolso es manual en Culqi). Un asistente sin correo recibe su QR en el correo del comprador.</div>
     </div>
@@ -784,6 +791,19 @@
 
   // Rechazo (ver api/admin-reject.js): ANULA el registro y le manda el
   // correo de rechazo, una sola vez por persona, SOLO a los marcados.
+  document.getElementById('list-sel-toggle').onclick = function(){
+    const b = document.getElementById('list-sel-box'); b.style.display = b.style.display === 'none' ? '' : 'none';
+  };
+  document.getElementById('list-sel-apply').onclick = function(){
+    const tokens = document.getElementById('list-sel-text').value.split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+    const byKey = new Map();
+    allTickets.forEach(t => { if (!canSelect(t)) return; byKey.set(String(t.id).toLowerCase(), t); if (t.email) { const k = t.email.trim().toLowerCase(); if (!byKey.has(k)) byKey.set(k, t); } });
+    const notFound = []; let n = 0;
+    selectedIds.clear();
+    tokens.forEach(k => { const t = byKey.get(k); if (t) { if (!selectedIds.has(t.id)) { selectedIds.add(t.id); n++; } } else if (k.includes('@') || /^[a-z0-9]{5,}$/.test(k)) notFound.push(k); });
+    document.getElementById('list-sel-result').textContent = n + ' marcados' + (notFound.length ? ' · No encontrados o ya anulados (' + notFound.length + '): ' + notFound.slice(0, 10).join(', ') + (notFound.length > 10 ? '…' : '') : '');
+    renderCurrentView(getSearchFilteredTickets());
+  };
   document.getElementById('rej-preview-btn').onclick = async function(){
     try {
       const r = await fetch('/api/admin-reject', { method:'POST', headers:{'Content-Type':'application/json'},

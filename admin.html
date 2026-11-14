@@ -721,16 +721,24 @@
     const label = btn.textContent;
     feSending = true; btn.disabled = true;
     let sent = 0; const failed = []; const skip = [];
+    const runStart = new Date().toISOString();
+    const done = new Set();
     try {
-      for (let guard = 0; guard < 500; guard++) {
+      // Nunca más vueltas que las necesarias para el total (+2 de margen).
+      for (let guard = 0; guard < Math.ceil(total / 8) + 2; guard++) {
         btn.textContent = 'Enviando… ' + sent + ' / ' + total;
         const r = await fetch('/api/admin-send-qrs', { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ passcode: PASSCODE, action:'send', limit: 8, skip, ids: ids || undefined }) });
+          body: JSON.stringify({ passcode: PASSCODE, action:'send', limit: 8, skip, runStart, ids: ids || undefined }) });
         if (r.status === 401) { alert('Clave incorrecta'); break; }
         const d = await r.json();
         if (!d.ok) { alert('Se detuvo el envío. Vuelve a intentar.'); break; }
+        // Freno de seguridad: si el servidor devuelve a alguien que ya se
+        // envió en esta corrida, se corta en seco.
+        if ((d.sentIds || []).some(id => done.has(id))) { alert('Se detuvo el envío para no repetir correos.'); break; }
+        (d.sentIds || []).forEach(id => { done.add(id); skip.push(id); });
         sent += d.sent;
         (d.failed || []).forEach(f => { failed.push(f); skip.push(f.id); });
+        if (sent >= total) break;
         progress.textContent = 'Enviados: ' + sent + ' · Fallidos: ' + failed.length + ' · Faltan: ' + d.remaining;
         if (!d.remaining || !d.sent && !(d.failed || []).length) break;
       }

@@ -180,6 +180,8 @@
         <div class="cortesia-actions">
           <button class="btn btn-pink" id="fe-send-selected-btn" disabled>Enviar QR a seleccionados (0)</button>
           <button class="btn btn-ghost" id="fe-clear-sel-btn" style="display:none;">Quitar selección</button>
+          <button class="btn btn-ghost" id="rej-send-btn" style="display:none;border-color:#E2361F;color:#E2361F;">Rechazar seleccionados (0)</button>
+          <button class="btn btn-ghost" id="rej-preview-btn">Ver correo de rechazo</button>
           <button class="btn btn-ghost" id="fe-send-btn">Enviar a todos los pendientes</button>
           <button class="btn btn-ghost" id="cortesia-open-btn">Abrir lista general</button>
           <button class="btn btn-ghost" id="cortesia-close-btn">Cerrar lista general</button>
@@ -488,6 +490,7 @@
 <div class="sel-bar" id="sel-bar" hidden>
   <span id="sel-bar-text">0 seleccionados</span>
   <button class="btn btn-pink btn-sm" id="sel-bar-send">Enviar QR</button>
+  <button class="btn btn-ghost btn-sm" id="sel-bar-reject" style="border-color:#E2361F;color:#E2361F;">Rechazar</button>
   <button class="btn btn-ghost btn-sm" id="sel-bar-clear">Quitar</button>
 </div>
 <script>
@@ -700,6 +703,10 @@
     if (!feSending) b.textContent = 'Enviar QR a seleccionados (' + n + ')';
     b.disabled = !n || feSending;
     document.getElementById('fe-clear-sel-btn').style.display = n ? '' : 'none';
+    const rb = document.getElementById('rej-send-btn');
+    rb.style.display = n ? '' : 'none';
+    if (!feSending) rb.textContent = 'Rechazar seleccionados (' + n + ')';
+    rb.disabled = !n || feSending;
     document.getElementById('sel-bar').hidden = !n || feSending;
     document.getElementById('sel-bar-text').textContent = n + (n === 1 ? ' seleccionado' : ' seleccionados');
     // "Marcar todos" solo marca a los PENDIENTES de la lista (no reenvía en masa).
@@ -721,6 +728,7 @@
     renderCurrentView(getSearchFilteredTickets());
   });
   document.getElementById('sel-bar-send').onclick = function(){ document.getElementById('fe-send-selected-btn').click(); };
+  document.getElementById('sel-bar-reject').onclick = function(){ document.getElementById('rej-send-btn').click(); };
   document.getElementById('sel-bar-clear').onclick = function(){ document.getElementById('fe-clear-sel-btn').click(); };
   document.getElementById('fe-clear-sel-btn').onclick = function(){
     selectedIds.clear(); renderCurrentView(getSearchFilteredTickets());
@@ -772,6 +780,56 @@
     const resends = chosen.filter(t => !t.pending && !oldQr(t)).length;
     if (!confirm('¿Enviar el QR SOLO a estas ' + chosen.length + ' personas?\n\n' + names + '\n\nA nadie más le llega. Cada una queda aprobada al recibirlo.' + (resends ? '\n' + resends + ' ya tenían su QR: les llega de nuevo el mismo (el anterior sigue sirviendo).' : ''))) return;
     await sendQrs(this, chosen.length, chosen.map(t => t.id));
+  };
+
+  // Rechazo (ver api/admin-reject.js): ANULA el registro y le manda el
+  // correo de rechazo, una sola vez por persona, SOLO a los marcados.
+  document.getElementById('rej-preview-btn').onclick = async function(){
+    try {
+      const r = await fetch('/api/admin-reject', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ passcode: PASSCODE, action:'preview' }) });
+      if (r.status === 401) { alert('Clave incorrecta'); return; }
+      const d = await r.json();
+      const w = window.open('', '_blank');
+      if (w) { w.document.write('<title>' + escapeHtml(d.subject) + '</title><div style="font:13px Arial;padding:10px;background:#222;color:#ddd;">Asunto: <b>' + escapeHtml(d.subject) + '</b></div>' + d.html); w.document.close(); }
+    } catch(e){ alert('No se pudo cargar la vista previa'); }
+  };
+  document.getElementById('rej-send-btn').onclick = async function(){
+    const chosen = allTickets.filter(t => selectedIds.has(t.id) && canSelect(t));
+    if (!chosen.length || feSending) return;
+    const fresh = chosen.filter(t => !t.rejectSentAt);
+    const names = fresh.slice(0, 10).map(t => '• ' + t.name + ' (' + (t.email || 'correo del comprador') + ')').join('\n') + (fresh.length > 10 ? '\n… y ' + (fresh.length - 10) + ' más' : '');
+    if (!fresh.length) { alert('A todos los marcados ya se les envió el rechazo.'); return; }
+    if (!confirm('¿RECHAZAR a estas ' + fresh.length + ' personas?\n\n' + names + '\n\nSe ANULA su registro (su QR deja de servir en la puerta) y les llega UNA vez el correo "Registro Rechazado - QR INVÁLIDO". A nadie más.')) return;
+    if (prompt('Escribe RECHAZAR para confirmar') !== 'RECHAZAR') return;
+    const btn = this, progress = document.getElementById('fe-send-progress');
+    const ids = fresh.map(t => t.id), done = new Set(), skip = [], failed = [];
+    let sent = 0;
+    feSending = true; btn.disabled = true;
+    try {
+      for (let guard = 0; guard < Math.ceil(ids.length / 8) + 2; guard++) {
+        btn.textContent = 'Rechazando… ' + sent + ' / ' + ids.length;
+        const r = await fetch('/api/admin-reject', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ passcode: PASSCODE, action:'send', ids, skip, limit: 8 }) });
+        if (r.status === 401) { alert('Clave incorrecta'); break; }
+        const d = await r.json();
+        if (!d.ok) { alert('Se detuvo. Vuelve a intentar.'); break; }
+        if ((d.sentIds || []).some(id => done.has(id))) { alert('Se detuvo para no repetir correos.'); break; }
+        (d.sentIds || []).forEach(id => { done.add(id); skip.push(id); });
+        (d.already || []).forEach(id => skip.push(id));
+        (d.failed || []).forEach(f => { failed.push(f); skip.push(f.id); });
+        sent += d.sent;
+        progress.textContent = 'Rechazos enviados: ' + sent + ' · Fallidos: ' + failed.length + ' · Faltan: ' + d.remaining;
+        if (!d.remaining) break;
+      }
+      progress.textContent = 'Listo. Rechazados y anulados: ' + sent + (failed.length ? ' · No salió el correo a ' + failed.length + ' (igual quedaron anulados): ' + failed.map(f => f.email).join(', ') : '');
+    } catch(e) {
+      progress.textContent = 'Error de conexión después de ' + sent + ' rechazos. Vuelve a apretar: no se repite a nadie.';
+    } finally {
+      feSending = false;
+      selectedIds.clear();
+      await loadData();
+    }
   };
 
   document.getElementById('fe-send-btn').onclick = async function(){
@@ -1074,7 +1132,7 @@
     const isSel = selectable && selectedIds.has(t.id);
     const cls = [reasons ? 'row-flag' : '', isSel ? 'row-selected' : ''].filter(Boolean).join(' ');
     return `<tr${cls ? ` class="${cls}"` : ''} data-id="${t.id}">
-      <td style="text-align:center;">${selectable ? `<input type="checkbox" class="sel-box" data-sel="${t.id}"${isSel ? ' checked' : ''} aria-label="Seleccionar ${escapeHtml(t.name)}" />${oldQr(t) ? '<div style="font-size:9px;color:#e0c87f;margin-top:2px;white-space:nowrap;" title="Recibió el QR para el ' + escapeHtml(t.movedFrom) + ', falta el correo del Pre Opening">QR del ' + escapeHtml(t.movedFrom.slice(8,10) + '/' + t.movedFrom.slice(5,7)) + '</div>' : (!t.pending ? '<div style="font-size:9px;color:#6fcf8e;margin-top:2px;white-space:nowrap;">QR enviado</div>' : '')}` : (t.voided ? '<span style="font-size:9px;color:#888;">anulado</span>' : '')}</td>
+      <td style="text-align:center;">${selectable ? `<input type="checkbox" class="sel-box" data-sel="${t.id}"${isSel ? ' checked' : ''} aria-label="Seleccionar ${escapeHtml(t.name)}" />${oldQr(t) ? '<div style="font-size:9px;color:#e0c87f;margin-top:2px;white-space:nowrap;" title="Recibió el QR para el ' + escapeHtml(t.movedFrom) + ', falta el correo del Pre Opening">QR del ' + escapeHtml(t.movedFrom.slice(8,10) + '/' + t.movedFrom.slice(5,7)) + '</div>' : (!t.pending ? '<div style="font-size:9px;color:#6fcf8e;margin-top:2px;white-space:nowrap;">QR enviado</div>' : '')}` : (t.voided ? '<span style="font-size:9px;color:#888;">anulado</span>' + (t.rejectSentAt ? '<div style="font-size:9px;color:#E2361F;white-space:nowrap;">rechazo enviado</div>' : '') : '')}</td>
       <td style="font-family:monospace;">${t.id}</td>
       <td>${escapeHtml(t.name)}${suspiciousBadge}</td>
       <td>${escapeHtml(t.dni||'')}</td>
@@ -1259,7 +1317,7 @@
     // ahí corre las columnas posteriores respecto de exports anteriores.
     // Instagram, Promotor y CodigoInvitacion van al final para no correr las
     // columnas de exports anteriores.
-    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso','Instagram','Promotor','CodigoInvitacion','DespuesDeHora','Entrada','EstadoQR','EdadEnEvento','HoraEnvioQR'];
+    const headers = ['Codigo','Nombre','DNI','FechaNacimiento','Telefono','Email','Tipo','Monto','IdOrden','Registrado','CheckedIn','HoraIngreso','IngresoTardio','Anulado','EstadoCorreo','Sospechoso','Instagram','Promotor','CodigoInvitacion','DespuesDeHora','Entrada','EstadoQR','EdadEnEvento','HoraEnvioQR','RechazoEnviado'];
     const rows = applySuspiciousFilter(applyEmailFilter(getSearchFilteredTickets())).map(t => [
       t.id, t.name, t.dni, t.dob, t.phone, t.email, t.type, t.amount, t.orderId || '',
       t.createdAt, t.checkedIn ? 'si' : 'no', t.checkedInAt || '', t.lateEntry ? 'si' : 'no',
@@ -1267,7 +1325,7 @@
       suspiciousFlags.has(t.id) ? [...suspiciousFlags.get(t.id)].join('; ') : '',
       t.instagram ? '@' + t.instagram : '', t.promoterCode || '', t.inviteCode || '',
       t.lateEntry ? (t.lateCharged ? 'pago' : 'gratis') : '',
-      t.skuLabel || '', t.voided ? 'anulado' : (t.pending ? 'pendiente' : 'enviado'), ageAtEvent(t) ?? '', t.emailSentAt || ''
+      t.skuLabel || '', t.voided ? 'anulado' : (t.pending ? 'pendiente' : 'enviado'), ageAtEvent(t) ?? '', t.emailSentAt || '', t.rejectSentAt || ''
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

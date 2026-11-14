@@ -876,7 +876,9 @@
     // SOLO los que se intentaron enviar y fallaron ("No salió"), p. ej. por
     // la cuota diaria de Resend. Nunca a registros pendientes que nadie
     // eligió: esos no tienen emailStatus 'failed'.
-    const targets = allTickets.filter(t => !t.voided && (t.email || t.orderId) && t.emailStatus === 'failed');
+    // Se excluye a quien ya recibió su QR antes (emailSentAt) y no está
+    // pendiente: su último intento falló, pero ya tiene el QR en su correo.
+    const targets = allTickets.filter(t => !t.voided && (t.email || t.orderId) && t.emailStatus === 'failed' && (t.pending || !t.emailSentAt));
     if (!targets.length) { alert('No hay correos que hayan fallado en esta fecha.'); return; }
     const preview = targets.slice(0, 8).map(t => '• ' + t.name).join('\n') + (targets.length > 8 ? '\n… y ' + (targets.length - 8) + ' más' : '');
     if (!confirm(`Reenviar el QR SOLO a las ${targets.length} persona(s) cuyo correo falló ("No salió")?\n\n${preview}`)) return;

@@ -186,7 +186,7 @@
           <button class="btn btn-ghost" id="cortesia-resync-btn" style="display:none;">Resincronizar contador</button>
         </div>
       </div>
-      <div class="hint">Marca la casilla de cada persona en la tabla de abajo (solo aparece en los que tienen el QR pendiente) y dale "Enviar QR a seleccionados": le llega <strong>solo a ellos</strong>. "Enviar a todos los pendientes" manda a todos los que falten.</div>
+      <div class="hint">Marca la casilla de cada persona en la tabla de abajo y dale "Enviar QR a seleccionados": le llega <strong>solo a ellos</strong>. Si alguien ya tenía su QR ("QR enviado" bajo la casilla), se le reenvía el mismo. "Enviar a todos los pendientes" manda a todos los que falten.</div>
       <div class="hint" id="fe-send-progress"></div>
       <div class="hint">Nadie recibe su QR al registrarse o comprar (Free Entry, entradas y reservas): al comprar solo les llega la confirmación. Al enviarles el QR (a los marcados o a todos los pendientes) quedan aprobados. Para rechazar a alguien, anúlalo antes de enviar (si pagó, el reembolso es manual en Culqi). Un asistente sin correo recibe su QR en el correo del comprador.</div>
     </div>
@@ -677,7 +677,9 @@
   const selectedIds = new Set();
   let lastRendered = [];
   function canSelect(t){
-    return ['promo', 'paid', 'table'].includes(t.type) && t.pending && !t.voided && isCurrentEvent();
+    // Cualquier registro no anulado de la fecha actual: si ya tenía su QR,
+    // se le reenvía el mismo.
+    return !t.voided && (t.email || t.orderId) && isCurrentEvent();
   }
   function syncSelectionUi(){
     // Si alguien dejó de estar pendiente (ya se le mandó, o se anuló), sale de la selección.
@@ -690,7 +692,8 @@
     document.getElementById('fe-clear-sel-btn').style.display = n ? '' : 'none';
     document.getElementById('sel-bar').hidden = !n || feSending;
     document.getElementById('sel-bar-text').textContent = n + (n === 1 ? ' seleccionado' : ' seleccionados');
-    const visible = lastRendered.filter(canSelect);
+    // "Marcar todos" solo marca a los PENDIENTES de la lista (no reenvía en masa).
+    const visible = lastRendered.filter(t => canSelect(t) && t.pending);
     const all = document.getElementById('sel-all');
     all.checked = visible.length > 0 && visible.every(t => selectedIds.has(t.id));
     all.indeterminate = !all.checked && visible.some(t => selectedIds.has(t.id));
@@ -703,7 +706,7 @@
     syncSelectionUi();
   });
   document.getElementById('sel-all').addEventListener('change', function(){
-    const visible = lastRendered.filter(canSelect);
+    const visible = lastRendered.filter(t => canSelect(t) && t.pending);
     visible.forEach(t => { if (this.checked) selectedIds.add(t.id); else selectedIds.delete(t.id); });
     renderCurrentView(getSearchFilteredTickets());
   });
@@ -744,8 +747,9 @@
   document.getElementById('fe-send-selected-btn').onclick = async function(){
     const chosen = allTickets.filter(t => selectedIds.has(t.id) && canSelect(t));
     if (!chosen.length) return;
-    const names = chosen.slice(0, 8).map(t => '• ' + t.name + ' (' + (t.email || 'correo del comprador') + ')').join('\n') + (chosen.length > 8 ? '\n… y ' + (chosen.length - 8) + ' más' : '');
-    if (!confirm('¿Enviar el QR SOLO a estas ' + chosen.length + ' personas?\n\n' + names + '\n\nA nadie más le llega. Cada una queda aprobada al recibirlo.')) return;
+    const names = chosen.slice(0, 8).map(t => '• ' + t.name + ' (' + (t.email || 'correo del comprador') + ')' + (t.pending ? '' : ' · reenvío')).join('\n') + (chosen.length > 8 ? '\n… y ' + (chosen.length - 8) + ' más' : '');
+    const resends = chosen.filter(t => !t.pending).length;
+    if (!confirm('¿Enviar el QR SOLO a estas ' + chosen.length + ' personas?\n\n' + names + '\n\nA nadie más le llega. Cada una queda aprobada al recibirlo.' + (resends ? '\n' + resends + ' ya tenían su QR: les llega de nuevo el mismo (el anterior sigue sirviendo).' : ''))) return;
     await sendQrs(this, chosen.length, chosen.map(t => t.id));
   };
 
@@ -1043,7 +1047,7 @@
     const isSel = selectable && selectedIds.has(t.id);
     const cls = [reasons ? 'row-flag' : '', isSel ? 'row-selected' : ''].filter(Boolean).join(' ');
     return `<tr${cls ? ` class="${cls}"` : ''} data-id="${t.id}">
-      <td>${selectable ? `<input type="checkbox" class="sel-box" data-sel="${t.id}"${isSel ? ' checked' : ''} aria-label="Seleccionar ${escapeHtml(t.name)}" />` : ''}</td>
+      <td style="text-align:center;">${selectable ? `<input type="checkbox" class="sel-box" data-sel="${t.id}"${isSel ? ' checked' : ''} aria-label="Seleccionar ${escapeHtml(t.name)}" />${!t.pending ? '<div style="font-size:9px;color:#6fcf8e;margin-top:2px;white-space:nowrap;">QR enviado</div>' : ''}` : (t.voided ? '<span style="font-size:9px;color:#888;">anulado</span>' : '')}</td>
       <td style="font-family:monospace;">${t.id}</td>
       <td>${escapeHtml(t.name)}${suspiciousBadge}</td>
       <td>${escapeHtml(t.dni||'')}</td>

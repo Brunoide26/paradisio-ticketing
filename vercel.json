@@ -4,6 +4,10 @@
     {
       "source": "/p/:code",
       "destination": "/api/p/:code"
+    },
+    {
+      "source": "/como-llegar",
+      "destination": "/api/como-llegar"
     }
   ],
   "headers": [

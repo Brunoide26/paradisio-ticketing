@@ -380,7 +380,7 @@
         <section class="sec" id="mesas" aria-labelledby="h-mesas" hidden>
           <h2 class="sec-h" id="h-mesas">Mesas y boxes</h2>
           <div class="cards">
-            <div class="card">
+            <div class="card" id="tables-card">
               <div class="card-l">
                 <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><ellipse cx="16" cy="11" rx="11" ry="3.5"/><path d="M16 14.5V26M10 27h12"/></svg>
                 <span class="from">Desde</span><span class="price" id="tables-from">—</span>
@@ -616,10 +616,10 @@
     const tix = cfg.tickets || [];
     $('entradas').hidden = !tix.length;
     list.innerHTML = tix.map((t) =>
-      '<div class="card' + (t.soldOut ? ' is-off' : '') + '" data-sku="' + esc(t.sku) + '">' +
+      '<div class="card' + (t.soldOut || t.closed ? ' is-off' : '') + '" data-sku="' + esc(t.sku) + '">' +
         '<div class="card-l">' + TICKET_ICON + '<span class="price">' + money(t.price) + '</span></div>' +
         '<div class="card-r"><div class="card-top"><p class="card-name">' + esc(t.name) + (t.fewLeft ? '<span class="tag">Últimas</span>' : '') + '</p>' +
-        (t.soldOut ? '<span class="cap muted">Agotado</span>'
+        (t.closed ? '<span class="cap muted">Closed</span>' : t.soldOut ? '<span class="cap muted">Agotado</span>'
           : '<div class="qty" data-sku="' + esc(t.sku) + '">' +
               '<button type="button" data-d="-1" aria-label="Quitar una ' + esc(t.name) + '">−</button>' +
               '<output aria-live="polite">0</output>' +
@@ -697,9 +697,9 @@
     if (!t || !t.units || !t.units.length) { $('mesas').hidden = true; return; }
     $('mesas').hidden = false;
     const avail = t.units.filter((u) => !u.sold);
-    const prices = t.types.filter((tt) => avail.some((u) => u.type === tt.type)).map((tt) => tt.price);
+    const prices = t.types.filter((tt) => t.soldOut || avail.some((u) => u.type === tt.type)).map((tt) => tt.price);
     $('tables-from').textContent = prices.length ? money(Math.min(...prices)) : '—';
-    if (!avail.length) { $('tables-btn').disabled = true; $('tables-btn').textContent = 'Agotadas'; }
+    if (t.soldOut || !avail.length) { $('tables-btn').disabled = true; $('tables-btn').textContent = 'Sold out'; $('tables-card').classList.add('is-off'); }
   }
 
   function renderTables(){

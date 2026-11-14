@@ -46,7 +46,11 @@ module.exports = async (req, res) => {
     // volvía a tomar a los mismos 8 y les mandaba el QR una y otra vez.
     // Sin ids: solo los pendientes (al enviarse dejan de serlo).
     const runStart = Date.parse(req.body.runStart) || 0;
-    const windowStart = Date.now() - 30 * 60 * 1000;
+    // Y además: nadie que ya recibió el correo de esta fecha (desde
+    // QR_CAMPAIGN_START) lo vuelve a recibir por casillas. Para reenviarle a
+    // alguien a propósito está el botón "Reenviar QR" de su fila.
+    const campaignStart = Date.parse(process.env.QR_CAMPAIGN_START || '2026-11-13T05:00:00.000Z') || 0;
+    const windowStart = Math.min(Date.now() - 30 * 60 * 1000, campaignStart || Infinity);
     const recentCut = runStart ? Math.min(runStart, windowStart) : windowStart;
     const sentRecently = (t) => t.emailSentAt && Date.parse(t.emailSentAt) >= recentCut;
     const pending = (only ? tickets.filter((t) => only.has(t.id) && !t.voided && !sentRecently(t)) : withQr.filter(isPending))

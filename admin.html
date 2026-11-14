@@ -748,6 +748,9 @@
       progress.textContent = 'Error de conexión después de ' + sent + ' envíos. Vuelve a apretar el botón: sigue con los que faltan.';
     } finally {
       feSending = false; btn.textContent = label;
+      // La selección se vacía siempre después de un envío: el siguiente grupo
+      // arranca de cero y nunca arrastra a los ya enviados.
+      selectedIds.clear();
       await loadData();
     }
   }

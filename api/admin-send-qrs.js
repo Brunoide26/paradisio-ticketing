@@ -42,11 +42,12 @@ module.exports = async (req, res) => {
     const only = Array.isArray(req.body.ids) && req.body.ids.length ? new Set(req.body.ids) : null;
     // Con ids: todos los elegidos que no estén anulados (cualquier tipo con QR),
     // MENOS los que ya recibieron su correo en esta misma corrida (runStart) o
-    // hace menos de 3 minutos. Sin esto, con más de 8 elegidos cada tanda
+    // en los últimos 30 minutos (lo que sea más antiguo: ventana más amplia). Sin esto, con más de 8 elegidos cada tanda
     // volvía a tomar a los mismos 8 y les mandaba el QR una y otra vez.
     // Sin ids: solo los pendientes (al enviarse dejan de serlo).
     const runStart = Date.parse(req.body.runStart) || 0;
-    const recentCut = Math.max(runStart, Date.now() - 3 * 60 * 1000);
+    const windowStart = Date.now() - 30 * 60 * 1000;
+    const recentCut = runStart ? Math.min(runStart, windowStart) : windowStart;
     const sentRecently = (t) => t.emailSentAt && Date.parse(t.emailSentAt) >= recentCut;
     const pending = (only ? tickets.filter((t) => only.has(t.id) && !t.voided && !sentRecently(t)) : withQr.filter(isPending))
       // Primero los que se registraron antes.

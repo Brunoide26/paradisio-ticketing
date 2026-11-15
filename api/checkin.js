@@ -1,4 +1,5 @@
 const { checkInTicket } = require('../lib/tickets');
+const { getPromoter } = require('../lib/promoters');
 
 // Simple shared-secret protection so random people can't check tickets in.
 // Set STAFF_PASSCODE in your Vercel environment variables.
@@ -22,6 +23,14 @@ module.exports = async (req, res) => {
       lateCharged: lateCharged === true,
       dryRun: dryRun === true,
     });
+    // De parte de quién viene: nombre del promotor del registro (si tiene).
+    // Si la búsqueda falla, el escáner muestra el código; nunca bloquea.
+    if (result && result.ticket && result.ticket.promoterCode) {
+      try {
+        const p = await getPromoter(result.ticket.promoterCode);
+        if (p && p.name) result.promoterName = p.name;
+      } catch (e) { /* sin nombre: queda el código */ }
+    }
     return res.status(200).json(result);
   } catch (err) {
     console.error(err);

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowDownIcon, ArrowUpIcon, ChevronLeftIcon, ChevronRightIcon, DownloadIcon, ListIcon, KanbanIcon, CalendarDaysIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TriangleAlertIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,9 @@ import { useOS } from '../os/store.jsx';
 import { PageHeader, StageBadge, BrandDot, Unavailable, fmtDay, relDays, MONTHS_LONG } from '../os/kit.jsx';
 import { sel } from '../os/Shell.jsx';
 import { Panel, BrandTile } from '../ui.jsx';
-import { cn, money, brandColor, limaISO, parseDate } from '../lib.js';
+import { cn, money, brandColor, limaISO, parseDate, totals, byCategory } from '../lib.js';
+import DataTable from '../os/DataTable.jsx';
+import { MiniLines } from './overview/widgets.jsx';
 
 const VIEWS = [{ id: 'lista', label: 'Lista', icon: ListIcon }, { id: 'tablero', label: 'Tablero', icon: KanbanIcon }, { id: 'calendario', label: 'Calendario', icon: CalendarDaysIcon }];
 
@@ -58,68 +60,48 @@ export default function Events({ fixedView }) {
   );
 }
 
-const COLS = [
-  { key: 'date', label: 'Fecha', get: (f) => f.date },
-  { key: 'name', label: 'Evento', get: (f) => f.name.toLowerCase() },
-  { key: 'stage', label: 'Etapa', get: (f) => f.stage },
-  { key: 'revenue', label: 'Ingresos', get: (f) => f.revenue, num: true },
-  { key: 'costs', label: 'Costos', get: (f) => (f.hasCosts ? f.costs : -Infinity), num: true },
-  { key: 'result', label: 'Resultado / utilidad', get: (f) => (f.result == null ? -Infinity : f.result), num: true },
-];
-
+// Lista: tabla compartida con filtros por etapa y marca, detalle desplegable y acciones por fila.
 function ListView({ rows, stages, onOpen, brands }) {
-  const [sort, setSort] = useState({ key: 'date', dir: -1 });
-  const [page, setPage] = useState(0);
-  const PER = 25;
-  const sorted = rows.slice().sort((a, b) => { const c = COLS.find((x) => x.key === sort.key); const va = c.get(a), vb = c.get(b); return (va > vb ? 1 : va < vb ? -1 : 0) * sort.dir; });
-  const shown = sorted.slice(page * PER, page * PER + PER);
-  const pages = Math.max(1, Math.ceil(sorted.length / PER));
-  const csv = () => {
-    const out = [['Fecha', 'Marca', 'Evento', 'Local', 'Etapa', 'Tipo', 'Ingresos', 'Costos', 'Resultado']].concat(sorted.map((f) => [f.date, brands.find((b) => b.id === f.brand)?.name, f.name, f.venue, stages.find((s) => s.id === f.stage)?.label, f.kind === 'actual' ? 'Real' : f.kind === 'budget' ? 'Proyectado' : 'Cancelado', f.revenue, f.hasCosts ? f.costs : '', f.result ?? '']));
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['﻿' + out.map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }));
-    a.download = `eventos-${limaISO()}.csv`; a.click();
-  };
+  const { data, withTaxes } = useOS();
+  const navigate = useNavigate();
+  const stageName = (id) => stages.find((s) => s.id === id)?.label || id;
+  const brandName = (id) => brands.find((b) => b.id === id)?.name || id;
   return (
     <Panel>
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent [&_th]:h-9 [&_th]:text-[12px]">
-            {COLS.map((c, i) => (
-              <TableHead key={c.key} className={cn(i === 0 && 'pl-4', c.num && 'text-end')}>
-                <button type="button" className={cn('inline-flex items-center gap-1 hover:text-foreground', c.num && 'flex-row-reverse')} onClick={() => setSort((s) => ({ key: c.key, dir: s.key === c.key ? -s.dir : c.num ? -1 : 1 }))}>
-                  {c.label}{sort.key === c.key && (sort.dir > 0 ? <ArrowUpIcon className="size-3" /> : <ArrowDownIcon className="size-3" />)}
-                </button>
-              </TableHead>
-            ))}
-            <TableHead className="w-10 pr-4 text-end"><Button variant="ghost" size="icon-sm" onClick={csv} title="Exportar CSV" aria-label="Exportar CSV"><DownloadIcon /></Button></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {shown.length === 0 && <TableRow><TableCell colSpan={7} className="px-4 py-8 text-[13px] text-muted-foreground">Ningún evento coincide con los filtros.</TableCell></TableRow>}
-          {shown.map((f) => {
-            const proj = f.kind === 'budget';
-            return (
-              <TableRow key={f.id} className={cn('cursor-pointer text-[13px]', proj && 'border-dashed', f.kind === 'cancelled' && 'opacity-50')} onClick={() => onOpen(f.id)}>
-                <TableCell className="pl-4"><span className="mono">{fmtDay(f.date)}</span><span className="block text-[11px] text-muted-foreground">{relDays(f.daysTo)}</span></TableCell>
-                <TableCell><span className="flex items-center gap-2"><BrandTile id={f.brand} size="xs" /><span className="min-w-0"><span className="block max-w-[320px] truncate font-medium">{f.name}</span><span className="block text-[11px] text-muted-foreground">{f.venue || 'Local por confirmar'}</span></span>{f.warnings.some((w) => w.level === 'warn') && <TriangleAlertIcon className="size-3.5 shrink-0 text-[#C98500]" />}</span></TableCell>
-                <TableCell><StageBadge stage={f.stage} stages={stages} /></TableCell>
-                <TableCell className={cn('mono text-end', proj && 'text-foreground/70')}>{f.hasIncome ? money(f.revenue) : <Unavailable />}</TableCell>
-                <TableCell className={cn('mono text-end', proj && 'text-foreground/70')}>{f.hasCosts ? money(f.costs) : <Unavailable />}</TableCell>
-                <TableCell className={cn('mono text-end', f.result != null && (f.result >= 0 ? 'text-good' : 'text-bad'), proj && 'opacity-80')}>{f.result == null ? (f.kind === 'cancelled' ? '—' : <span className="text-[12px] text-proj">Incompleto</span>) : <>{money(f.result)}{proj && <span className="ml-1 text-[10px] text-proj">proy.</span>}</>}</TableCell>
-                <TableCell className="pr-4" />
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-      {pages > 1 && (
-        <div className="flex items-center justify-end gap-2 border-t px-4 py-2 text-[12px] text-muted-foreground">
-          Página {page + 1} de {pages}
-          <Button variant="outline" size="icon-sm" disabled={page === 0} onClick={() => setPage(page - 1)} aria-label="Anterior"><ChevronLeftIcon /></Button>
-          <Button variant="outline" size="icon-sm" disabled={page >= pages - 1} onClick={() => setPage(page + 1)} aria-label="Siguiente"><ChevronRightIcon /></Button>
-        </div>
-      )}
+      <DataTable id="events-list" rows={rows} searchable={false} initialSort={{ key: 'date', dir: -1 }} csvName="eventos"
+        rowClassName={(f) => cn(f.kind === 'budget' && 'border-dashed', f.kind === 'cancelled' && 'opacity-50')}
+        empty="Ningún evento coincide con los filtros."
+        rowActions={(f) => [
+          { label: 'Revisar en panel', onSelect: () => onOpen(f.id) },
+          { label: 'Abrir evento', onSelect: () => navigate(`/eventos/${f.id}`) },
+          { label: 'Editar números', onSelect: () => navigate(`/finanzas/datos?evento=${f.id}`) },
+        ]}
+        expand={(f) => {
+          const ev = data.finance.events.find((e) => e.id === f.id);
+          if (!ev) return null;
+          const tt = totals(ev, withTaxes);
+          return (
+            <div className="grid gap-5 md:grid-cols-3">
+              <MiniLines title={f.kind === 'actual' ? 'Ingresos' : 'Ingresos proyectados'} lines={(ev.income || []).map((l) => ({ key: l.label, value: Number(l.amount) || 0 }))} />
+              <MiniLines title={f.kind === 'actual' ? 'Costos por categoría' : 'Costos proyectados'} lines={byCategory(tt.costs).map((c) => ({ key: c.name, value: c.value }))} />
+              <div className="text-[12px]">
+                <p className="mb-1.5 text-[11.5px] text-muted-foreground">Avisos</p>
+                {f.warnings.length ? <ul className="space-y-1">{f.warnings.map((w, i) => <li key={i} className="flex gap-2 text-muted-foreground"><i className={cn('mt-1.5 size-1.5 shrink-0 rounded-full', w.level === 'warn' ? 'bg-warn' : 'bg-faint')} />{w.text}</li>)}</ul> : <p className="text-muted-foreground">Sin avisos.</p>}
+                <div className="mt-3 flex gap-3"><button type="button" className="font-medium underline-offset-4 hover:underline" onClick={() => onOpen(f.id)}>Revisar</button><button type="button" className="font-medium underline-offset-4 hover:underline" onClick={() => navigate(`/eventos/${f.id}`)}>Abrir evento</button></div>
+              </div>
+            </div>
+          );
+        }}
+        columns={[
+          { key: 'date', label: 'Fecha', get: (f) => f.date, render: (f) => <span className="num whitespace-nowrap">{fmtDay(f.date)}<span className="block text-[11px] text-muted-foreground">{relDays(f.daysTo)}</span></span> },
+          { key: 'name', label: 'Evento', get: (f) => f.name, render: (f) => <span className="flex items-center gap-2.5"><i className="h-7 w-[3px] shrink-0 rounded-full" style={{ background: brandColor(f.brand) }} /><span className="min-w-0"><span className="block max-w-[320px] truncate font-medium">{f.name}</span><span className="block text-[11px] text-muted-foreground">{f.venue || 'Local por confirmar'}</span></span>{f.warnings.some((w) => w.level === 'warn') && <TriangleAlertIcon className="size-3.5 shrink-0 text-warn" />}</span> },
+          { key: 'brand', label: 'Marca', facet: true, hidden: true, get: (f) => brandName(f.brand) },
+          { key: 'stage', label: 'Etapa', get: (f) => stageName(f.stage), render: (f) => <StageBadge stage={f.stage} stages={stages} /> },
+          { key: 'kind', label: 'Tipo', facet: true, hidden: true, get: (f) => (f.kind === 'actual' ? 'Real' : f.kind === 'budget' ? 'Proyectado' : 'Cancelado') },
+          { key: 'revenue', label: 'Ingresos', num: true, get: (f) => (f.hasIncome ? f.revenue : null), render: (f) => (f.hasIncome ? <span className={f.kind === 'budget' ? 'text-foreground/70' : ''}>{money(f.revenue)}</span> : <Unavailable />) },
+          { key: 'costs', label: 'Costos', num: true, get: (f) => (f.hasCosts ? f.costs : null), render: (f) => (f.hasCosts ? <span className={f.kind === 'budget' ? 'text-foreground/70' : 'text-muted-foreground'}>{money(f.costs)}</span> : <Unavailable />) },
+          { key: 'result', label: 'Resultado / utilidad', num: true, get: (f) => f.result, render: (f) => (f.result == null ? (f.kind === 'cancelled' ? '—' : <span className="text-[12px] text-proj">Incompleto</span>) : <span className={f.result >= 0 ? 'text-good' : 'text-bad'}>{money(f.result)}{f.kind === 'budget' && <span className="ml-1 text-[10px] text-proj">proy.</span>}</span>) },
+        ]} />
     </Panel>
   );
 }
@@ -131,11 +113,12 @@ function BoardView({ rows, stages, onOpen }) {
       {stages.map((s) => {
         const items = rows.filter((f) => f.stage === s.id).sort((a, b) => a.date.localeCompare(b.date));
         return (
-          <div key={s.id} className="flex w-[244px] shrink-0 flex-col rounded-lg border bg-background/60">
-            <div className="flex items-center justify-between border-b px-2.5 py-2"><StageBadge stage={s.id} stages={stages} /><span className="text-[12px] text-muted-foreground">{items.length}</span></div>
+          <div key={s.id} className="flex w-[248px] shrink-0 flex-col rounded-lg bg-surface">
+            <div className="flex items-center justify-between px-2.5 py-2"><StageBadge stage={s.id} stages={stages} /><span className="text-[12px] text-muted-foreground">{items.length}</span></div>
             <div className="flex min-h-24 flex-col gap-1.5 p-1.5">
               {items.map((f) => (
-                <div key={f.id} className={cn('group rounded-md border bg-card p-2.5 text-left shadow-xs', f.kind === 'budget' && 'border-dashed')} style={{ boxShadow: `inset 2px 0 0 ${brandColor(f.brand)}` }}>
+                <div key={f.id} className={cn('group relative rounded-md border bg-card p-2.5 pl-3.5 text-left transition-colors hover:border-ring/60', f.kind === 'budget' && 'border-dashed')}>
+                  <i className="absolute inset-y-2.5 left-1.5 w-[2px] rounded-full" style={{ background: brandColor(f.brand) }} />
                   <div className="flex items-start gap-1">
                     <button type="button" onClick={() => onOpen(f.id)} className="min-w-0 flex-1 text-left">
                       <p className="line-clamp-2 text-[13px] font-medium leading-snug">{f.name}</p>

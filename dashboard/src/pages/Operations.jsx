@@ -8,6 +8,7 @@ import DataTable from '../os/DataTable.jsx';
 import { PageHeader, Kpi, fmtDay, sel, BrandDot, Unavailable, useScope } from '../os/kit.jsx';
 import { PanelBar } from './Overview.jsx';
 import { Panel } from '../ui.jsx';
+import { Segmented } from '../ui.jsx';
 import { cn, money, limaISO } from '../lib.js';
 
 const STATUS_TONE = { todo: 'text-muted-foreground', doing: 'text-sky-600', done: 'text-good', blocked: 'text-[#C98500]' };
@@ -47,15 +48,15 @@ export function MyTasks() {
   return (
     <div className="flex flex-col gap-3">
       <PageHeader title="Mis tareas" description="Todo lo pendiente de todos los eventos y del grupo." actions={<Button size="sm" onClick={() => setDrawer({ type: 'task' })}><PlusIcon />Tarea</Button>} />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-4">
         <Kpi label="Abiertas" value={String(all.filter((t) => t.status !== 'done').length)} onClick={() => setShow('open')} />
         <Kpi label="Vencidas" value={String(all.filter((t) => t.overdue).length)} tone={all.some((t) => t.overdue) ? 'bad' : undefined} onClick={() => setShow('overdue')} />
         <Kpi label="Esta semana" value={String(all.filter((t) => t.status !== 'done' && t.due && t.due <= week && !t.overdue).length)} />
         <Kpi label="Bloqueadas" value={String(all.filter((t) => t.effective === 'blocked').length)} onClick={() => setShow('blocked')} />
       </div>
       <Panel>
+        <div className="px-3 pt-3"><Segmented value={show} onChange={setShow} options={[['open', 'Abiertas'], ['overdue', 'Vencidas'], ['blocked', 'Bloqueadas'], ['all', 'Todas']]} /></div>
         <TaskList id="my-tasks" tasks={rows} />
-        <div className="flex gap-1 border-t px-3 py-2">{[['open', 'Abiertas'], ['overdue', 'Vencidas'], ['blocked', 'Bloqueadas'], ['all', 'Todas']].map(([k, l]) => <Button key={k} size="sm" variant={show === k ? 'secondary' : 'ghost'} onClick={() => setShow(k)}>{l}</Button>)}</div>
       </Panel>
     </div>
   );

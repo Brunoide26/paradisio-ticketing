@@ -272,8 +272,8 @@ export function ActivityRow({ a, onOpen, stages }) {
 
 function Header({ title, description, action }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b px-4 py-2.5">
-      <div className="min-w-0"><h3 className="text-[14px] font-medium">{title}</h3>{description && <p className="text-[12px] text-muted-foreground">{description}</p>}</div>
+    <div className="flex items-center justify-between gap-3 border-b border-divider px-4 pb-2.5 pt-3">
+      <div className="min-w-0"><h3 className="text-[13.5px] font-medium tracking-tight">{title}</h3>{description && <p className="text-[12px] text-muted-foreground">{description}</p>}</div>
       {action}
     </div>
   );

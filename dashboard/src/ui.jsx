@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import NumberFlow from '@number-flow/react';
+import { motion } from 'motion/react';
 import { ArrowRightIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,7 @@ import { cn, money, BRAND_STYLE } from './lib.js';
 // Toda tarjeta con números estimados usa `proj`: borde punteado, fondo rayado suave y la etiqueta "Proyectado".
 export function Panel({ proj, className, children, ...p }) {
   return (
-    <Card className={cn('gap-0 overflow-hidden py-0', proj && 'border-dashed border-proj-line bg-proj-soft/40 shadow-none', className)} {...p}>
+    <Card className={cn('gap-0 overflow-hidden rounded-lg py-0 shadow-none', proj && 'border-dashed border-proj-line bg-proj-soft/30', className)} {...p}>
       {children}
     </Card>
   );
@@ -21,9 +22,9 @@ export function Panel({ proj, className, children, ...p }) {
 
 export function PanelHeader({ title, description, action, className, big }) {
   return (
-    <CardHeader className={cn('border-b py-4 [.border-b]:pb-4', className)}>
-      <CardTitle className={cn(big ? 'font-mono text-2xl font-medium tabular-nums tracking-tight' : 'text-balance text-[15px] font-medium')}>{title}</CardTitle>
-      {description && <CardDescription className="text-pretty text-[13px]">{description}</CardDescription>}
+    <CardHeader className={cn('gap-0.5 px-4 pb-3 pt-3.5', className)}>
+      <CardTitle className={cn(big ? 'num text-2xl font-medium tracking-[-0.025em]' : 'text-balance text-[13.5px] font-medium tracking-tight')}>{title}</CardTitle>
+      {description && <CardDescription className="text-pretty text-[12px]">{description}</CardDescription>}
       {action && <CardAction>{action}</CardAction>}
     </CardHeader>
   );
@@ -82,29 +83,78 @@ export function StatusBadge({ status }) {
 
 export function KindTag({ real }) {
   return real
-    ? <Badge variant="outline" className="rounded-md border-emerald-200 bg-emerald-50 text-emerald-700"><i className="size-1.5 rounded-full bg-good" />Real</Badge>
-    : <Badge variant="outline" className="rounded-md border-dashed border-proj-line bg-proj-soft text-proj"><i className="size-1.5 rounded-full border border-proj" />Proyectado</Badge>;
+    ? <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground"><i className="inline-block size-2.5 rounded-[2px] bg-foreground" />Real</span>
+    : <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-proj"><i className="proj-hatch inline-block size-2.5 rounded-[2px] border border-proj-line" />Proyectado</span>;
 }
 
-// ---------- Lista con barras (ShareBarList del bloque) ----------
-export function Bars({ items, format = (v) => money(v), color = '#737370', dashed, className, empty = 'Sin datos todavía.' }) {
-  if (!items.length) return <p className={cn('px-6 py-5 text-[13px] text-muted-foreground', className)}>{empty}</p>;
+// ---------- Lista con barras finas (etiqueta, valor y una barra de proporción debajo) ----------
+export function Bars({ items, format = (v) => money(v), color, dashed, className, empty = 'Sin datos todavía.' }) {
+  const [hover, setHover] = useState(null);
+  if (!items.length) return <p className={cn('px-4 py-5 text-[13px] text-muted-foreground', className)}>{empty}</p>;
   const max = Math.max(...items.map((i) => Math.abs(i.value)), 1);
   return (
-    <ShareBarList className={cn('py-1', className)}>
+    <ul className={cn('space-y-2.5 px-4 pb-4 pt-1', className)}>
       {items.map((it, i) => (
-        <ShareBarListItem key={it.label + i} value={(Math.abs(it.value) / max) * 62} title={it.title} className="h-11">
-          <ShareBarListContent>
-            <ShareBarListLabel className="truncate font-medium">{it.label}</ShareBarListLabel>
-            <ShareBarListValue className="shrink-0">
-              <span className="mono font-normal text-foreground/80">{format(it.value)}</span>
-              {it.extra && <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">{it.extra}</span>}
-            </ShareBarListValue>
-          </ShareBarListContent>
-          <ShareBarListFill color={it.color || color} dashed={dashed} />
-        </ShareBarListItem>
+        <li key={it.label + i} title={it.title} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} className={cn('transition-opacity', hover != null && hover !== i && 'opacity-45')}>
+          <div className="flex items-baseline justify-between gap-3 text-[12.5px]">
+            <span className="truncate">{it.label}</span>
+            <span className="shrink-0"><span className="num text-foreground/85">{format(it.value)}</span>{it.extra && <span className="ml-1.5 text-[11px] text-muted-foreground">{it.extra}</span>}</span>
+          </div>
+          <div className={cn('mt-1 h-[5px] overflow-hidden rounded-full bg-muted', dashed && 'proj-hatch bg-transparent')}>
+            <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${(Math.abs(it.value) / max) * 100}%` }} transition={{ duration: 0.45, ease: [0.2, 0, 0, 1] }}
+              style={{ background: dashed ? 'transparent' : it.color || color || 'var(--foreground)', border: dashed ? `1px dashed ${it.color || color || 'var(--proj-line)'}` : undefined, opacity: it.value < 0 ? 0.55 : 1 }} />
+          </div>
+        </li>
       ))}
-    </ShareBarList>
+    </ul>
+  );
+}
+
+// Barras divergentes desde cero (positivos a la derecha, negativos a la izquierda): sirven con 1 o con 20 filas.
+export function DivergingBars({ items, format = (v) => money(v), empty = 'Sin datos.' }) {
+  const vals = items.filter((i) => i.value != null);
+  if (!vals.length) return <p className="px-4 py-5 text-[13px] text-muted-foreground">{empty}</p>;
+  const max = Math.max(...vals.map((i) => Math.abs(i.value)), 1);
+  const hasNeg = vals.some((i) => i.value < 0), hasPos = vals.some((i) => i.value > 0);
+  const zero = hasNeg && hasPos ? 50 : hasNeg ? 100 : 0;
+  return (
+    <ul className="space-y-3 px-4 pb-4 pt-1">
+      {items.map((it) => {
+        const w = it.value == null ? 0 : (Math.abs(it.value) / max) * (hasNeg && hasPos ? 50 : 100);
+        return (
+          <li key={it.label}>
+            <div className="flex items-baseline justify-between gap-3 text-[12.5px]">
+              <span className="flex min-w-0 items-center gap-1.5 truncate">{it.color && <i className="size-2 shrink-0 rounded-full" style={{ background: it.color }} />}{it.label}</span>
+              {it.value == null ? <span className="text-[12px] text-muted-foreground">{it.na || 'sin datos'}</span> : <span className={cn('num', it.value < 0 ? 'text-bad' : 'text-good')}>{format(it.value)}</span>}
+            </div>
+            <div className="relative mt-1.5 h-2 rounded-full bg-muted">
+              <span className="absolute inset-y-[-3px] w-px bg-border" style={{ left: `${zero}%` }} />
+              <motion.span className="absolute inset-y-0 rounded-full" initial={false} animate={{ width: `${w}%`, left: it.value < 0 ? `${zero - w}%` : `${zero}%` }} transition={{ duration: 0.45, ease: [0.2, 0, 0, 1] }}
+                style={{ background: it.color || 'var(--foreground)', opacity: it.value < 0 ? 0.6 : 1 }} />
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+// Control segmentado con indicador que se desliza (pestañas locales de una página).
+export function Segmented({ value, onChange, options, className, size = 'sm' }) {
+  const gid = React.useId();
+  return (
+    <div role="tablist" className={cn('inline-flex items-center gap-0.5 rounded-lg bg-muted p-0.5', className)}>
+      {options.map(([k, l, n]) => {
+        const on = value === k;
+        return (
+          <button key={k} type="button" role="tab" aria-selected={on} onClick={() => onChange(k)}
+            className={cn('press relative rounded-md px-2.5 text-[12.5px] transition-colors', size === 'sm' ? 'h-7' : 'h-8', on ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground')}>
+            {on && <motion.span layoutId={`seg-${gid}`} transition={{ type: 'spring', stiffness: 520, damping: 42 }} className="absolute inset-0 rounded-md bg-background shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.06)] dark:bg-accent" />}
+            <span className="relative">{l}{n != null && <span className="num ml-1 text-muted-foreground">{n}</span>}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -150,7 +200,7 @@ export function MetricStrip({ items }) {
         <li key={m.label} className="flex flex-col gap-1">
           <p className="text-pretty text-sm font-medium">{m.label}</p>
           <p className="text-pretty text-xs text-muted-foreground">{m.sub}</p>
-          <p className={cn('mono text-balance text-2xl font-semibold', m.tone === 'good' && 'text-good', m.tone === 'bad' && 'text-bad')}>{m.value}</p>
+          <p className={cn('num text-balance text-2xl font-medium tracking-[-0.025em]', m.tone === 'good' && 'text-good', m.tone === 'bad' && 'text-bad')}>{m.value}</p>
           {m.foot && <p className="text-xs text-muted-foreground">{m.foot}</p>}
         </li>
       ))}
@@ -186,7 +236,7 @@ export function Empty({ title, children, action }) {
 // Tooltip de gráficos con el mismo estilo que ChartTooltipContent.
 export function TooltipBox({ title, rows, foot }) {
   return (
-    <div className="grid min-w-44 gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+    <div className="grid min-w-44 gap-1.5 rounded-md border bg-popover px-2.5 py-2 text-xs shadow-lg">
       {title && <p className="font-medium">{title}</p>}
       {rows.map((r, i) => (
         <div key={i} className="flex items-center justify-between gap-4 text-muted-foreground">

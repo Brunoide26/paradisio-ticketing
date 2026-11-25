@@ -11,7 +11,7 @@ import { PageHeader, Kpi, Unavailable, StageBadge, fmtDay, relDays, moneyOrNA, s
 import { PanelBar } from './Overview.jsx';
 import { EventPromoters } from './Promoters.jsx';
 import Brand from '../Brand.jsx';
-import { Panel, Bars, BrandTile, KindTag, TooltipBox } from '../ui.jsx';
+import { Panel, Bars, DivergingBars, BrandTile, KindTag, TooltipBox } from '../ui.jsx';
 import { cn, money, pct, short, brandColor } from '../lib.js';
 
 const sumVals = (list) => (list || []).reduce((s, x) => s + x.value, 0);
@@ -88,18 +88,7 @@ export function BrandsCompare() {
         </Panel>
         <Panel className="xl:col-span-4">
           <PanelBar title="Resultado real por marca" />
-          <div className="px-2 pb-2 pt-3">
-            <ChartContainer config={{}} className="aspect-auto h-56 w-full">
-              <BarChart data={chart} margin={{ left: 4, right: 12 }}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(v) => v.replace('Paradisio ', '')} />
-                <YAxis tickFormatter={short} tickLine={false} axisLine={false} width={64} domain={[(min) => Math.min(0, min), (max) => Math.max(0, max)]} />
-                <ReferenceLine y={0} stroke="var(--border)" />
-                <ChartTooltip cursor={{ fill: 'var(--muted)' }} content={({ active, payload }) => active && payload && payload.length ? <TooltipBox title={payload[0].payload.name} rows={[{ label: 'Ingresos', value: money(payload[0].payload.revenue), color: brandColor(payload[0].payload.id) }, { label: 'Resultado', value: money(payload[0].payload.result) }, { label: 'Fechas realizadas', value: payload[0].payload.done }]} /> : null} />
-                <Bar dataKey="result" maxBarSize={56} radius={[3, 3, 3, 3]} isAnimationActive={false}>{chart.map((c) => <Cell key={c.id} fill={brandColor(c.id)} fillOpacity={c.result >= 0 ? 1 : 0.55} />)}</Bar>
-              </BarChart>
-            </ChartContainer>
-          </div>
+          <DivergingBars items={chart.map((c) => ({ label: c.name, color: brandColor(c.id), value: c.done ? c.result : null, na: 'sin fechas cerradas' }))} />
         </Panel>
       </div>
     </div>
@@ -153,7 +142,7 @@ function BrandSpace({ brandId }) {
       {tab === 'resumen' && (
         <>
           {none && <Panel className="px-5 py-4 text-[13px] text-muted-foreground">{b.name} todavía no tiene fechas realizadas. Cuando cierre la primera, aquí vas a ver qué le entra, en qué se le va, qué le queda y cuánto aporta al grupo, separado de las otras marcas.</Panel>}
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
+          <div className="kpi-strip grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
             <Kpi label="Ingresos reales" value={money(X.actual.revenue)} sub={`${X.events.done} fecha(s)`} unavailable={none ? 'Sin fechas realizadas' : null} />
             <Kpi label="Costos reales" value={money(X.actual.costs)} unavailable={none ? 'Sin fechas realizadas' : null} />
             <Kpi label="Le queda (resultado)" value={money(X.actual.result)} tone={signTone(X.actual.result)} unavailable={none ? 'Sin fechas realizadas' : null} sub={X.actual.stock ? `incluye ${money(X.actual.stock)} de stock` : ''} />

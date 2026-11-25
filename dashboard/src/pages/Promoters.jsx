@@ -43,7 +43,7 @@ export function EventPromoters({ eventId }) {
   const R = P.rule;
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="QRs de promotores" value={P.totals.qrs.toLocaleString('es-PE')} sub={`${P.noPromoter} QRs sin promotor`} />
         <Kpi label="Entraron (verificado)" value={P.totals.attended.toLocaleString('es-PE')} sub={`asistencia ${pct(P.totals.qrs ? (P.totals.attended / P.totals.qrs) * 100 : null)}`} />
         <Kpi label="Comisiones" value={moneyOrNA(P.totals.commission)} unavailable={R ? null : 'Define la regla de comisión del evento'} onClick={() => setRuleOpen(true)} sub={R ? 'según la regla' : 'sin regla'} />

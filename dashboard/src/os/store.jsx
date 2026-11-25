@@ -112,6 +112,16 @@ export function OSProvider({ children }) {
   const upsertAccount = (account) => docMutate('ledger', { action: 'account.upsert', account }, 'Cuenta guardada');
   const upsertTx = (tx) => docMutate('ledger', { action: 'tx.upsert', tx }, 'Transacción guardada');
   const deleteTx = (id) => docMutate('ledger', { action: 'tx.delete', id }, 'Transacción eliminada');
+  // Borrado en lote: una llamada por transacción (cada una queda en la auditoría), encadenando la versión del libro.
+  const deleteTxs = async (ids) => {
+    let v = data && data.ledger ? data.ledger.updatedAt || null : null; let done = 0;
+    try {
+      for (const id of ids) { const r = await osApi(pass, { action: 'tx.delete', id, baseVersion: v }); v = r && r.ledger ? r.ledger.updatedAt : v; done++; }
+      flash(`${done} transacción${done === 1 ? '' : 'es'} eliminada${done === 1 ? '' : 's'}`);
+    } catch (e) {
+      if (e.status === 401) logout(); else flash(`Se eliminaron ${done} de ${ids.length}. ${e.status === 409 ? 'Hubo cambios desde otra pestaña.' : 'No se pudo eliminar el resto.'}`);
+    } finally { await load(pass).catch(() => {}); }
+  };
   const upsertProduct = (product) => docMutate('inventory', { action: 'inv.product.upsert', product }, 'Producto guardado');
   const addMoves = (moves, msg = 'Movimiento registrado') => docMutate('inventory', { action: 'inv.move.add', moves }, msg);
   const deleteMove = (id) => docMutate('inventory', { action: 'inv.move.delete', id }, 'Movimiento eliminado');
@@ -128,7 +138,7 @@ export function OSProvider({ children }) {
     pass, data, loading, login, logout, load, osApi: (b) => osApi(pass, b),
     workspace, setWorkspace, withTaxes, setWithTaxes, theme, setTheme,
     drawer, setDrawer, creating, setCreating, cmd, setCmd, toast, flash,
-    updateEvent, createEvent, saveFinance, upsertAccount, upsertTx, deleteTx, upsertProduct, addMoves, deleteMove, duplicateEvent, saveEventNumbers, promo, opsAct, com,
+    updateEvent, createEvent, saveFinance, upsertAccount, upsertTx, deleteTx, deleteTxs, upsertProduct, addMoves, deleteMove, duplicateEvent, saveEventNumbers, promo, opsAct, com,
   }), [pass, data, loading, workspace, withTaxes, theme, drawer, creating, cmd, toast]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

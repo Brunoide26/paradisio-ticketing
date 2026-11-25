@@ -14,20 +14,18 @@ export const fmtDayYear = (iso) => { if (!iso) return '—'; const d = parseDate
 export const fmtStamp = (iso) => new Date(iso).toLocaleString('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 export const relDays = (n) => (n == null ? '' : n === 0 ? 'hoy' : n === 1 ? 'mañana' : n > 0 ? `en ${n} días` : n === -1 ? 'ayer' : `hace ${-n} días`);
 
-const STAGE_TONE = {
-  concept: 'bg-muted text-muted-foreground',
-  evaluation: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  confirmed: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
-  preproduction: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400',
-  on_sale: 'bg-violet-500/10 text-violet-700 dark:text-violet-400',
-  live: 'bg-rose-500/10 text-rose-700 dark:text-rose-400',
-  settlement: 'bg-teal-500/10 text-teal-700 dark:text-teal-400',
-  closed: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  cancelled: 'bg-muted text-muted-foreground line-through',
+// Etapas: texto neutro con un punto de color (sin pastillas de colores por todas partes).
+const STAGE_DOT = {
+  concept: 'bg-faint', evaluation: 'bg-warn', confirmed: 'bg-sky-500', preproduction: 'bg-indigo-500',
+  on_sale: 'bg-violet-500', live: 'bg-bad animate-pulse', settlement: 'bg-teal-500', closed: 'bg-good', cancelled: 'bg-faint',
 };
 export function StageBadge({ stage, stages, className }) {
   const s = (stages || []).find((x) => x.id === stage);
-  return <Badge variant="secondary" className={cn('rounded-md px-1.5 text-[11px] font-medium', STAGE_TONE[stage], className)}>{s ? s.label : stage}</Badge>;
+  return (
+    <span className={cn('inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border/70 bg-background px-1.5 py-px text-[11.5px] text-foreground/80', stage === 'cancelled' && 'text-muted-foreground line-through', className)}>
+      <i className={cn('size-1.5 shrink-0 rounded-full', STAGE_DOT[stage] || 'bg-faint')} />{s ? s.label : stage}
+    </span>
+  );
 }
 
 export function BrandDot({ id, className }) {
@@ -39,20 +37,21 @@ export function Unavailable({ reason, className }) {
   return <span title={reason} className={cn('inline-flex items-center gap-1 text-[13px] font-normal text-muted-foreground', className)}>No disponible{reason && <InfoIcon className="size-3.5" />}</span>;
 }
 
-// Tarjeta de KPI compacta; al hacer clic abre de dónde sale el número.
+// Indicador compacto; al hacer clic abre de dónde sale el número.
+// Dentro de una fila .kpi-strip se ve como celdas separadas por líneas finas (sin una tarjeta por cifra).
 export function Kpi({ label, value, sub, tone, proj, onClick, unavailable, className }) {
   const Comp = onClick ? 'button' : 'div';
   return (
     <Comp onClick={onClick} type={onClick ? 'button' : undefined}
-      className={cn('flex min-w-0 flex-col gap-1 rounded-lg border bg-card px-3.5 py-3 text-left shadow-xs transition-colors',
-        proj && 'border-dashed border-proj-line bg-proj-soft/50 shadow-none dark:bg-transparent',
-        onClick && 'hover:border-ring', className)}>
-      <span className="flex items-center gap-1.5 truncate text-[12px] text-muted-foreground">
-        {proj && <i className="size-1.5 shrink-0 rounded-full border border-proj" />}{label}
+      className={cn('group flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card px-4 py-3.5 text-left transition-colors',
+        proj && 'border-dashed border-proj-line bg-proj-soft/50',
+        onClick && 'hover:bg-muted/40', className)}>
+      <span className="flex items-center gap-1.5 truncate text-[12px] text-muted-foreground transition-colors group-hover:text-foreground">
+        {proj && <i className="proj-hatch inline-block size-2 shrink-0 rounded-[2px] border border-proj-line" />}{label}
       </span>
-      {unavailable ? <Unavailable reason={unavailable} className="py-[3px]" />
-        : <span className={cn('mono truncate text-[22px] font-semibold leading-tight', tone === 'good' && 'text-good', tone === 'bad' && 'text-bad', proj && 'text-foreground/80')}>{value}</span>}
-      {sub && <span className="truncate text-[12px] text-muted-foreground">{sub}</span>}
+      {unavailable ? <Unavailable reason={unavailable} className="py-[3px] text-[14px]" />
+        : <span className={cn('num truncate text-[22px] font-medium leading-tight tracking-[-0.025em]', tone === 'good' && 'text-good', tone === 'bad' && 'text-bad', proj && 'text-foreground/80')}>{value}</span>}
+      {sub && <span className="truncate text-[11.5px] text-muted-foreground">{sub}</span>}
     </Comp>
   );
 }
@@ -67,7 +66,7 @@ export function Section({ title, description, action, children, className }) {
       {(title || action) && (
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
-            {title && <h2 className="text-[14px] font-semibold tracking-tight">{title}</h2>}
+            {title && <h2 className="text-[14px] font-medium tracking-tight">{title}</h2>}
             {description && <p className="text-[12px] text-muted-foreground">{description}</p>}
           </div>
           {action}
@@ -80,10 +79,10 @@ export function Section({ title, description, action, children, className }) {
 
 export function PageHeader({ title, description, actions, children }) {
   return (
-    <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-[20px] font-semibold tracking-tight">{title}</h1>
-        {description && <p className="text-[13px] text-muted-foreground">{description}</p>}
+        <h1 className="text-[24px] font-semibold leading-tight tracking-[-0.025em]">{title}</h1>
+        {description && <p className="mt-1 text-[12.5px] text-muted-foreground">{description}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-2">{actions}</div>
       {children}
@@ -91,7 +90,7 @@ export function PageHeader({ title, description, actions, children }) {
   );
 }
 
-export const sel = 'h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30';
+export const sel = 'h-9 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30';
 
 export function Field({ label, children, className, hint }) {
   return (

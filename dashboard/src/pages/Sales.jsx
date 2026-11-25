@@ -43,7 +43,7 @@ export function SalesView({ e, S }) {
   const color = brandColor(e.brand);
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="Registros" value={S.registrations.toLocaleString('es-PE')} sub={`${S.voided} anulados · ${S.pending} sin QR`} />
         <Kpi label="QRs emitidos" value={S.issued.toLocaleString('es-PE')} sub="pueden entrar" />
         <Kpi label="Entraron" value={S.attended.toLocaleString('es-PE')} sub={`${S.attendedPersons.toLocaleString('es-PE')} personas con mesas`} />

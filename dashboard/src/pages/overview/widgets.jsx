@@ -176,7 +176,7 @@ export function EventsWidget({ S }) {
   );
 }
 
-function MiniLines({ title, lines }) {
+export function MiniLines({ title, lines }) {
   const tot = lines.reduce((s, l) => s + l.value, 0) || 1;
   return (
     <div>

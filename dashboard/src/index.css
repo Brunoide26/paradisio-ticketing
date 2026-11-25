@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --color-canvas: #F4F3F0;
+  --color-panel: #FFFFFF;
+  --color-line: #E6E4DF;
+  --color-line-soft: #EFEDE9;
+  --color-ink: #141413;
+  --color-ink-2: #55534E;
+  --color-muted: #8B8881;
+  --color-cost: #C9C5BD;
+  --color-good: #12805C;
+  --color-bad: #C8361B;
+  --color-club: #F0441A;
+  --color-beats: #0F9BB0;
+  --color-icon: #7B45FF;
+}
+
+html, body, #root { height: 100%; }
+body { background: var(--color-canvas); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; font-feature-settings: "ss01", "cv11"; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.recharts-cartesian-axis-tick-value { font-size: 11px; fill: #8B8881; font-variant-numeric: tabular-nums; }
+.recharts-tooltip-cursor { fill: rgba(20,20,19,.04); }
+::selection { background: #F0441A22; }
+.scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: #DAD7D1; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

@@ -36,7 +36,7 @@ export function Marketing() {
           <Button size="sm" variant="outline" onClick={() => setDrawer({ type: 'campaign', preset: { brand: scope.brandId || '' } })}><PlusIcon />Campaña</Button>
           <Button size="sm" onClick={() => setDrawer({ type: 'content', preset: { brand: scope.brandId || '' } })}><PlusIcon />Contenido</Button>
         </>} />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-5">
         <Kpi label="Piezas en curso" value={String(content.filter((c) => c.status !== 'published').length)} sub={`${content.filter((c) => c.status === 'published').length} publicadas`} />
         <Kpi label="Atrasadas" value={String(late.length)} tone={late.length ? 'bad' : undefined} sub="pasaron su entrega sin aprobarse" />
         <Kpi label="Campañas activas" value={String(campaigns.filter((c) => c.status === 'active').length)} sub={`${campaigns.length} en total`} />
@@ -156,7 +156,7 @@ export function Sponsors() {
     <div className="flex flex-col gap-3">
       <PageHeader title="Sponsors y alianzas" description="El monto de un acuerdo es proyectado. Lo real es lo cobrado: transacciones con ese sponsor. Lo que aportan en especie va aparte y nunca suma a ingresos."
         actions={<Button size="sm" onClick={() => setDrawer({ type: 'deal', preset: { brands: scope.brandId ? [scope.brandId] : [] } })}><PlusIcon />Sponsor</Button>} />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-5">
         <Kpi proj label="En negociación" value={money(sum(open, (d) => d.cash))} sub={`${open.length} acuerdo(s)`} />
         <Kpi proj label="Firmado (efectivo)" value={money(sum(won, (d) => d.cash))} sub={`${won.length} acuerdo(s)`} />
         <Kpi label="Cobrado (real)" value={money(sum(deals, (d) => d.collected))} sub="del libro de transacciones" />
@@ -212,7 +212,7 @@ export function Team() {
     <div className="flex flex-col gap-3">
       <PageHeader title="Equipo" description="Personas del equipo interno, su rol y su carga de tareas. Las tareas se asignan por nombre (Responsable)."
         actions={<Button size="sm" onClick={() => setDrawer({ type: 'contact', preset: { type: 'team' } })}><PlusIcon />Persona del equipo</Button>} />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-4">
         <Kpi label="Personas" value={String(team.length)} />
         <Kpi label="Tareas abiertas" value={String(tasks.filter((t) => t.status !== 'done').length)} />
         <Kpi label="Sin responsable" value={String(unassigned.length)} tone={unassigned.length ? 'bad' : undefined} sub="asígnalas en Mis tareas" />
@@ -256,7 +256,7 @@ export function Audience() {
         <ShieldCheckIcon className="mt-0.5 size-4 shrink-0" />
         <p><b>Consentimiento de marketing: {A.consent} persona(s).</b> La política de privacidad exige consentimiento expreso para enviar comunicaciones de futuros eventos, pero la web todavía no tiene esa casilla (solo la de términos). Por eso aquí no se exportan contactos. Para poder hacer campañas a esta base, primero hay que agregar la casilla opcional al registro.</p>
       </div>
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="Personas" value={A.people.toLocaleString('es-PE')} sub="con correo o DNI" />
         <Kpi label="Vinieron al menos una vez" value={A.attended.toLocaleString('es-PE')} />
         <Kpi label="Volvieron (2+ fechas)" value={A.repeat.toLocaleString('es-PE')} sub={`${pct(A.repeatRate)} de los que vinieron`} />
@@ -327,7 +327,7 @@ export function Documents() {
     <div className="flex flex-col gap-3">
       <PageHeader title="Documentos" description="Contratos, cotizaciones, riders, permisos y facturas como enlaces (Drive, Dropbox…), ligados a su fecha, proveedor o sponsor. Avisa 30 días antes de que venzan."
         actions={<Button size="sm" onClick={() => setDrawer({ type: 'document', preset: { brand: scope.brandId || '' } })}><PlusIcon />Documento</Button>} />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-4">
         <Kpi label="Documentos" value={String(rows.length)} />
         <Kpi label="Vencidos" value={String(rows.filter((d) => d.expires && d.expires < t).length)} tone={rows.some((d) => d.expires && d.expires < t) ? 'bad' : undefined} />
         <Kpi label="Vencen en 30 días" value={String(rows.filter((d) => d.expires && d.expires >= t && d.expires <= in30).length)} />

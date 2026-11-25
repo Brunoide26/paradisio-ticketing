@@ -1,23 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useMatches } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   LayoutDashboardIcon, InboxIcon, CalendarDaysIcon, TicketIcon, WalletIcon, HistoryIcon, PlusIcon, BellIcon,
   RefreshCwIcon, DownloadIcon, ReceiptIcon, MoonIcon, SunIcon, ChevronsUpDownIcon, CheckIcon, Building2Icon, ExternalLinkIcon, SlidersHorizontalIcon, TriangleAlertIcon, PackageIcon, ArrowLeftRightIcon, CalculatorIcon, CopyIcon, ListTodoIcon, ShoppingBagIcon, MegaphoneIcon, WrenchIcon, UserPlusIcon, SparklesIcon, HandshakeIcon, UsersIcon, ContactIcon, FileTextIcon, RadioIcon, LineChartIcon, PlugIcon,
 } from 'lucide-react';
-import { AppShell } from '@/components/app-shell';
-import { GroupLogo } from '@/components/app-sidebar';
-import { NavUser } from '@/components/nav-user';
+import Frame, { BrandSwitch, Notifications, AccountMenu, NextEventNote } from './Frame.jsx';
+import { PageTransition } from './motion.jsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { useKeypress } from '@/hooks/use-keypress';
 import { useOS } from './store.jsx';
@@ -43,95 +40,6 @@ export function exportCsv(finance, withTaxes) {
   a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
   a.download = `paradisio-os-${limaISO()}.csv`;
   a.click();
-}
-
-// Botones de marca arriba de cada sección: Grupo / Club / Beats / Icon.
-// Es el mismo filtro que el selector de la barra lateral (se recuerda al cambiar de sección).
-function BrandBar({ brands }) {
-  const { workspace, setWorkspace, data } = useOS();
-  const B = data.os.brands || {};
-  const opts = [{ id: 'group', name: 'Todo el grupo' }, ...brands];
-  return (
-    <div className="mb-3 flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Ver por marca">
-      {opts.map((b) => {
-        const on = workspace === b.id;
-        const c = b.id === 'group' ? null : brandColor(b.id);
-        const done = b.id === 'group' ? null : (B[b.id] || { events: {} }).events.done;
-        return (
-          <button key={b.id} type="button" role="tab" aria-selected={on} onClick={() => setWorkspace(b.id)}
-            className={cn('flex h-9 items-center gap-2 rounded-lg border px-3 text-[13px] font-medium transition-colors', on ? 'text-white shadow-sm' : 'bg-background text-foreground hover:border-ring')}
-            style={on ? { background: c || 'var(--primary)', borderColor: c || 'var(--primary)', color: c ? '#fff' : 'var(--primary-foreground)' } : undefined}>
-            {b.id === 'group' ? <Building2Icon className="size-4" /> : <BrandTile id={b.id} size="xs" className={on ? 'ring-1 ring-white/60' : ''} />}
-            {b.name}
-            {done === 0 && <span className={cn('rounded px-1 text-[10px] font-normal', on ? 'bg-white/20' : 'bg-muted text-muted-foreground')}>sin fechas</span>}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function WorkspaceSwitcher({ brands }) {
-  const { workspace, setWorkspace } = useOS();
-  const cur = brands.find((b) => b.id === workspace);
-  return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
-              {cur ? <BrandTile id={cur.id} size="sm" className="size-8!" /> : <GroupLogo />}
-              <span className="grid min-w-0 flex-1 text-left leading-tight">
-                <span className="truncate text-[13px] font-semibold">Paradisio OS</span>
-                <span className="truncate text-[11px] text-muted-foreground">{cur ? cur.name : 'Paradisio Entertainment Group'}</span>
-              </span>
-              <ChevronsUpDownIcon className="ml-auto size-4 text-muted-foreground" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-64">
-            <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">Espacio de trabajo</DropdownMenuLabel>
-            <DropdownMenuItem onSelect={() => setWorkspace('group')}>
-              <Building2Icon />Todo el grupo{workspace === 'group' && <CheckIcon className="ml-auto" />}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {brands.map((b) => (
-              <DropdownMenuItem key={b.id} onSelect={() => setWorkspace(b.id)}>
-                <BrandTile id={b.id} size="xs" />{b.name}{workspace === b.id && <CheckIcon className="ml-auto" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  );
-}
-
-function Notifications({ items, onOpen }) {
-  const high = items.filter((a) => a.level === 'high').length;
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="icon-sm" aria-label={`Atención (${items.length})`} className="relative">
-          <BellIcon />
-          {items.length > 0 && <span className={cn('absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium text-white', high ? 'bg-bad' : 'bg-foreground/70')}>{items.length}</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[360px] p-0">
-        <div className="border-b px-3 py-2 text-[13px] font-medium">Requiere atención</div>
-        <ul className="scroll-thin max-h-[360px] divide-y overflow-y-auto">
-          {items.length === 0 && <li className="px-3 py-4 text-[13px] text-muted-foreground">Nada pendiente.</li>}
-          {items.map((a, i) => (
-            <li key={i}>
-              <button type="button" onClick={() => onOpen(a)} className="flex w-full gap-2.5 px-3 py-2.5 text-left hover:bg-muted">
-                <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', a.level === 'high' ? 'bg-bad' : a.level === 'med' ? 'bg-[#C98500]' : 'bg-muted-foreground/50')} />
-                <span className="min-w-0"><span className="block text-[13px] font-medium">{a.title}</span><span className="block text-[12px] text-muted-foreground">{a.text}</span></span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </PopoverContent>
-    </Popover>
-  );
 }
 
 function QuickCreate() {
@@ -332,7 +240,7 @@ const Kbd = ({ children }) => <kbd className="ml-auto rounded border bg-muted px
 function useCrumbs() {
   const matches = useMatches();
   const { data } = useOS();
-  const out = [{ label: 'Paradisio OS', to: '/' }];
+  const out = [];
   matches.forEach((m) => {
     const c = m.handle && m.handle.crumb;
     if (!c) return;
@@ -344,99 +252,98 @@ function useCrumbs() {
 
 export default function Shell() {
   const os = useOS();
-  const { data, loading, setCmd, setCreating, withTaxes, setWithTaxes, drawer, setDrawer, theme, setTheme, toast, logout, load, workspace } = os;
+  const { data, loading, setCmd, setCreating, withTaxes, setWithTaxes, drawer, setDrawer, theme, setTheme, toast, logout, load, workspace, setWorkspace } = os;
   const navigate = useNavigate();
   const location = useLocation();
   const crumbs = useCrumbs();
+  const mainRef = useRef(null);
   useKeypress({ combo: ['meta+k', 'ctrl+k'], callback: () => setCmd((v) => !v), enableOnInputs: true });
   useKeypress({ combo: 'c', callback: () => setCreating(true) });
   useKeypress({ combo: 't', callback: () => setDrawer({ type: 'tx' }) });
-  useEffect(() => { window.scrollTo({ top: 0 }); }, [location.pathname]);
-
+  useKeypress({ combo: 'shift+d', callback: () => setTheme(theme === 'dark' ? 'light' : 'dark') });
+  // Atajos de marca: 0 grupo, 1 Club, 2 Beats, 3 Icon.
   const brands = data.finance.brands || [];
+  useKeypress({ combo: ['0', '1', '2', '3'], callback: (e) => { const i = Number(e.key); setWorkspace(i === 0 ? 'group' : (brands[i - 1] || {}).id || workspace); } });
+  useEffect(() => { mainRef.current?.scrollTo({ top: 0 }); }, [location.pathname]);
+
   const scopeAttention = data.os.attention.filter((a) => workspace === 'group' || !a.event || (data.finance.events.find((e) => e.id === a.event) || {}).brand === workspace);
   const upcoming = data.os.summary.events.filter((f) => f.kind !== 'cancelled' && f.daysTo >= 0 && (workspace === 'group' || f.brand === workspace));
   const next = upcoming[0];
   const updated = new Date(data.generatedAt).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' });
+  const overdue = data.os.ledgerSummary.payables.overdue;
 
   const navGroups = [
     { label: 'Espacio de trabajo', items: [
       { to: '/', title: 'Resumen ejecutivo', icon: <LayoutDashboardIcon />, end: true },
       { to: '/atencion', title: 'Atención', icon: <InboxIcon />, badge: scopeAttention.length || null },
       { to: '/calendario', title: 'Calendario', icon: <CalendarDaysIcon /> },
-      { to: '/en-vivo', title: 'En vivo', icon: <RadioIcon />, badge: data.finance.events.some((e) => e.date === limaISO() && e.stage !== 'cancelled') ? 'hoy' : null },
+      { to: '/en-vivo', title: 'En vivo', icon: <RadioIcon />, badge: data.finance.events.some((e) => e.date === limaISO() && e.stage !== 'cancelled') ? 'hoy' : null, badgeTone: 'bad' },
       { to: '/tareas', title: 'Mis tareas', icon: <ListTodoIcon />, badge: (data.os.tasks || []).filter((t) => t.overdue).length || null },
     ] },
     { label: 'Negocio', collapsible: true, items: [
       { to: '/eventos', title: 'Eventos', icon: <TicketIcon /> },
-      { to: '/finanzas', title: 'Finanzas', icon: <WalletIcon />, end: true, match: ['/finanzas/transacciones', '/finanzas/cuentas', '/finanzas/por-pagar', '/finanzas/flujo', '/finanzas/presupuestos', '/finanzas/simulador', '/finanzas/datos'], badge: data.os.ledgerSummary.payables.overdue || null },
+      { to: '/finanzas', title: 'Finanzas', icon: <WalletIcon />, end: true, match: ['/finanzas/transacciones', '/finanzas/cuentas', '/finanzas/por-pagar', '/finanzas/flujo', '/finanzas/presupuestos', '/finanzas/simulador', '/finanzas/datos'], badge: overdue || null, badgeTone: 'bad' },
       { to: '/ventas', title: 'Ventas y reservas', icon: <ShoppingBagIcon /> },
       { to: '/promotores', title: 'Promotores', icon: <MegaphoneIcon /> },
       { to: '/inventario', title: 'Inventario y barra', icon: <PackageIcon />, badge: data.os.inventorySummary.low.length || null },
-      { to: '/operaciones', title: 'Operaciones y proveedores', icon: <WrenchIcon /> },
+      { to: '/operaciones', title: 'Operaciones', icon: <WrenchIcon /> },
       { to: '/analitica', title: 'Analítica', icon: <LineChartIcon /> },
     ] },
     { label: 'Comercial', collapsible: true, items: [
       { to: '/marketing', title: 'Marketing y contenido', icon: <SparklesIcon /> },
       { to: '/sponsors', title: 'Sponsors y alianzas', icon: <HandshakeIcon /> },
-      { to: '/audiencia', title: 'Audiencia (CRM)', icon: <ContactIcon /> },
+      { to: '/audiencia', title: 'Audiencia', icon: <ContactIcon /> },
     ] },
     { label: 'Organización', collapsible: true, items: [
       { to: '/equipo', title: 'Equipo', icon: <UsersIcon /> },
       { to: '/documentos', title: 'Documentos', icon: <FileTextIcon /> },
     ] },
     { label: 'Marcas', collapsible: true, items: [
-      { to: '/marcas', title: 'Comparativo de marcas', icon: <Building2Icon />, end: true },
-      ...brands.map((b) => ({ to: `/marcas/${b.id}`, title: b.name, icon: <BrandTile id={b.id} size="xs" className="size-4!" />, badge: (data.os.brands && data.os.brands[b.id] && !data.os.brands[b.id].events.done) ? 'nueva' : null })),
+      { to: '/marcas', title: 'Comparativo', icon: <Building2Icon />, end: true },
+      ...brands.map((b) => ({ to: `/marcas/${b.id}`, title: b.name, icon: <BrandTile id={b.id} size="xs" className="size-4! rounded-[4px]" />, badge: (data.os.brands && data.os.brands[b.id] && !data.os.brands[b.id].events.done) ? 'nueva' : null })),
     ] },
     { label: 'Sistema', collapsible: true, items: [
-      { to: '/integraciones', title: 'Integraciones', icon: <PlugIcon />, badge: (data.os.integrations || []).some((i) => i.status === 'error') ? '!' : null },
+      { to: '/integraciones', title: 'Integraciones', icon: <PlugIcon />, badge: (data.os.integrations || []).some((i) => i.status === 'error') ? '!' : null, badgeTone: 'bad' },
       { to: '/actividad', title: 'Registro de actividad', icon: <HistoryIcon /> },
     ] },
   ];
 
-  // En las secciones generales; no en la página de una marca ni en el detalle de un evento.
-  const showBrandBar = !/^\/(marcas|eventos\/[^/]+|finanzas\/datos)/.test(location.pathname);
-
+  // El selector de marca filtra las secciones generales; no aplica en la página de una marca ni en el detalle de un evento.
+  const showBrandSwitch = !/^\/(marcas|eventos\/[^/]+|finanzas\/datos)/.test(location.pathname);
+  const brandCounts = Object.fromEntries(brands.map((b) => [b.id, data.os.brands && data.os.brands[b.id] ? data.os.brands[b.id].events.done : null]));
   const openAttention = (a) => (a.event ? setDrawer({ type: 'event', id: a.event }) : navigate(a.route || '/atencion'));
+  const refresh = () => load(undefined, { quiet: false }).catch(() => {});
 
   return (
     <>
-      <AppShell
+      <Frame
+        groups={navGroups}
         crumbs={crumbs}
-        navGroups={navGroups}
-        switcher={<WorkspaceSwitcher brands={brands} />}
+        mainRef={mainRef}
         onSearch={() => setCmd(true)}
-        sidebarNote={next && (
-          <button type="button" onClick={() => setDrawer({ type: 'event', id: next.id })} className="w-full rounded-lg border bg-background px-3 py-2.5 text-left transition-colors hover:border-ring">
-            <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><CalendarDaysIcon className="size-3.5" />Próximo evento · {relDays(next.daysTo)}</p>
-            <p className="mt-1 flex items-center gap-2 text-xs font-medium"><BrandTile id={next.brand} size="xs" /><span className="truncate">{next.name}</span></p>
-            <p className="mt-0.5 text-[11px] capitalize text-muted-foreground">{fmtDay(next.date)} · {next.venue || 'local por confirmar'}</p>
-          </button>
+        brandSwitch={showBrandSwitch && <BrandSwitch value={workspace} onChange={setWorkspace} brands={brands} counts={brandCounts} />}
+        note={next && <NextEventNote ev={next} dayLabel={fmtDay(next.date).replace(/^(\S+) (\d+).*/, '$1 $2')} rel={relDays(next.daysTo)} onOpen={() => setDrawer({ type: 'event', id: next.id })} />}
+        account={(collapsed) => (
+          <AccountMenu collapsed={collapsed} staff={data.usingStaffPasscode} theme={theme} onTheme={setTheme} withTaxes={withTaxes} onTaxes={setWithTaxes}
+            onExport={() => exportCsv(data.finance, withTaxes)} onRefresh={refresh} onEdit={() => navigate('/finanzas/datos')} onLogout={logout} />
         )}
-        sidebarFooter={
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton size="sm" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} tooltip={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'} className="text-[13px] text-muted-foreground">
-                {theme === 'dark' ? <SunIcon /> : <MoonIcon />}<span>{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        }
-        headerActions={(
+        actions={(
           <>
-            <div className="hidden items-center gap-2 lg:flex" title="Incluir IGV y renta en los costos">
-              <Switch id="taxes" checked={withTaxes} onCheckedChange={setWithTaxes} />
-              <Label htmlFor="taxes" className="text-[12px] font-normal text-muted-foreground">{withTaxes ? 'Con impuestos' : 'Sin impuestos'}</Label>
-            </div>
-            <span className="hidden text-[11px] text-muted-foreground xl:inline" title="Última sincronización">Sincronizado {updated}</span>
-            <Button variant="outline" size="icon-sm" onClick={() => load(undefined, { quiet: false }).catch(() => {})} aria-label="Actualizar" title="Actualizar"><RefreshCwIcon className={cn(loading && 'animate-spin')} /></Button>
-            <Notifications items={scopeAttention} onOpen={openAttention} />
+            <button type="button" onClick={refresh} title={`Sincronizado ${updated}. Clic para actualizar.`}
+              className="press hidden h-8 items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground hover:bg-black/5 hover:text-foreground xl:flex dark:hover:bg-white/5">
+              <span className={cn('size-1.5 rounded-full', loading ? 'animate-pulse bg-warn' : 'bg-good')} />{loading ? 'Sincronizando' : updated}
+            </button>
+            <button type="button" onClick={refresh} aria-label="Actualizar" className="press flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-black/5 hover:text-foreground xl:hidden dark:hover:bg-white/5"><RefreshCwIcon className={cn('size-4', loading && 'animate-spin')} /></button>
+            <button type="button" onClick={() => setWithTaxes(!withTaxes)} aria-pressed={withTaxes} title="Incluir IGV y renta en los costos"
+              className={cn('press hidden h-8 items-center gap-1.5 rounded-md px-2 text-[12px] transition-colors lg:flex', withTaxes ? 'text-foreground hover:bg-black/5 dark:hover:bg-white/5' : 'text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5')}>
+              <ReceiptIcon className="size-3.5" />{withTaxes ? 'Con IGV' : 'Sin IGV'}
+            </button>
+            <Notifications items={scopeAttention} onOpen={openAttention} onAction={(a) => navigate(`/finanzas/datos?evento=${a.event}`)} onSeeAll={() => navigate('/atencion')} />
             <DropdownMenu>
-              <DropdownMenuTrigger asChild><Button size="sm" className="h-8"><PlusIcon /><span className="hidden sm:inline">Nuevo</span></Button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onSelect={() => setCreating(true)}><TicketIcon />Evento<span className="ml-auto text-[11px] text-muted-foreground">C</span></DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setDrawer({ type: 'tx' })}><ArrowLeftRightIcon />Transacción<span className="ml-auto text-[11px] text-muted-foreground">T</span></DropdownMenuItem>
+              <DropdownMenuTrigger asChild><Button size="sm" className="ml-1 h-8 gap-1.5 px-2.5"><PlusIcon /><span className="hidden sm:inline">Nuevo</span></Button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end" sideOffset={6} className="w-56">
+                <DropdownMenuItem onSelect={() => setCreating(true)}><TicketIcon />Evento<Kbd>C</Kbd></DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDrawer({ type: 'tx' })}><ArrowLeftRightIcon />Transacción<Kbd>T</Kbd></DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'move' })}><PackageIcon />Movimiento de inventario</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'task' })}><ListTodoIcon />Tarea</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'contact' })}><UserPlusIcon />Contacto</DropdownMenuItem>
@@ -450,11 +357,11 @@ export default function Shell() {
             </DropdownMenu>
           </>
         )}
-        user={<NavUser staff={data.usingStaffPasscode} onExport={() => exportCsv(data.finance, withTaxes)} onRefresh={() => load(undefined, { quiet: false }).catch(() => {})} onEdit={() => navigate('/finanzas/datos')} onLogout={logout} />}
       >
-        {showBrandBar && <BrandBar brands={brands} />}
-        <Outlet />
-      </AppShell>
+        <PageTransition id={location.pathname} className="flex min-h-full flex-col p-4 md:p-6">
+          <Outlet />
+        </PageTransition>
+      </Frame>
 
       <Sheet open={!!drawer} onOpenChange={(o) => !o && setDrawer(null)}>
         <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-[460px]">
@@ -476,7 +383,12 @@ export default function Shell() {
       <QuickCreate />
       <Palette />
       <AnimatePresence>
-        {toast && <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} role="status" className="fixed bottom-6 right-6 z-[60] max-w-sm rounded-lg border bg-popover px-3.5 py-2 text-sm text-popover-foreground shadow-xl">{toast}</motion.div>}
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: 10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 6, scale: 0.98 }} transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+            role="status" className="fixed bottom-5 right-5 z-[60] flex max-w-sm items-center gap-2.5 rounded-lg bg-foreground px-3.5 py-2.5 text-[13px] text-background shadow-xl">
+            {toast}
+          </motion.div>
+        )}
       </AnimatePresence>
     </>
   );

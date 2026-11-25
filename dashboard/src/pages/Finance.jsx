@@ -46,7 +46,7 @@ export function FinanceOverview() {
       <PageHeader title="Finanzas" description={`${withTaxes ? 'Con' : 'Sin'} IGV y renta · clic en una cifra para ver de dónde sale.`}
         actions={<Button size="sm" onClick={() => setDrawer({ type: 'tx' })}><PlusIcon />Transacción</Button>} />
       <FinanceTabs />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="Caja disponible" value={moneyOrNA(LS.cash)} unavailable={LS.cash == null ? (LS.accounts.length ? 'Falta el saldo inicial de alguna cuenta' : 'Registra tus cuentas (BCP, caja, Culqi)') : null} sub={LS.accounts.length ? `${LS.accounts.filter((a) => !a.archived).length} cuenta(s)` : 'sin cuentas'} onClick={() => navigate('/finanzas/cuentas')} />
         <Kpi label="Por pagar" value={LS.hasData ? money(LS.payables.total) : null} unavailable={LS.hasData ? null : 'Sin transacciones registradas'} tone={LS.payables.overdue ? 'bad' : undefined} sub={LS.payables.overdue ? `${LS.payables.overdue} vencido(s)` : `${LS.payables.count} pendiente(s)`} onClick={() => navigate('/finanzas/por-pagar')} />
         <Kpi label="Por cobrar" value={LS.hasData ? money(LS.receivables.total) : null} unavailable={LS.hasData ? null : 'Sin transacciones registradas'} sub={`${LS.receivables.count} pendiente(s)`} onClick={() => navigate('/finanzas/por-pagar')} />
@@ -111,7 +111,7 @@ function EventPnl({ title, rows, kind, S }) {
 
 // ---------- Transacciones ----------
 export function Transactions() {
-  const { data, workspace, setDrawer } = useOS();
+  const { data, workspace, setDrawer, deleteTx, deleteTxs } = useOS();
   const [kind, setKind] = useState('all');
   const [status, setStatus] = useState('all');
   const accounts = new Map((data.ledger.accounts || []).map((a) => [a.id, a]));
@@ -125,6 +125,13 @@ export function Transactions() {
       <FinanceTabs />
       <Panel>
         <DataTable id="tx" rows={rows} initialSort={{ key: 'date', dir: -1 }} onRowClick={(t) => setDrawer({ type: 'tx', id: t.id })} csvName="transacciones"
+          rowActions={(t) => [
+            { label: 'Editar', onSelect: () => setDrawer({ type: 'tx', id: t.id }) },
+            { label: 'Duplicar como nueva', onSelect: () => setDrawer({ type: 'tx', preset: Object.fromEntries(Object.entries(t).filter(([k, v]) => v != null && !['id', 'createdAt', 'updatedAt', 'createdBy', 'paidOn', 'externalRef', 'source'].includes(k))) }) },
+            '-',
+            { label: 'Eliminar', destructive: true, onSelect: async () => { if (window.confirm(`¿Eliminar "${t.description}"? Queda en el registro de actividad.`)) await deleteTx(t.id).catch(() => {}); } },
+          ]}
+          bulkActions={[{ label: 'Eliminar', destructive: true, run: async (sel) => { if (!window.confirm(`¿Eliminar ${sel.length} transacción(es)? Quedan en el registro de actividad.`)) return; await deleteTxs(sel.map((t) => t.id)); } }]}
           empty={<>Todavía no hay transacciones. <button type="button" className="font-medium text-foreground underline" onClick={() => setDrawer({ type: 'tx' })}>Registra la primera</button>, o crea antes tus cuentas.</>}
           toolbar={<>
             <select aria-label="Tipo" className={cn(sel, 'h-8 w-auto text-[13px]')} value={kind} onChange={(e) => setKind(e.target.value)}><option value="all">Todos los tipos</option>{Object.entries(data.os.enums.txKinds).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select>
@@ -137,7 +144,7 @@ export function Transactions() {
             { key: 'event', label: 'Evento / marca', get: (t) => (t.eventId ? (events.get(t.eventId) || {}).name : t.brand || 'Grupo'), render: (t) => (t.eventId ? <span className="flex items-center gap-1.5"><BrandDot id={t.brand} /><span className="max-w-[180px] truncate">{(events.get(t.eventId) || {}).name}</span></span> : <span className="text-muted-foreground">{t.brand ? data.finance.brands.find((b) => b.id === t.brand)?.name : 'Grupo'}</span>) },
             { key: 'counterparty', label: 'Proveedor / cliente', get: (t) => t.counterparty, hidden: true },
             { key: 'doc', label: 'Comprobante', get: (t) => [t.docType, t.docNumber].filter(Boolean).join(' '), hidden: true },
-            { key: 'account', label: 'Cuenta', get: (t) => (accounts.get(t.accountId) || {}).name || '' },
+            { key: 'account', label: 'Cuenta', facet: true, get: (t) => (accounts.get(t.accountId) || {}).name || '' },
             { key: 'status', label: 'Estado', get: (t) => (t.paidOn ? 'Pagado' : t.committed ? 'Comprometido' : 'Pendiente'), render: (t) => (t.paidOn ? <span className="text-good">{data.os.enums.txKinds[t.kind].dir > 0 ? 'Cobrado' : 'Pagado'} {fmtDay(t.paidOn)}</span> : t.committed ? <span className="text-muted-foreground">Comprometido</span> : <span className={(t.dueDate || t.date) < limaISO() ? 'text-bad' : 'text-[#C98500]'}>Pendiente{t.dueDate ? ` · vence ${fmtDay(t.dueDate)}` : ''}</span>) },
             { key: 'amount', label: 'Monto', num: true, get: (t) => data.os.enums.txKinds[t.kind].dir * txPen(t), render: (t) => { const d = data.os.enums.txKinds[t.kind].dir; return <span className={d > 0 ? 'text-good' : d < 0 ? '' : 'text-muted-foreground'}>{d < 0 ? '−' : d > 0 ? '+' : ''}{money(t.amount, 2, t.currency)}</span>; } },
           ]} />
@@ -154,7 +161,7 @@ export function Accounts() {
     <div className="flex flex-col gap-3">
       <PageHeader title="Cuentas" description="Bancos, caja, Culqi y billeteras del grupo (son compartidas: no se dividen por marca). El saldo se calcula desde el saldo inicial con las transacciones pagadas." actions={<Button size="sm" onClick={() => setDrawer({ type: 'account' })}><PlusIcon />Nueva cuenta</Button>} />
       <FinanceTabs />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-4">
         <Kpi label="Caja disponible" value={moneyOrNA(LS.cash)} unavailable={LS.cash == null ? 'Falta saldo inicial o tipo de cambio en alguna cuenta' : null} sub="suma de cuentas activas, en soles" />
       </div>
       <Panel>

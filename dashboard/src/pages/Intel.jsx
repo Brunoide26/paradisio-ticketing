@@ -126,7 +126,7 @@ export function Analytics() {
       <PageHeader title="Analítica" description="Indicadores de las fechas cerradas. Un indicador sin dato dice “no disponible”; los comparativos aparecen cuando hay al menos dos fechas." />
       {rows.length === 0 ? <Panel className="px-5 py-8 text-[13px] text-muted-foreground">{scope.brand ? `${scope.name} todavía no tiene fechas cerradas.` : 'Todavía no hay fechas cerradas.'} La analítica empieza con la primera liquidación.</Panel> : (
         <>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
+          <div className="kpi-strip grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
             <Kpi label="Ingreso por asistente" value={avg('revenuePerAttendee') == null ? null : money(avg('revenuePerAttendee'), 2)} unavailable={avg('revenuePerAttendee') == null ? 'Sin asistencia verificada' : null} sub={`promedio de ${rows.length} fecha(s)`} />
             <Kpi label="Barra por asistente" value={avg('barPerAttendee') == null ? null : money(avg('barPerAttendee'), 2)} unavailable={avg('barPerAttendee') == null ? 'Sin datos' : null} />
             <Kpi label="Costo por asistente" value={avg('costPerAttendee') == null ? null : money(avg('costPerAttendee'), 2)} unavailable={avg('costPerAttendee') == null ? 'Sin datos' : null} />
@@ -217,7 +217,7 @@ export function Live() {
 
       {!L ? <Panel className="px-5 py-5 text-[13px] text-muted-foreground">Esta fecha no tiene datos de la web de tickets{e.liveEventId ? ' todavía' : ' (no tiene “Fecha en la web de tickets”)'}: la puerta no se ve en vivo aquí.</Panel> : (
         <>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+          <div className="kpi-strip grid grid-cols-2 md:grid-cols-4">
             <Kpi label="Adentro" value={inside.toLocaleString('es-PE')} sub={cap ? `${pct((inside / cap) * 100)} del aforo (${cap})` : 'define el aforo abajo'} tone={cap && inside > cap ? 'bad' : undefined} />
             <Kpi label="QRs emitidos" value={L.issued.toLocaleString('es-PE')} sub={`${L.issued - (inside || 0)} por entrar`} />
             <Kpi label="Después de hora" value={String(L.tarde)} sub={`${L.tardeCobrado} pagaron puerta`} />

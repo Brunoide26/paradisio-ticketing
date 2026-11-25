@@ -83,7 +83,7 @@ export function EventPage() {
       )}
 
       {f && f.budget && real && (
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+        <div className="kpi-strip grid grid-cols-2 md:grid-cols-4">
           <Kpi label="Resultado real" value={money(f.result)} tone={signTone(f.result)} />
           <Kpi proj label="Utilidad presupuestada" value={moneyOrNA(f.budget.result)} unavailable={f.budget.result == null ? 'El presupuesto no tenía costos' : null} sub={f.budget.approvedAt ? `aprobado el ${fmtDayYear(f.budget.approvedAt.slice(0, 10))}` : ''} />
           <Kpi label="Variación" value={f.budget.result == null ? null : money(f.result - f.budget.result)} unavailable={f.budget.result == null ? 'Sin presupuesto completo' : null} tone={f.budget.result == null ? undefined : signTone(f.result - f.budget.result)} />
@@ -127,7 +127,7 @@ function EventPayments({ e }) {
   const acc = new Map((data.ledger.accounts || []).map((a) => [a.id, a.name]));
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-5">
         <Kpi label="Pagado" value={p ? money(p.paid) : null} unavailable={p ? null : 'Sin pagos registrados'} />
         <Kpi label="Por pagar" value={p ? money(p.pendingCost) : null} unavailable={p ? null : 'Sin pagos registrados'} tone={p && p.pendingCost ? 'bad' : undefined} />
         <Kpi label="Comprometido" value={p ? money(p.committed) : null} unavailable={p ? null : 'Sin compromisos'} />

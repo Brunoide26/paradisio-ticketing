@@ -33,7 +33,7 @@ export default function Inventory() {
           <Button size="sm" variant="outline" onClick={() => setDrawer({ type: 'move' })}><PlusIcon />Movimiento</Button>
           <Button size="sm" onClick={() => setCountFor(evSel || events[0]?.id)} disabled={!events.length}><ClipboardListIcon />Conteo del evento</Button>
         </>} />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="kpi-strip grid grid-cols-2 md:grid-cols-4">
         <Kpi label="Valor del inventario" value={moneyOrNA(IS.value)} unavailable={IS.value == null ? 'Sin productos contados o comprados' : null} sub="a costo" />
         <Kpi label="Productos" value={String(IS.products.length)} sub={IS.uncounted ? `${IS.uncounted} sin contar` : 'todos con stock conocido'} />
         <Kpi label="Stock bajo" value={String(IS.low.length)} tone={IS.low.length ? 'bad' : undefined} sub="debajo del mínimo" onClick={IS.low.length ? () => setTab('products') : undefined} />

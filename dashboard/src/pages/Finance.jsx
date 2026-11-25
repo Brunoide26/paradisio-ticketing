@@ -152,7 +152,7 @@ export function Accounts() {
   const LS = data.os.ledgerSummary;
   return (
     <div className="flex flex-col gap-3">
-      <PageHeader title="Cuentas" description="Bancos, caja, Culqi y billeteras. El saldo se calcula desde el saldo inicial con las transacciones pagadas." actions={<Button size="sm" onClick={() => setDrawer({ type: 'account' })}><PlusIcon />Nueva cuenta</Button>} />
+      <PageHeader title="Cuentas" description="Bancos, caja, Culqi y billeteras del grupo (son compartidas: no se dividen por marca). El saldo se calcula desde el saldo inicial con las transacciones pagadas." actions={<Button size="sm" onClick={() => setDrawer({ type: 'account' })}><PlusIcon />Nueva cuenta</Button>} />
       <FinanceTabs />
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Kpi label="Caja disponible" value={moneyOrNA(LS.cash)} unavailable={LS.cash == null ? 'Falta saldo inicial o tipo de cambio en alguna cuenta' : null} sub="suma de cuentas activas, en soles" />

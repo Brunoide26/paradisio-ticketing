@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useOS } from '../os/store.jsx';
 import DataTable from '../os/DataTable.jsx';
-import { PageHeader, Kpi, Unavailable, fmtDay, sel, Field, moneyOrNA } from '../os/kit.jsx';
+import { PageHeader, Kpi, Unavailable, fmtDay, sel, Field, moneyOrNA, useScope } from '../os/kit.jsx';
 import { useSalesEvents } from './Sales.jsx';
 import { PanelBar } from './Overview.jsx';
 import { Panel } from '../ui.jsx';
@@ -14,8 +14,10 @@ import { cn, money, pct } from '../lib.js';
 
 export default function Promoters() {
   const { data } = useOS();
+  const scope = useScope();
   const events = useSalesEvents();
-  const [id, setId] = useState(events[0]?.id || '');
+  const [pick, setId] = useState('');
+  const id = events.some((x) => x.id === pick) ? pick : events[0]?.id || '';
   const [tab, setTab] = useState('event');
   return (
     <div className="flex flex-col gap-3">
@@ -24,7 +26,7 @@ export default function Promoters() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-8"><TabsTrigger value="event" className="text-[12px]">Por evento</TabsTrigger><TabsTrigger value="history" className="text-[12px]">Historial</TabsTrigger><TabsTrigger value="teams" className="text-[12px]">Equipos</TabsTrigger></TabsList>
       </Tabs>
-      {tab === 'event' && (data.os.promoters[id] ? <EventPromoters eventId={id} /> : <Panel className="px-5 py-8 text-[13px] text-muted-foreground">Sin datos de la web de tickets para este espacio.</Panel>)}
+      {tab === 'event' && (data.os.promoters[id] ? <EventPromoters eventId={id} /> : <Panel className="px-5 py-8 text-[13px] text-muted-foreground">{scope.brand ? `${scope.name} todavía no tiene fechas con promotores en la web de tickets. Cuando empiece, aquí vas a ver a sus promotores separados de las otras marcas.` : 'Sin datos de promotores.'}</Panel>)}
       {tab === 'history' && <History />}
       {tab === 'teams' && <Teams />}
     </div>
@@ -114,8 +116,10 @@ function RuleDialog({ open, onOpenChange, eventId, rule }) {
 
 function History() {
   const { data } = useOS();
+  const scope = useScope();
+  const brandOf = new Map(data.finance.events.map((e) => [e.id, e.brand]));
   const agg = new Map();
-  Object.entries(data.os.promoters).forEach(([evId, P]) => P.rows.forEach((r) => {
+  Object.entries(data.os.promoters).filter(([evId]) => scope.inScope(brandOf.get(evId))).forEach(([evId, P]) => P.rows.forEach((r) => {
     const o = agg.get(r.code) || { id: r.code, code: r.code, name: r.name, team: r.team, events: 0, qrs: 0, attended: 0, sales: 0, commission: 0, paid: 0, hasRule: false };
     o.events++; o.qrs += r.qrs; o.attended += r.attended; o.sales += r.paidRevenue + r.tableRevenue; o.paid += r.paid;
     if (r.commission != null) { o.commission += r.commission; o.hasRule = true; }
@@ -123,7 +127,7 @@ function History() {
   }));
   return (
     <Panel>
-      <PanelBar title="Historial por promotor" description="Todas las fechas con datos de la web de tickets." />
+      <PanelBar title={`Historial por promotor · ${scope.name}`} description="Todas las fechas con datos de la web de tickets." />
       <DataTable id="promo-history" rows={[...agg.values()]} initialSort={{ key: 'attended', dir: -1 }} csvName="promotores-historial"
         columns={[
           { key: 'name', label: 'Promotor', get: (r) => r.name, render: (r) => <span className="font-medium">{r.name}</span> },
@@ -149,7 +153,7 @@ function Teams() {
   return (
     <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
       <Panel className="xl:col-span-5">
-        <PanelBar title="Equipos" description="Agrupa promotores y define un líder." />
+        <PanelBar title="Equipos" description="Compartidos entre las marcas: un promotor puede trabajar para varias." />
         <form className="flex gap-2 border-b px-4 py-3" onSubmit={async (e) => { e.preventDefault(); if (!name.trim()) return; try { await promo('promo.team.upsert', { team: { name } }, 'Equipo creado'); setName(''); } catch { /* */ } }}>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre del equipo" className="h-8" /><Button size="sm" type="submit"><PlusIcon />Crear</Button>
         </form>

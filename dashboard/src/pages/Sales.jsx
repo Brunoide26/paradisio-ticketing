@@ -3,7 +3,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { useOS } from '../os/store.jsx';
 import DataTable from '../os/DataTable.jsx';
-import { PageHeader, Kpi, Unavailable, fmtDay, sel, BrandDot } from '../os/kit.jsx';
+import { PageHeader, Kpi, Unavailable, fmtDay, sel, BrandDot, useScope } from '../os/kit.jsx';
 import { PanelBar } from './Overview.jsx';
 import { Panel, TooltipBox, KindTag } from '../ui.jsx';
 import { cn, money, pct, brandColor, short } from '../lib.js';
@@ -18,8 +18,10 @@ export function useSalesEvents() {
 
 export default function Sales() {
   const { data } = useOS();
+  const scope = useScope();
   const events = useSalesEvents();
-  const [id, setId] = useState(events[0]?.id || '');
+  const [pick, setId] = useState('');
+  const id = events.some((x) => x.id === pick) ? pick : events[0]?.id || '';
   const e = data.finance.events.find((x) => x.id === id);
   const S = data.os.sales[id];
   const noTicketing = data.finance.events.filter((x) => !data.os.sales[x.id]);
@@ -29,10 +31,10 @@ export default function Sales() {
         actions={events.length > 0 && <select aria-label="Evento" className={cn(sel, 'h-8 w-72 text-[13px]')} value={id} onChange={(x) => setId(x.target.value)}>{events.map((x) => <option key={x.id} value={x.id}>{fmtDay(x.date)} · {x.name}</option>)}</select>} />
       {!S ? (
         <Panel className="px-5 py-8 text-[13px] text-muted-foreground">
-          Ningún evento de este espacio tiene ventas en la web de tickets. Para enlazar uno, en el evento completa "Fecha en la web de tickets" (Datos de eventos).
+          {scope.brand ? `${scope.name} todavía no tiene fechas con ventas en la web de tickets.` : 'Ningún evento tiene ventas en la web de tickets.'} Cuando venda por la web, aparece aquí sola. Para enlazar una fecha, completa "Fecha en la web de tickets" en Datos de eventos.
         </Panel>
       ) : <SalesView e={e} S={S} />}
-      {noTicketing.length > 0 && <p className="text-[12px] text-muted-foreground">Sin datos de la web de tickets: {noTicketing.map((x) => x.name).join(' · ')}. Beats e Icon todavía no venden por la web.</p>}
+      {!scope.brand && noTicketing.length > 0 && <p className="text-[12px] text-muted-foreground">Sin datos de la web de tickets: {noTicketing.map((x) => x.name).join(' · ')}. Beats e Icon todavía no venden por la web.</p>}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { InfoIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { cn, money, pct, brandColor, parseDate } from '../lib.js';
+import { useOS as useOSLazy } from './store.jsx';
 
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 export const MONTHS_LONG = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -98,4 +99,11 @@ export function Field({ label, children, className, hint }) {
       {label}{children}{hint && <span className="text-[11px]">{hint}</span>}
     </Label>
   );
+}
+
+// Alcance actual (grupo o marca) para títulos y estados vacíos.
+export function useScope() {
+  const { data, workspace } = useOSLazy();
+  const brand = workspace === 'group' ? null : (data.finance.brands || []).find((b) => b.id === workspace) || null;
+  return { brandId: brand ? brand.id : null, brand, name: brand ? brand.name : 'Todo el grupo', inScope: (brandId) => !brand || brandId === brand.id };
 }

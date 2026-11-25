@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOS } from '../os/store.jsx';
 import DataTable from '../os/DataTable.jsx';
-import { PageHeader, Kpi, fmtDay, sel, BrandDot, Unavailable } from '../os/kit.jsx';
+import { PageHeader, Kpi, fmtDay, sel, BrandDot, Unavailable, useScope } from '../os/kit.jsx';
 import { PanelBar } from './Overview.jsx';
 import { Panel } from '../ui.jsx';
 import { cn, money, limaISO } from '../lib.js';
@@ -63,9 +63,15 @@ export function MyTasks() {
 
 export default function Operations() {
   const { data, setDrawer } = useOS();
+  const scope = useScope();
   const [tab, setTab] = useState('directory');
   const [type, setType] = useState('all');
-  const contacts = (data.ops.contacts || []).filter((c) => type === 'all' || c.type === type);
+  const [everyone, setEveryone] = useState(false);
+  const brandOf = new Map(data.finance.events.map((e) => [e.id, e.brand]));
+  // Con una marca elegida: quienes trabajaron en sus fechas (el directorio es compartido).
+  const usedBy = new Set(Object.entries(data.ops.staff || {}).filter(([evId]) => scope.inScope(brandOf.get(evId))).flatMap(([, list]) => list.map((x) => x.contactId)));
+  const contacts = (data.ops.contacts || []).filter((c) => (type === 'all' || c.type === type) && (!scope.brand || everyone || usedBy.has(c.id)));
+  const tasks = (data.os.tasks || []).filter((t) => !scope.brand || (t.eventId && brandOf.get(t.eventId) === scope.brandId));
   const T = data.os.enums.contactTypes;
   return (
     <div className="flex flex-col gap-3">
@@ -76,7 +82,10 @@ export default function Operations() {
         <Panel>
           <DataTable id="contacts" rows={contacts} initialSort={{ key: 'name', dir: 1 }} onRowClick={(c) => setDrawer({ type: 'contact', id: c.id })} rowClassName={(c) => (c.archived ? 'opacity-50' : '')}
             empty={<>Directorio vacío. <button type="button" className="font-medium text-foreground underline" onClick={() => setDrawer({ type: 'contact' })}>Agrega el primero</button> (local, DJ, proveedor de barra, seguridad…).</>}
-            toolbar={<select aria-label="Tipo" className={cn(sel, 'h-8 w-auto text-[13px]')} value={type} onChange={(e) => setType(e.target.value)}><option value="all">Todos</option>{Object.entries(T).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>}
+            toolbar={<>
+              <select aria-label="Tipo" className={cn(sel, 'h-8 w-auto text-[13px]')} value={type} onChange={(e) => setType(e.target.value)}><option value="all">Todos</option>{Object.entries(T).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+              {scope.brand && <Button size="sm" variant="ghost" onClick={() => setEveryone(!everyone)}>{everyone ? `Sólo los de ${scope.name}` : 'Ver todo el directorio'}</Button>}
+            </>}
             columns={[
               { key: 'name', label: 'Nombre', get: (c) => c.name, render: (c) => <span className="font-medium">{c.name}</span> },
               { key: 'type', label: 'Tipo', get: (c) => T[c.type] },
@@ -89,7 +98,8 @@ export default function Operations() {
             ]} />
         </Panel>
       )}
-      {tab === 'tasks' && <Panel><TaskList id="ops-tasks" tasks={data.os.tasks || []} /></Panel>}
+      {tab === 'tasks' && <Panel><TaskList id="ops-tasks" tasks={tasks} /></Panel>}
+      {scope.brand && tab === 'directory' && !everyone && <p className="text-[12px] text-muted-foreground">Mostrando quienes trabajaron en fechas de {scope.name}. El directorio es compartido entre las marcas.</p>}
     </div>
   );
 }

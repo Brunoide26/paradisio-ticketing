@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate, useMatches } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   LayoutDashboardIcon, InboxIcon, CalendarDaysIcon, TicketIcon, WalletIcon, HistoryIcon, PlusIcon, BellIcon,
-  RefreshCwIcon, DownloadIcon, ReceiptIcon, MoonIcon, SunIcon, ChevronsUpDownIcon, CheckIcon, Building2Icon, ExternalLinkIcon, SlidersHorizontalIcon, TriangleAlertIcon,
+  RefreshCwIcon, DownloadIcon, ReceiptIcon, MoonIcon, SunIcon, ChevronsUpDownIcon, CheckIcon, Building2Icon, ExternalLinkIcon, SlidersHorizontalIcon, TriangleAlertIcon, PackageIcon, ArrowLeftRightIcon, CalculatorIcon, CopyIcon,
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { GroupLogo } from '@/components/app-sidebar';
@@ -21,11 +21,13 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { useKeypress } from '@/hooks/use-keypress';
 import { useOS } from './store.jsx';
+import { TxForm, AccountForm, ProductForm, MoveForm } from './forms.jsx';
 import { StageBadge, BrandDot, fmtDay, fmtDayYear, relDays, Unavailable, moneyOrNA } from './kit.jsx';
 import { BrandTile, KindTag } from '../ui.jsx';
 import { cn, money, pct, isActual, totals, limaISO } from '../lib.js';
 
-export const sel = 'h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30';
+export { sel, Field } from './kit.jsx';
+import { sel, Field } from './kit.jsx';
 
 // CSV del estado de resultados de cada fecha (real y presupuesto separados por columna "Tipo").
 export function exportCsv(finance, withTaxes) {
@@ -142,13 +144,6 @@ function QuickCreate() {
   );
 }
 
-export function Field({ label, children, className, hint }) {
-  return (
-    <Label className={cn('flex flex-col items-stretch gap-1.5 text-xs font-normal text-muted-foreground', className)}>
-      {label}{children}{hint && <span className="text-[11px]">{hint}</span>}
-    </Label>
-  );
-}
 
 // Panel lateral para revisar y editar un evento sin salir de la página.
 function EventDrawer({ id, onClose }) {
@@ -267,6 +262,8 @@ function Palette() {
         <CommandEmpty>Nada encontrado.</CommandEmpty>
         <CommandGroup heading="Acciones">
           <CommandItem onSelect={() => run(() => setCreating(true))}><PlusIcon />Nuevo evento<Kbd>C</Kbd></CommandItem>
+          <CommandItem onSelect={() => run(() => setDrawer({ type: 'tx' }))}><ArrowLeftRightIcon />Nueva transacción<Kbd>T</Kbd></CommandItem>
+          <CommandItem onSelect={() => run(() => setDrawer({ type: 'move' }))}><PackageIcon />Movimiento de inventario</CommandItem>
           <CommandItem onSelect={() => run(() => setWithTaxes(!withTaxes))}><ReceiptIcon />{withTaxes ? 'Ver sin IGV ni renta' : 'Ver con IGV y renta'}</CommandItem>
           <CommandItem onSelect={() => run(() => setTheme(theme === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? <SunIcon /> : <MoonIcon />}{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</CommandItem>
           <CommandItem onSelect={() => run(() => exportCsv(data.finance, withTaxes))}><DownloadIcon />Exportar todo a CSV</CommandItem>
@@ -274,7 +271,7 @@ function Palette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Ir a">
-          {[['/', 'Resumen ejecutivo', <LayoutDashboardIcon key="i" />], ['/atencion', 'Atención', <InboxIcon key="i" />], ['/calendario', 'Calendario', <CalendarDaysIcon key="i" />], ['/eventos', 'Eventos', <TicketIcon key="i" />], ['/finanzas', 'Finanzas', <WalletIcon key="i" />], ['/finanzas/datos', 'Datos financieros', <SlidersHorizontalIcon key="i" />], ['/actividad', 'Registro de actividad', <HistoryIcon key="i" />]].map(([to, l, icon]) => (
+          {[['/', 'Resumen ejecutivo', <LayoutDashboardIcon key="i" />], ['/atencion', 'Atención', <InboxIcon key="i" />], ['/calendario', 'Calendario', <CalendarDaysIcon key="i" />], ['/eventos', 'Eventos', <TicketIcon key="i" />], ['/finanzas', 'Finanzas', <WalletIcon key="i" />], ['/finanzas/transacciones', 'Transacciones', <ArrowLeftRightIcon key="i" />], ['/finanzas/cuentas', 'Cuentas', <WalletIcon key="i" />], ['/finanzas/por-pagar', 'Por pagar y por cobrar', <WalletIcon key="i" />], ['/finanzas/flujo', 'Flujo de caja', <WalletIcon key="i" />], ['/finanzas/presupuestos', 'Presupuestos', <WalletIcon key="i" />], ['/finanzas/simulador', 'Simulador de rentabilidad', <CalculatorIcon key="i" />], ['/finanzas/datos', 'Datos de eventos', <SlidersHorizontalIcon key="i" />], ['/inventario', 'Inventario y barra', <PackageIcon key="i" />], ['/actividad', 'Registro de actividad', <HistoryIcon key="i" />]].map(([to, l, icon]) => (
             <CommandItem key={to} value={`ir ${l}`} onSelect={() => run(() => navigate(to))}>{icon}{l}</CommandItem>
           ))}
           {brands.map((b) => <CommandItem key={b.id} value={`marca ${b.name}`} onSelect={() => run(() => navigate(`/marcas/${b.id}`))}><BrandTile id={b.id} size="xs" />{b.name}</CommandItem>)}
@@ -320,6 +317,7 @@ export default function Shell() {
   const crumbs = useCrumbs();
   useKeypress({ combo: ['meta+k', 'ctrl+k'], callback: () => setCmd((v) => !v), enableOnInputs: true });
   useKeypress({ combo: 'c', callback: () => setCreating(true) });
+  useKeypress({ combo: 't', callback: () => setDrawer({ type: 'tx' }) });
   useEffect(() => { window.scrollTo({ top: 0 }); }, [location.pathname]);
 
   const brands = data.finance.brands || [];
@@ -336,7 +334,8 @@ export default function Shell() {
     ] },
     { label: 'Negocio', collapsible: true, items: [
       { to: '/eventos', title: 'Eventos', icon: <TicketIcon /> },
-      { to: '/finanzas', title: 'Finanzas', icon: <WalletIcon />, end: true, match: ['/finanzas/datos'] },
+      { to: '/finanzas', title: 'Finanzas', icon: <WalletIcon />, end: true, match: ['/finanzas/transacciones', '/finanzas/cuentas', '/finanzas/por-pagar', '/finanzas/flujo', '/finanzas/presupuestos', '/finanzas/simulador', '/finanzas/datos'], badge: data.os.ledgerSummary.payables.overdue || null },
+      { to: '/inventario', title: 'Inventario y barra', icon: <PackageIcon />, badge: data.os.inventorySummary.low.length || null },
     ] },
     { label: 'Marcas', collapsible: true, items: brands.map((b) => ({ to: `/marcas/${b.id}`, title: b.name, icon: <BrandTile id={b.id} size="xs" className="size-4!" /> })) },
     { label: 'Sistema', collapsible: true, items: [{ to: '/actividad', title: 'Registro de actividad', icon: <HistoryIcon /> }] },
@@ -376,7 +375,17 @@ export default function Shell() {
             <span className="hidden text-[11px] text-muted-foreground xl:inline" title="Última sincronización">Sincronizado {updated}</span>
             <Button variant="outline" size="icon-sm" onClick={() => load(undefined, { quiet: false }).catch(() => {})} aria-label="Actualizar" title="Actualizar"><RefreshCwIcon className={cn(loading && 'animate-spin')} /></Button>
             <Notifications items={scopeAttention} onOpen={openAttention} />
-            <Button size="sm" onClick={() => setCreating(true)} className="h-8"><PlusIcon /><span className="hidden sm:inline">Nuevo</span></Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild><Button size="sm" className="h-8"><PlusIcon /><span className="hidden sm:inline">Nuevo</span></Button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onSelect={() => setCreating(true)}><TicketIcon />Evento<span className="ml-auto text-[11px] text-muted-foreground">C</span></DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDrawer({ type: 'tx' })}><ArrowLeftRightIcon />Transacción<span className="ml-auto text-[11px] text-muted-foreground">T</span></DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDrawer({ type: 'move' })}><PackageIcon />Movimiento de inventario</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setDrawer({ type: 'account' })}><WalletIcon />Cuenta</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDrawer({ type: 'product' })}><PackageIcon />Producto</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         )}
         user={<NavUser staff={data.usingStaffPasscode} onExport={() => exportCsv(data.finance, withTaxes)} onRefresh={() => load(undefined, { quiet: false }).catch(() => {})} onEdit={() => navigate('/finanzas/datos')} onLogout={logout} />}
@@ -388,6 +397,10 @@ export default function Shell() {
         <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-[460px]">
           {drawer?.type === 'event' && <EventDrawer id={drawer.id} onClose={() => setDrawer(null)} />}
           {drawer?.type === 'metric' && <MetricDrawer id={drawer.id} summary={drawer.summary} onClose={() => setDrawer(null)} />}
+          {drawer?.type === 'tx' && <TxForm key={drawer.id || 'new'} id={drawer.id} preset={drawer.preset} onClose={() => setDrawer(null)} />}
+          {drawer?.type === 'account' && <AccountForm key={drawer.id || 'new'} id={drawer.id} onClose={() => setDrawer(null)} />}
+          {drawer?.type === 'product' && <ProductForm key={drawer.id || 'new'} id={drawer.id} onClose={() => setDrawer(null)} />}
+          {drawer?.type === 'move' && <MoveForm key="mv" preset={drawer.preset} onClose={() => setDrawer(null)} />}
         </SheetContent>
       </Sheet>
       <QuickCreate />

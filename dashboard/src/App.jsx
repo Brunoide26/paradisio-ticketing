@@ -18,6 +18,7 @@ import Inventory from './pages/Inventory.jsx';
 import Sales from './pages/Sales.jsx';
 import Promoters from './pages/Promoters.jsx';
 import Operations, { MyTasks } from './pages/Operations.jsx';
+import { BrandsCompare, BrandHome } from './pages/Brands.jsx';
 import { BrandTile } from './ui.jsx';
 
 const evName = (p, d) => (d && d.finance.events.find((e) => e.id === p.id) || {}).name;
@@ -51,7 +52,10 @@ const router = createBrowserRouter([
       { path: 'promotores', element: <Promoters />, handle: { crumb: 'Promotores' } },
       { path: 'operaciones', element: <Operations />, handle: { crumb: 'Operaciones y proveedores' } },
       { path: 'tareas', element: <MyTasks />, handle: { crumb: 'Mis tareas' } },
-      { path: 'marcas/:brandId', element: <BrandPage />, handle: { crumb: brandName } },
+      { path: 'marcas', handle: { crumb: 'Marcas' }, children: [
+        { index: true, element: <BrandsCompare />, handle: { crumb: 'Comparativo' } },
+        { path: ':brandId', element: <BrandHome />, handle: { crumb: brandName } },
+      ] },
       { path: 'actividad', element: <Activity />, handle: { crumb: 'Registro de actividad' } },
       { path: '*', element: <NotFound /> },
     ],

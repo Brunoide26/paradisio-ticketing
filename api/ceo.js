@@ -16,6 +16,7 @@ const { redis, listAllTickets } = require('../lib/tickets');
 const { eventIdOfTicket, CURRENT_EVENT_ID } = require('../lib/events');
 const { listPromoters } = require('../lib/promoters');
 const { SEED } = require('../lib/ceo-seed');
+const { culqiForEvents } = require('../lib/culqi-sync');
 
 const FINANCE_KEY = 'ceo:finance';
 const MAX_BYTES = 250000;
@@ -200,11 +201,14 @@ module.exports = async (req, res) => {
     });
     const live = {};
     byEvent.forEach((list, id) => { live[id] = summarize(list, id, names); });
+    let culqi = { connected: false, reason: 'error' };
+    try { culqi = await culqiForEvents(redis, finance.events || []); } catch (e) { console.error('culqi', e); }
 
     return res.status(200).json({
       finance,
       seeded,
       live,
+      culqi,
       currentEventId: CURRENT_EVENT_ID,
       usingStaffPasscode: !process.env.CEO_PASSCODE,
       generatedAt: new Date().toISOString(),

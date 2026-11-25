@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card, CardHeader, Money, DeltaPill, KindTag, StatusBadge, ShareBarList, DataTable, MetricStrip, BrandTile, TooltipBox } from './ui.jsx';
 import { money, short, pct, sum, totals, isActual, fmtShort, daysTo, brandColor, byCategory, cn } from './lib.js';
 
-export default function Group({ finance, withTaxes, go }) {
+export default function Group({ finance, withTaxes, go, culqi, live }) {
   const brands = finance.brands || [];
   const events = useMemo(() => (finance.events || []).slice().sort((a, b) => a.date.localeCompare(b.date)), [finance]);
   const real = events.filter(isActual);
@@ -111,6 +111,15 @@ export default function Group({ finance, withTaxes, go }) {
         </Card>
       </div>
 
+      <Card delay={0.19}>
+        <CardHeader title="Fuentes de datos" description="De dónde sale cada número." />
+        <div className="grid divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <Source ok={!!(culqi && culqi.connected)} name="Culqi" text={culqi && culqi.connected ? `Conectado${culqi.mode === 'test' ? ' (prueba)' : ''} · ${money(sum(real, (e) => (culqi.byEvent[e.id] || {}).amount || 0))} cobrados en fechas cerradas` : `No conectado${culqi && culqi.reason ? ` (${culqi.reason})` : ''}`} />
+          <Source ok={!!live && Object.keys(live).length > 0} name="Web de tickets" text="En vivo: registros, QRs, puerta y promotores" />
+          <Source ok={false} warn name="Wally y costos" text="Carga manual: Wally no tiene API. Se cargan los cierres después de cada fecha." />
+        </div>
+      </Card>
+
       {/* Fila 4: indicadores reales */}
       <Card delay={0.2}>
         <CardHeader title="Indicadores reales" description="Calculados solo con fechas cerradas." action={<KindTag real />} />
@@ -161,5 +170,14 @@ function IncomeChart({ events, withTaxes, brandName }) {
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+  );
+}
+
+function Source({ ok, warn, name, text }) {
+  return (
+    <div className="flex gap-3 px-4 py-3.5">
+      <span className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', ok ? 'bg-good' : warn ? 'bg-[#C98500]' : 'bg-bad')} />
+      <div><p className="text-[13px] font-medium">{name}</p><p className="text-[12px] text-muted">{text}</p></div>
+    </div>
   );
 }

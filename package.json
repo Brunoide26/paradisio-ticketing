@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vercel dev"
+    "dev": "vercel dev",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@upstash/redis": "^1.31.0",

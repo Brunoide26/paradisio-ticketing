@@ -8,6 +8,10 @@
     {
       "source": "/como-llegar",
       "destination": "/api/como-llegar"
+    },
+    {
+      "source": "/administracion/:path*",
+      "destination": "/administracion/index.html"
     }
   ],
   "headers": [

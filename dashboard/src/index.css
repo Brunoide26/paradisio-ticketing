@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-/* Tema claro único: el panel nunca va en negro. */
+@custom-variant dark (&:is(.dark *));
+
+/* Claro por defecto; oscuro opcional (clase .dark en <html>, se elige en la barra lateral). */
 
 @theme inline {
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
@@ -48,11 +50,11 @@
   --color-club: #F0441A;
   --color-beats: #0F9BB0;
   --color-icon: #7B45FF;
-  --color-good: #059669;
-  --color-bad: #DC3B1A;
-  --color-proj: #9A5B06;
-  --color-proj-line: #E2C08A;
-  --color-proj-soft: #FFF9F0;
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --color-proj: var(--proj);
+  --color-proj-line: var(--proj-line);
+  --color-proj-soft: var(--proj-soft);
 }
 
 :root {
@@ -88,7 +90,47 @@
   --sidebar-accent-foreground: #171717;
   --sidebar-border: #E6E5E1;
   --sidebar-ring: #A3A3A0;
+  --good: #059669;
+  --bad: #DC3B1A;
+  --proj: #9A5B06;
+  --proj-line: #E2C08A;
+  --proj-soft: #FFF9F0;
   color-scheme: light;
+}
+
+.dark {
+  --background: #111110;
+  --foreground: #EDEDEA;
+  --card: #171716;
+  --card-foreground: #EDEDEA;
+  --popover: #1B1B1A;
+  --popover-foreground: #EDEDEA;
+  --primary: #EDEDEA;
+  --primary-foreground: #111110;
+  --secondary: #222220;
+  --secondary-foreground: #EDEDEA;
+  --muted: #0C0C0B;
+  --muted-foreground: #9A9A95;
+  --accent: #262624;
+  --accent-foreground: #EDEDEA;
+  --destructive: #F0613F;
+  --border: #2A2A28;
+  --input: #33332F;
+  --ring: #5C5C58;
+  --sidebar: #131312;
+  --sidebar-foreground: #CFCFCA;
+  --sidebar-primary: #EDEDEA;
+  --sidebar-primary-foreground: #111110;
+  --sidebar-accent: #232321;
+  --sidebar-accent-foreground: #EDEDEA;
+  --sidebar-border: #2A2A28;
+  --sidebar-ring: #5C5C58;
+  --good: #34C38F;
+  --bad: #F0613F;
+  --proj: #E0A955;
+  --proj-line: #6B5230;
+  --proj-soft: #1E1912;
+  color-scheme: dark;
 }
 
 @layer base {
@@ -102,5 +144,5 @@
 /* Relleno rayado para todo lo proyectado. */
 .proj-hatch { background-image: repeating-linear-gradient(135deg, var(--color-proj-line) 0 1px, transparent 1px 7px); }
 .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-.scroll-thin::-webkit-scrollbar-thumb { background: #DDDDDA; border-radius: 6px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

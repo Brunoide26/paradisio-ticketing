@@ -5,13 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Panel, PanelHeader, BrandTile, KindTag } from './ui.jsx';
-import { CATEGORIES, STATUSES, money, totals, fmtDate, today, isActual, cn } from './lib.js';
+import { CATEGORIES, money, totals, fmtDate, limaISO, isActual, stageOf, cn } from './lib.js';
 
 const sel = 'h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
-export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEditId, onSave, onDiscard, onReset, saving, withTaxes, seeded }) {
+export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEditId, onSave, onDiscard, saving, withTaxes, seeded, stages }) {
   const [sureDel, setSureDel] = useState(false);
-  const [sureReset, setSureReset] = useState(false);
   const [newBrand, setNewBrand] = useState(draft.brands[0]?.id);
   const events = draft.events.slice().sort((a, b) => a.date.localeCompare(b.date));
   const e = draft.events.find((x) => x.id === editId) || events[0];
@@ -22,10 +21,10 @@ export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEd
   const addLine = (key) => update((ev) => { ev[key] = ev[key] || []; ev[key].push(key === 'brandInvestment' ? { label: '', amount: 0 } : { label: '', category: '', amount: 0 }); });
   const delLine = (key, i) => update((ev) => { ev[key].splice(i, 1); });
   const newEvent = () => {
-    const d = today(); const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const iso = limaISO();
     const id = newBrand + '-' + Date.now().toString(36);
     const b = draft.brands.find((x) => x.id === newBrand);
-    setDraft((dd) => ({ ...dd, events: [...dd.events, { id, brand: newBrand, date: iso, name: `${b?.name || ''} · nueva fecha`, venue: '', status: 'planificación', liveEventId: '', notes: '', income: [], costs: [], brandInvestment: [] }] }));
+    setDraft((dd) => ({ ...dd, events: [...dd.events, { id, brand: newBrand, date: iso, name: `${b?.name || ''} · nueva fecha`, venue: '', stage: 'concept', status: 'planificación', liveEventId: '', notes: '', income: [], costs: [], brandInvestment: [] }] }));
     setEditId(id); setDirty(true);
   };
   const deleteEvent = () => {
@@ -37,8 +36,8 @@ export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEd
   return (
     <div className="flex flex-col gap-4 pb-24">
       <div>
-        <p className="text-xs text-muted-foreground">{seeded ? 'Estás viendo los datos de arranque' : 'Datos guardados'}</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Editar datos</h1>
+        <h1 className="text-[20px] font-semibold tracking-tight">Datos financieros</h1>
+        <p className="text-[13px] text-muted-foreground">{seeded ? 'Datos de arranque (todavía no se guardó ningún cambio).' : 'Cada guardado deja la versión anterior en el historial.'} Ingresos y costos de cada evento; en Liquidación y Cerrado cuentan como reales.</p>
       </div>
       <div className="grid items-start gap-4 lg:grid-cols-[280px_1fr]">
         <Panel className="p-2">
@@ -49,7 +48,7 @@ export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEd
                 <button key={x.id} onClick={() => { setEditId(x.id); setSureDel(false); }}
                   className={cn('block w-full rounded-md border-l-2 px-3 py-2 text-left', x.id === e?.id ? 'bg-accent' : 'hover:bg-muted', isActual(x) ? 'border-l-transparent' : 'border-l-proj-line border-dashed')}>
                   <span className="block truncate text-sm">{x.name}</span>
-                  <span className="block text-[11px] capitalize text-muted-foreground">{fmtDate(x.date)} · {x.status}</span>
+                  <span className="block text-[11px] capitalize text-muted-foreground">{fmtDate(x.date)} · {(stages.find((st) => st.id === stageOf(x)) || {}).label}</span>
                 </button>
               ))}
             </div>
@@ -71,10 +70,11 @@ export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEd
               <Field label="Nombre" className="sm:col-span-3"><Input value={e.name} onChange={(v) => setField('name', v.target.value)} /></Field>
               <Field label="Marca"><select className={sel} value={e.brand} onChange={(v) => setField('brand', v.target.value)}>{draft.brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></Field>
               <Field label="Fecha"><Input type="date" value={e.date} onChange={(v) => v.target.value && setField('date', v.target.value)} /></Field>
-              <Field label="Estado"><select className={sel} value={e.status} onChange={(v) => setField('status', v.target.value)}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></Field>
+              <Field label="Etapa"><select className={sel} value={stageOf(e)} onChange={(v) => setField('stage', v.target.value)}>{stages.map((st) => <option key={st.id} value={st.id}>{st.label}</option>)}</select></Field>
               <Field label="Local"><Input value={e.venue || ''} onChange={(v) => setField('venue', v.target.value)} /></Field>
               <Field label="Fecha en la web de tickets"><Input placeholder="AAAA-MM-DD" value={e.liveEventId || ''} onChange={(v) => setField('liveEventId', v.target.value)} /></Field>
-              <Field label="Stock que quedó (S/)"><Input type="number" step="0.01" className="mono" value={e.stockLeft || ''} onChange={(v) => setField('stockLeft', Number(v.target.value) || 0)} /></Field>
+              <Field label="Inventario inicial (S/)"><Input type="number" step="0.01" className="mono" placeholder="No registrado" value={e.openingStock ?? ''} onChange={(v) => setField('openingStock', v.target.value === '' ? null : Number(v.target.value))} /></Field>
+              <Field label="Stock final que quedó (S/)"><Input type="number" step="0.01" className="mono" value={e.stockLeft || ''} onChange={(v) => setField('stockLeft', Number(v.target.value) || 0)} /></Field>
               <Field label="Notas" className="sm:col-span-3"><Textarea className="min-h-20" value={e.notes || ''} onChange={(v) => setField('notes', v.target.value)} /></Field>
             </div>
             {[['income', 'Ingresos', true], ['costs', 'Costos', true], ['brandInvestment', 'Inversión en marca', false]].map(([key, title, withCat]) => (
@@ -102,7 +102,6 @@ export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEd
       <div className="fixed inset-x-4 bottom-4 z-30 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-background px-4 py-2.5 text-sm shadow-2xl md:left-auto md:right-6 md:w-[640px]">
         <span className="flex items-center gap-2 text-muted-foreground"><i className={cn('size-2 rounded-full', dirty ? 'bg-[#C98500]' : 'bg-good')} />{dirty ? 'Cambios sin guardar' : 'Todo guardado'}</span>
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => { if (!sureReset) { setSureReset(true); return; } setSureReset(false); onReset(); }}>{sureReset ? 'Toca de nuevo: borra tus cambios' : 'Restaurar arranque'}</Button>
           <Button variant="outline" size="sm" onClick={onDiscard}>Descartar</Button>
           <Button size="sm" disabled={saving || !dirty} onClick={onSave}>{saving ? 'Guardando…' : 'Guardar cambios'}</Button>
         </div>

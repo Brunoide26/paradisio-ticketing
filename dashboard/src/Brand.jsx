@@ -57,13 +57,13 @@ export default function Brand({ brandId, finance, live, culqi, withTaxes, select
       )}
 
       {!sel ? (
-        <Panel><Empty title="Todavía no hay fechas" action={<Button size="sm" onClick={() => go('edit')}>Crear fecha</Button>}>Crea la primera fecha de {brand.name} en Editar datos.</Empty></Panel>
+        <Panel><Empty title="Todavía no hay fechas" action={<Button size="sm" onClick={() => go('/finanzas/datos')}>Crear fecha</Button>}>Crea la primera fecha de {brand.name} en Editar datos.</Empty></Panel>
       ) : <EventView key={sel.id + withTaxes} e={sel} events={events} live={live} culqi={culqi} withTaxes={withTaxes} color={color} brandId={brandId} go={go} />}
     </div>
   );
 }
 
-function EventView({ e, events, live, culqi, withTaxes, color, brandId, go }) {
+export function EventView({ e, events, live, culqi, withTaxes, color, brandId, go }) {
   const t = totals(e, withTaxes);
   const real = isActual(e);
   const noCosts = !(e.costs || []).length;
@@ -82,7 +82,7 @@ function EventView({ e, events, live, culqi, withTaxes, color, brandId, go }) {
   const numbers = noCosts && noIncome ? (
     <Panel proj={!real}>
       <PanelHeader title={e.name} description={where} action={<KindTag real={real} />} />
-      <Empty title="Números por definir" action={<Button size="sm" onClick={() => go('edit', e.id)}><PencilIcon />Cargar números</Button>}>
+      <Empty title="Números por definir" action={<Button size="sm" onClick={() => go('/finanzas/datos?evento=' + e.id)}><PencilIcon />Cargar números</Button>}>
         {e.notes && <p>{e.notes}</p>}
         <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
           {['Local y consumo mínimo', 'DJs y talento', 'Personal: barra, seguridad, limpieza', 'Producción y decoración temática', 'Promotores y marketing', 'Precios de entradas, boxes y barra'].map((x) => <li key={x} className="rounded-md border border-dashed px-2.5 py-1.5 text-foreground/80">{x}</li>)}
@@ -98,7 +98,7 @@ function EventView({ e, events, live, culqi, withTaxes, color, brandId, go }) {
           action={<div className="flex items-center gap-2">
             {tp && tp.income ? <DeltaPill value={((t.income - tp.income) / tp.income) * 100} label={`vs ${fmtShort(prev.date)}`} /> : null}
             {!real && <KindTag />}
-            <Button variant="outline" size="sm" onClick={() => go('edit', e.id)}><PencilIcon />Editar</Button>
+            <Button variant="outline" size="sm" onClick={() => go('/finanzas/datos?evento=' + e.id)}><PencilIcon />Editar</Button>
           </div>} />
         <CardContent className="px-2 pb-2">
           {noCosts ? <Empty title="Sin costos cargados" /> : <CategoryChart t={t} tp={tp} prev={prev} e={e} color={color} real={real} />}
@@ -110,9 +110,10 @@ function EventView({ e, events, live, culqi, withTaxes, color, brandId, go }) {
       </Panel>
 
       <Panel proj={!real} className="md:col-span-2 lg:col-span-1">
-        <PanelHeader big title={<span className={t.result >= 0 ? 'text-good' : 'text-bad'}><Money value={t.result} /></span>}
-          description={`${real ? 'Resultado' : 'Utilidad proyectada'}${t.stock ? ` · incluye ${money(t.stock)} de stock` : ''}`}
-          action={t.income ? <DeltaPill value={t.margin} good={t.margin >= 0} label="margen" /> : null} />
+        {/* Un presupuesto sin costos no tiene utilidad: nunca se muestra el ingreso como si lo fuera. */}
+        <PanelHeader big title={!real && noCosts ? <span className="text-[17px] font-medium text-proj">Incompleto</span> : <span className={t.result >= 0 ? 'text-good' : 'text-bad'}><Money value={t.result} /></span>}
+          description={!real && noCosts ? 'Utilidad proyectada: faltan los costos del presupuesto.' : `${real ? 'Resultado' : 'Utilidad proyectada'}${t.stock ? ` · incluye ${money(t.stock)} de stock` : ''}${t.opening ? ` · descuenta ${money(t.opening)} de inventario inicial` : ''}`}
+          action={t.income && !(!real && noCosts) ? <DeltaPill value={t.margin} good={t.margin >= 0} label="margen" /> : null} />
         <CardContent className="px-0 py-1">
           <p className="px-6 pt-3 text-[12px] font-medium text-muted-foreground">De dónde viene la plata</p>
           <Bars dashed={!real} items={(e.income || []).map((x) => ({ label: x.label, value: Number(x.amount) || 0 })).sort((a, b) => b.value - a.value)} color={color} />
@@ -145,7 +146,7 @@ function EventView({ e, events, live, culqi, withTaxes, color, brandId, go }) {
       <Panel proj={!real} className="md:col-span-2 lg:col-span-4">
         <PanelHeader title={real ? 'Indicadores' : 'Indicadores proyectados'} action={<KindTag real={real} />} />
         <MetricStrip items={[
-          { label: 'Margen', sub: 'Resultado / ingresos', value: t.income ? pct(t.margin) : '—', tone: t.margin >= 0 ? 'good' : 'bad' },
+          { label: 'Margen', sub: 'Resultado / ingresos', value: t.income && !(!real && noCosts) ? pct(t.margin) : '—', tone: t.margin >= 0 ? 'good' : 'bad' },
           noCosts ? { label: 'Break-even', sub: 'Se calcula con los costos', value: '—' } :
             { label: 'Break-even', sub: 'Ingresos necesarios para no perder', value: money(Math.max(0, t.cost - t.stock)), foot: t.coverage >= 100 ? `Cubierto al ${pct(t.coverage)}` : `Faltan ${money(t.cost - t.income - t.stock)}`, tone: t.coverage >= 100 ? 'good' : 'bad' },
           L && L.ingresaron ? { label: 'Ingreso por asistente', sub: `${L.ingresaron} personas adentro`, value: money(t.income / L.ingresaron, 2) } : { label: 'Costo más grande', sub: (byCategory(t.costs)[0] || {}).name || '—', value: byCategory(t.costs)[0] ? money(byCategory(t.costs)[0].value) : '—' },

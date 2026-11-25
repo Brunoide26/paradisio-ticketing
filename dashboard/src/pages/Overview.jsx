@@ -165,14 +165,17 @@ export default function Overview() {
 }
 
 export function ActivityRow({ a, onOpen, stages }) {
-  const label = { 'event.update': 'Editó', 'event.create': 'Creó', 'finance.save': 'Guardó datos financieros' }[a.action] || a.action;
-  const ch = a.changes ? Object.entries(a.changes).map(([k, v]) => `${{ stage: 'etapa', name: 'nombre', date: 'fecha', venue: 'local', brand: 'marca', notes: 'notas', openingStock: 'inventario inicial', liveEventId: 'fecha en la web' }[k] || k}${k === 'stage' && stages ? `: ${stages.find((s) => s.id === v.to)?.label || v.to}` : ''}`).join(', ') : '';
+  const label = { 'event.update': 'Editó', 'event.create': 'Creó', 'finance.save': 'Guardó datos financieros', 'event.numbers': 'Cargó números de' }[a.action] || a.action;
+  const money2 = (v) => (typeof v === 'number' ? money(v) : v);
+  const ch = a.changes ? Object.entries(a.changes).map(([k, v]) => `${{ stage: 'etapa', name: 'nombre', date: 'fecha', venue: 'local', brand: 'marca', notes: 'notas', openingStock: 'inventario inicial', liveEventId: 'fecha en la web', income: 'ingresos', costs: 'costos', brandInvestment: 'inversión en marca', stockLeft: 'stock final', stock: 'detalle de stock', bar: 'barra' }[k] || k}${k === 'stage' && stages ? `: ${stages.find((s) => s.id === v.to)?.label || v.to}` : ['income', 'costs', 'brandInvestment', 'stockLeft', 'openingStock'].includes(k) ? ` ${money2(v.from)} → ${money2(v.to)}` : ''}`).join(', ') : '';
   return (
     <li className="flex items-start gap-2.5 px-4 py-2.5">
       <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
       <span className="min-w-0 flex-1 text-[13px]">
         {label} {a.event ? <button type="button" className="font-medium hover:underline" onClick={() => onOpen(a.event)}>{a.name || a.event}</button> : a.events ? <span className="text-muted-foreground">({a.events} eventos)</span> : null}
+        {a.actor === 'claude' && <span className="ml-1.5 rounded border px-1 text-[10px] font-medium text-muted-foreground">Claude</span>}
         {ch && <span className="block text-[12px] text-muted-foreground">{ch}</span>}
+        {a.source && <span className="block text-[11px] text-muted-foreground">Fuente: {a.source}</span>}
       </span>
       <span className="shrink-0 text-[11px] text-muted-foreground">{fmtStamp(a.at)}</span>
     </li>

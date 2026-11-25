@@ -20,6 +20,7 @@ import Promoters from './pages/Promoters.jsx';
 import Operations, { MyTasks } from './pages/Operations.jsx';
 import { BrandsCompare, BrandHome } from './pages/Brands.jsx';
 import { Marketing, Sponsors, Team, Audience, Documents } from './pages/Commercial.jsx';
+import { Integrations, Analytics, Live } from './pages/Intel.jsx';
 import { BrandTile } from './ui.jsx';
 
 const evName = (p, d) => (d && d.finance.events.find((e) => e.id === p.id) || {}).name;
@@ -58,6 +59,9 @@ const router = createBrowserRouter([
       { path: 'equipo', element: <Team />, handle: { crumb: 'Equipo' } },
       { path: 'audiencia', element: <Audience />, handle: { crumb: 'Audiencia' } },
       { path: 'documentos', element: <Documents />, handle: { crumb: 'Documentos' } },
+      { path: 'en-vivo', element: <Live />, handle: { crumb: 'En vivo' } },
+      { path: 'analitica', element: <Analytics />, handle: { crumb: 'Analítica' } },
+      { path: 'integraciones', element: <Integrations />, handle: { crumb: 'Integraciones' } },
       { path: 'marcas', handle: { crumb: 'Marcas' }, children: [
         { index: true, element: <BrandsCompare />, handle: { crumb: 'Comparativo' } },
         { path: ':brandId', element: <BrandHome />, handle: { crumb: brandName } },

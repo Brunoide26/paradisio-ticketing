@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate, useMatches } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   LayoutDashboardIcon, InboxIcon, CalendarDaysIcon, TicketIcon, WalletIcon, HistoryIcon, PlusIcon, BellIcon,
-  RefreshCwIcon, DownloadIcon, ReceiptIcon, MoonIcon, SunIcon, ChevronsUpDownIcon, CheckIcon, Building2Icon, ExternalLinkIcon, SlidersHorizontalIcon, TriangleAlertIcon, PackageIcon, ArrowLeftRightIcon, CalculatorIcon, CopyIcon, ListTodoIcon, ShoppingBagIcon, MegaphoneIcon, WrenchIcon, UserPlusIcon, SparklesIcon, HandshakeIcon, UsersIcon, ContactIcon, FileTextIcon,
+  RefreshCwIcon, DownloadIcon, ReceiptIcon, MoonIcon, SunIcon, ChevronsUpDownIcon, CheckIcon, Building2Icon, ExternalLinkIcon, SlidersHorizontalIcon, TriangleAlertIcon, PackageIcon, ArrowLeftRightIcon, CalculatorIcon, CopyIcon, ListTodoIcon, ShoppingBagIcon, MegaphoneIcon, WrenchIcon, UserPlusIcon, SparklesIcon, HandshakeIcon, UsersIcon, ContactIcon, FileTextIcon, RadioIcon, LineChartIcon, PlugIcon,
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { GroupLogo } from '@/components/app-sidebar';
@@ -303,7 +303,7 @@ function Palette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Ir a">
-          {[['/', 'Resumen ejecutivo', <LayoutDashboardIcon key="i" />], ['/atencion', 'Atención', <InboxIcon key="i" />], ['/calendario', 'Calendario', <CalendarDaysIcon key="i" />], ['/eventos', 'Eventos', <TicketIcon key="i" />], ['/finanzas', 'Finanzas', <WalletIcon key="i" />], ['/finanzas/transacciones', 'Transacciones', <ArrowLeftRightIcon key="i" />], ['/finanzas/cuentas', 'Cuentas', <WalletIcon key="i" />], ['/finanzas/por-pagar', 'Por pagar y por cobrar', <WalletIcon key="i" />], ['/finanzas/flujo', 'Flujo de caja', <WalletIcon key="i" />], ['/finanzas/presupuestos', 'Presupuestos', <WalletIcon key="i" />], ['/finanzas/simulador', 'Simulador de rentabilidad', <CalculatorIcon key="i" />], ['/finanzas/datos', 'Datos de eventos', <SlidersHorizontalIcon key="i" />], ['/inventario', 'Inventario y barra', <PackageIcon key="i" />], ['/ventas', 'Ventas y reservas', <ShoppingBagIcon key="i" />], ['/promotores', 'Promotores', <MegaphoneIcon key="i" />], ['/operaciones', 'Operaciones y proveedores', <WrenchIcon key="i" />], ['/tareas', 'Mis tareas', <ListTodoIcon key="i" />], ['/marketing', 'Marketing y contenido', <SparklesIcon key="i" />], ['/sponsors', 'Sponsors y alianzas', <HandshakeIcon key="i" />], ['/audiencia', 'Audiencia (CRM)', <ContactIcon key="i" />], ['/equipo', 'Equipo', <UsersIcon key="i" />], ['/documentos', 'Documentos', <FileTextIcon key="i" />], ['/actividad', 'Registro de actividad', <HistoryIcon key="i" />]].map(([to, l, icon]) => (
+          {[['/', 'Resumen ejecutivo', <LayoutDashboardIcon key="i" />], ['/atencion', 'Atención', <InboxIcon key="i" />], ['/calendario', 'Calendario', <CalendarDaysIcon key="i" />], ['/eventos', 'Eventos', <TicketIcon key="i" />], ['/finanzas', 'Finanzas', <WalletIcon key="i" />], ['/finanzas/transacciones', 'Transacciones', <ArrowLeftRightIcon key="i" />], ['/finanzas/cuentas', 'Cuentas', <WalletIcon key="i" />], ['/finanzas/por-pagar', 'Por pagar y por cobrar', <WalletIcon key="i" />], ['/finanzas/flujo', 'Flujo de caja', <WalletIcon key="i" />], ['/finanzas/presupuestos', 'Presupuestos', <WalletIcon key="i" />], ['/finanzas/simulador', 'Simulador de rentabilidad', <CalculatorIcon key="i" />], ['/finanzas/datos', 'Datos de eventos', <SlidersHorizontalIcon key="i" />], ['/inventario', 'Inventario y barra', <PackageIcon key="i" />], ['/ventas', 'Ventas y reservas', <ShoppingBagIcon key="i" />], ['/promotores', 'Promotores', <MegaphoneIcon key="i" />], ['/operaciones', 'Operaciones y proveedores', <WrenchIcon key="i" />], ['/tareas', 'Mis tareas', <ListTodoIcon key="i" />], ['/en-vivo', 'En vivo (día del evento)', <RadioIcon key="i" />], ['/analitica', 'Analítica', <LineChartIcon key="i" />], ['/integraciones', 'Integraciones', <PlugIcon key="i" />], ['/marketing', 'Marketing y contenido', <SparklesIcon key="i" />], ['/sponsors', 'Sponsors y alianzas', <HandshakeIcon key="i" />], ['/audiencia', 'Audiencia (CRM)', <ContactIcon key="i" />], ['/equipo', 'Equipo', <UsersIcon key="i" />], ['/documentos', 'Documentos', <FileTextIcon key="i" />], ['/actividad', 'Registro de actividad', <HistoryIcon key="i" />]].map(([to, l, icon]) => (
             <CommandItem key={to} value={`ir ${l}`} onSelect={() => run(() => navigate(to))}>{icon}{l}</CommandItem>
           ))}
           <CommandItem value="marcas comparativo" onSelect={() => run(() => navigate('/marcas'))}><Building2Icon />Comparativo de marcas</CommandItem>
@@ -364,6 +364,7 @@ export default function Shell() {
       { to: '/', title: 'Resumen ejecutivo', icon: <LayoutDashboardIcon />, end: true },
       { to: '/atencion', title: 'Atención', icon: <InboxIcon />, badge: scopeAttention.length || null },
       { to: '/calendario', title: 'Calendario', icon: <CalendarDaysIcon /> },
+      { to: '/en-vivo', title: 'En vivo', icon: <RadioIcon />, badge: data.finance.events.some((e) => e.date === limaISO() && e.stage !== 'cancelled') ? 'hoy' : null },
       { to: '/tareas', title: 'Mis tareas', icon: <ListTodoIcon />, badge: (data.os.tasks || []).filter((t) => t.overdue).length || null },
     ] },
     { label: 'Negocio', collapsible: true, items: [
@@ -373,6 +374,7 @@ export default function Shell() {
       { to: '/promotores', title: 'Promotores', icon: <MegaphoneIcon /> },
       { to: '/inventario', title: 'Inventario y barra', icon: <PackageIcon />, badge: data.os.inventorySummary.low.length || null },
       { to: '/operaciones', title: 'Operaciones y proveedores', icon: <WrenchIcon /> },
+      { to: '/analitica', title: 'Analítica', icon: <LineChartIcon /> },
     ] },
     { label: 'Comercial', collapsible: true, items: [
       { to: '/marketing', title: 'Marketing y contenido', icon: <SparklesIcon /> },
@@ -387,7 +389,10 @@ export default function Shell() {
       { to: '/marcas', title: 'Comparativo de marcas', icon: <Building2Icon />, end: true },
       ...brands.map((b) => ({ to: `/marcas/${b.id}`, title: b.name, icon: <BrandTile id={b.id} size="xs" className="size-4!" />, badge: (data.os.brands && data.os.brands[b.id] && !data.os.brands[b.id].events.done) ? 'nueva' : null })),
     ] },
-    { label: 'Sistema', collapsible: true, items: [{ to: '/actividad', title: 'Registro de actividad', icon: <HistoryIcon /> }] },
+    { label: 'Sistema', collapsible: true, items: [
+      { to: '/integraciones', title: 'Integraciones', icon: <PlugIcon />, badge: (data.os.integrations || []).some((i) => i.status === 'error') ? '!' : null },
+      { to: '/actividad', title: 'Registro de actividad', icon: <HistoryIcon /> },
+    ] },
   ];
 
   // En las secciones generales; no en la página de una marca ni en el detalle de un evento.

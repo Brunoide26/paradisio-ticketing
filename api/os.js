@@ -36,15 +36,17 @@ const PR = require('../lib/os/promoters');
 const OPS = require('../lib/os/ops');
 const COM = require('../lib/os/commercial');
 const CRM = require('../lib/os/crm');
+const INT = require('../lib/os/intel');
+const { chargesForEvents } = require('../lib/culqi-sync');
 const { listEvents } = require('../lib/events');
 const { listPromoters } = require('../lib/promoters');
 const limaToday = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 10);
 
 // Libro + inventario + sus resúmenes para un alcance (grupo o marca).
 async function opsPayload(finance, brand = null) {
-  const [ledger, inventory, promo, ops, marketing, sponsors, documents] = await Promise.all(['ledger', 'inventory', 'promo', 'ops', 'marketing', 'sponsors', 'documents'].map((d) => readDoc(redis, d)));
+  const [ledger, inventory, promo, ops, marketing, sponsors, documents, incidents] = await Promise.all(['ledger', 'inventory', 'promo', 'ops', 'marketing', 'sponsors', 'documents', 'incidents'].map((d) => readDoc(redis, d)));
   return {
-    ledger, inventory, promo, ops, marketing, sponsors, documents,
+    ledger, inventory, promo, ops, marketing, sponsors, documents, incidents,
     tasks: OPS.tasksView(ops, limaToday()),
     ledgerSummary: L.ledgerSummary(ledger, { finance, brand }),
     inventorySummary: I.inventorySummary(inventory),
@@ -170,7 +172,7 @@ async function write(current, next, baseVersion, action, detail, actor) {
   return { status: 200, body: { ok: true, version: next.updatedAt, finance: next } };
 }
 
-const EDITABLE = ['name', 'date', 'venue', 'brand', 'notes', 'stage', 'liveEventId', 'openingStock'];
+const EDITABLE = ['name', 'date', 'venue', 'brand', 'notes', 'stage', 'liveEventId', 'openingStock', 'capacity'];
 
 function applyPatch(e, patch) {
   const changes = {};
@@ -180,6 +182,7 @@ function applyPatch(e, patch) {
     if (k === 'stage') { if (!STAGE_IDS.includes(v)) throw new Error('bad_stage'); }
     else if (k === 'date') { if (!/^\d{4}-\d{2}-\d{2}$/.test(v || '')) throw new Error('bad_date'); }
     else if (k === 'openingStock') { v = v === null || v === '' ? null : Number(v); if (v !== null && !Number.isFinite(v)) throw new Error('bad_amount'); }
+    else if (k === 'capacity') { v = v === null || v === '' ? null : Math.round(Number(v)); if (v !== null && !(v > 0)) throw new Error('bad_capacity'); }
     else v = String(v == null ? '' : v).slice(0, 300);
     if (JSON.stringify(e[k]) !== JSON.stringify(v)) changes[k] = { from: e[k] === undefined ? null : e[k], to: v };
     e[k] = v;
@@ -279,6 +282,11 @@ module.exports = async (req, res) => {
       const audience = { group: CRM.audience(ticketsBy, metaOf) };
       (p.finance.brands || []).forEach((b) => { audience[b.id] = CRM.audience(ticketsBy, metaOf, { brand: b.id }); });
       ops.commercial = COM.commercialAttention({ mkt: ops.marketing, sponsors: deals, documents: ops.documents, today });
+      // Fase 5: analítica y estado de integraciones.
+      const analytics = INT.eventAnalytics(p.finance, { live: p.live, sales, promoters, audience: audience.group, ledger: ops.ledger });
+      const integrations = INT.integrationsStatus({ culqi: p.culqi, ticketsByEvent: ticketsBy, audit: activity });
+      const openIncidents = (ops.incidents.items || []).filter((i) => !i.resolved && i.severity === 'high');
+      if (openIncidents.length) ops.commercial.push({ level: 'high', title: 'Incidentes graves sin resolver', text: openIncidents.slice(0, 3).map((i) => i.text).join(' · '), route: '/en-vivo' });
       Object.values(brands).forEach((x) => { if (x.promoters) x.promoters.top = [...x.promoters.top.values()].sort((a, b) => b.attended - a.attended).slice(0, 5); });
       ops.promoPending = Object.entries(promoters).flatMap(([evId, perf]) => {
         const e = p.finance.events.find((x) => x.id === evId);
@@ -288,15 +296,16 @@ module.exports = async (req, res) => {
       return res.status(200).json({
         ...p,
         version: p.seeded ? null : versionOf(p.finance),
-        ledger: ops.ledger, inventory: ops.inventory, promo: ops.promo, ops: ops.ops, marketing: ops.marketing, sponsors: ops.sponsors, documents: ops.documents,
+        ledger: ops.ledger, inventory: ops.inventory, promo: ops.promo, ops: ops.ops, marketing: ops.marketing, sponsors: ops.sponsors, documents: ops.documents, incidents: ops.incidents,
         os: {
+          analytics, integrations,
           campaigns, deals, audience,
           sales, promoters, tasks: ops.tasks, brands, groupActual: { revenue: s.actual.revenue, result: s.actual.result },
           roster: [...roster.values()].map((x) => ({ code: x.code, name: x.name, retired: !!x.retired, active: x.active !== false })),
           stages: STAGES, metrics: METRICS, summary: s, activity,
           attention: merged(attention(s, { culqi: p.culqi, usingStaffPasscode }), opsAttention(ops)),
           ledgerSummary: ops.ledgerSummary, inventorySummary: ops.inventorySummary, byEvent: ops.byEvent,
-          enums: { txKinds: L.KINDS, accountTypes: L.ACCOUNT_TYPES, docTypes: L.DOC_TYPES, moveTypes: I.MOVES, productKinds: I.KINDS, contactTypes: OPS.CONTACT_TYPES, taskStatus: OPS.TASK_STATUS, contentStatus: COM.CONTENT_STATUS, channels: COM.CHANNELS, campaignStatus: COM.CAMPAIGN_STATUS, assetTypes: COM.ASSET_TYPES, dealStages: COM.DEAL_STAGES, docTypes4: COM.DOC_TYPES },
+          enums: { txKinds: L.KINDS, accountTypes: L.ACCOUNT_TYPES, docTypes: L.DOC_TYPES, moveTypes: I.MOVES, productKinds: I.KINDS, contactTypes: OPS.CONTACT_TYPES, taskStatus: OPS.TASK_STATUS, contentStatus: COM.CONTENT_STATUS, channels: COM.CHANNELS, campaignStatus: COM.CAMPAIGN_STATUS, assetTypes: COM.ASSET_TYPES, dealStages: COM.DEAL_STAGES, docTypes4: COM.DOC_TYPES, severity: INT.SEVERITY },
         },
       });
     }
@@ -312,6 +321,33 @@ module.exports = async (req, res) => {
     }
 
     // ---------- Libro: cuentas y transacciones ----------
+    // ---------- Fase 5: conciliación con Culqi e incidentes ----------
+    if (action === 'int.culqi.import') {
+      const { finance } = await loadFinance();
+      let got;
+      try { got = await chargesForEvents(finance.events || []); } catch (err) { return res.status(502).json({ error: 'culqi_error', message: err.message }); }
+      if (!got.connected) return res.status(400).json({ error: 'culqi_off', message: got.reason });
+      const r = await updateDoc(redis, 'ledger', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+        if (!d.accounts.some((a) => a.id === body.accountId)) throw new Error('bad_account');
+        const plan = INT.culqiImportPlan(got.charges, { accountId: body.accountId, existing: d.transactions, events: finance.events || [] });
+        const ctx = { accounts: d.accounts, events: finance.events || [], brands: finance.brands || [] };
+        plan.forEach((t) => { const tx = L.cleanTx(t, ctx); L.assertUniqueRef(d.transactions, tx); d.transactions.push(tx); });
+        return { name: `Culqi: ${plan.filter((t) => t.kind === 'sale').length} cobros y ${plan.filter((t) => t.kind === 'cost').length} comisiones importados`, imported: plan.length };
+      } });
+      return res.status(r.status).json({ ...r.body, charges: got.charges.length, fetched: got.fetched });
+    }
+    if (action === 'inc.upsert' || action === 'inc.delete') {
+      const { finance } = await loadFinance();
+      const r = await updateDoc(redis, 'incidents', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+        if (action === 'inc.delete') { const x = d.items.find((y) => y.id === body.id); if (!x) throw new Error('not_found'); d.items = d.items.filter((y) => y.id !== body.id); return { name: x.text.slice(0, 60), event: x.eventId }; }
+        const i = d.items.findIndex((y) => y.id === (body.item || {}).id);
+        const it = INT.cleanIncident({ ...(i >= 0 ? d.items[i] : {}), ...body.item }, { events: finance.events || [] });
+        if (i >= 0) d.items[i] = it; else d.items.push(it);
+        return { name: it.text.slice(0, 60), event: it.eventId, changes: i >= 0 ? { resolved: { from: !it.resolved, to: it.resolved } } : undefined };
+      } });
+      return res.status(r.status).json(r.body);
+    }
+
     // ---------- Fase 4: marketing, sponsors, documentos ----------
     if (action.startsWith('mkt.') || action.startsWith('sp.') || action.startsWith('doc.')) {
       const { finance } = await loadFinance();

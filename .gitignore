@@ -1,4 +1,5 @@
 .agents/skills/
-.claude/skills/
-skills-lock.json
 node_modules/
+# Impeccable: motor descargado (verificado por checksum) y archivos de trabajo locales
+.claude/skills/impeccable/scripts/bin/
+.impeccable/

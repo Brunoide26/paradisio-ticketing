@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate, useMatches } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   LayoutDashboardIcon, InboxIcon, CalendarDaysIcon, TicketIcon, WalletIcon, HistoryIcon, PlusIcon, BellIcon,
-  RefreshCwIcon, DownloadIcon, ReceiptIcon, MoonIcon, SunIcon, ChevronsUpDownIcon, CheckIcon, Building2Icon, ExternalLinkIcon, SlidersHorizontalIcon, TriangleAlertIcon, PackageIcon, ArrowLeftRightIcon, CalculatorIcon, CopyIcon,
+  RefreshCwIcon, DownloadIcon, ReceiptIcon, MoonIcon, SunIcon, ChevronsUpDownIcon, CheckIcon, Building2Icon, ExternalLinkIcon, SlidersHorizontalIcon, TriangleAlertIcon, PackageIcon, ArrowLeftRightIcon, CalculatorIcon, CopyIcon, ListTodoIcon, ShoppingBagIcon, MegaphoneIcon, WrenchIcon, UserPlusIcon,
 } from 'lucide-react';
 import { AppShell } from '@/components/app-shell';
 import { GroupLogo } from '@/components/app-sidebar';
@@ -21,7 +21,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { useKeypress } from '@/hooks/use-keypress';
 import { useOS } from './store.jsx';
-import { TxForm, AccountForm, ProductForm, MoveForm } from './forms.jsx';
+import { TxForm, AccountForm, ProductForm, MoveForm, ContactForm, TaskForm } from './forms.jsx';
 import { StageBadge, BrandDot, fmtDay, fmtDayYear, relDays, Unavailable, moneyOrNA } from './kit.jsx';
 import { BrandTile, KindTag } from '../ui.jsx';
 import { cn, money, pct, isActual, totals, limaISO } from '../lib.js';
@@ -264,6 +264,8 @@ function Palette() {
           <CommandItem onSelect={() => run(() => setCreating(true))}><PlusIcon />Nuevo evento<Kbd>C</Kbd></CommandItem>
           <CommandItem onSelect={() => run(() => setDrawer({ type: 'tx' }))}><ArrowLeftRightIcon />Nueva transacción<Kbd>T</Kbd></CommandItem>
           <CommandItem onSelect={() => run(() => setDrawer({ type: 'move' }))}><PackageIcon />Movimiento de inventario</CommandItem>
+          <CommandItem onSelect={() => run(() => setDrawer({ type: 'task' }))}><ListTodoIcon />Nueva tarea</CommandItem>
+          <CommandItem onSelect={() => run(() => setDrawer({ type: 'contact' }))}><UserPlusIcon />Nuevo contacto</CommandItem>
           <CommandItem onSelect={() => run(() => setWithTaxes(!withTaxes))}><ReceiptIcon />{withTaxes ? 'Ver sin IGV ni renta' : 'Ver con IGV y renta'}</CommandItem>
           <CommandItem onSelect={() => run(() => setTheme(theme === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? <SunIcon /> : <MoonIcon />}{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</CommandItem>
           <CommandItem onSelect={() => run(() => exportCsv(data.finance, withTaxes))}><DownloadIcon />Exportar todo a CSV</CommandItem>
@@ -271,7 +273,7 @@ function Palette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Ir a">
-          {[['/', 'Resumen ejecutivo', <LayoutDashboardIcon key="i" />], ['/atencion', 'Atención', <InboxIcon key="i" />], ['/calendario', 'Calendario', <CalendarDaysIcon key="i" />], ['/eventos', 'Eventos', <TicketIcon key="i" />], ['/finanzas', 'Finanzas', <WalletIcon key="i" />], ['/finanzas/transacciones', 'Transacciones', <ArrowLeftRightIcon key="i" />], ['/finanzas/cuentas', 'Cuentas', <WalletIcon key="i" />], ['/finanzas/por-pagar', 'Por pagar y por cobrar', <WalletIcon key="i" />], ['/finanzas/flujo', 'Flujo de caja', <WalletIcon key="i" />], ['/finanzas/presupuestos', 'Presupuestos', <WalletIcon key="i" />], ['/finanzas/simulador', 'Simulador de rentabilidad', <CalculatorIcon key="i" />], ['/finanzas/datos', 'Datos de eventos', <SlidersHorizontalIcon key="i" />], ['/inventario', 'Inventario y barra', <PackageIcon key="i" />], ['/actividad', 'Registro de actividad', <HistoryIcon key="i" />]].map(([to, l, icon]) => (
+          {[['/', 'Resumen ejecutivo', <LayoutDashboardIcon key="i" />], ['/atencion', 'Atención', <InboxIcon key="i" />], ['/calendario', 'Calendario', <CalendarDaysIcon key="i" />], ['/eventos', 'Eventos', <TicketIcon key="i" />], ['/finanzas', 'Finanzas', <WalletIcon key="i" />], ['/finanzas/transacciones', 'Transacciones', <ArrowLeftRightIcon key="i" />], ['/finanzas/cuentas', 'Cuentas', <WalletIcon key="i" />], ['/finanzas/por-pagar', 'Por pagar y por cobrar', <WalletIcon key="i" />], ['/finanzas/flujo', 'Flujo de caja', <WalletIcon key="i" />], ['/finanzas/presupuestos', 'Presupuestos', <WalletIcon key="i" />], ['/finanzas/simulador', 'Simulador de rentabilidad', <CalculatorIcon key="i" />], ['/finanzas/datos', 'Datos de eventos', <SlidersHorizontalIcon key="i" />], ['/inventario', 'Inventario y barra', <PackageIcon key="i" />], ['/ventas', 'Ventas y reservas', <ShoppingBagIcon key="i" />], ['/promotores', 'Promotores', <MegaphoneIcon key="i" />], ['/operaciones', 'Operaciones y proveedores', <WrenchIcon key="i" />], ['/tareas', 'Mis tareas', <ListTodoIcon key="i" />], ['/actividad', 'Registro de actividad', <HistoryIcon key="i" />]].map(([to, l, icon]) => (
             <CommandItem key={to} value={`ir ${l}`} onSelect={() => run(() => navigate(to))}>{icon}{l}</CommandItem>
           ))}
           {brands.map((b) => <CommandItem key={b.id} value={`marca ${b.name}`} onSelect={() => run(() => navigate(`/marcas/${b.id}`))}><BrandTile id={b.id} size="xs" />{b.name}</CommandItem>)}
@@ -331,11 +333,15 @@ export default function Shell() {
       { to: '/', title: 'Resumen ejecutivo', icon: <LayoutDashboardIcon />, end: true },
       { to: '/atencion', title: 'Atención', icon: <InboxIcon />, badge: scopeAttention.length || null },
       { to: '/calendario', title: 'Calendario', icon: <CalendarDaysIcon /> },
+      { to: '/tareas', title: 'Mis tareas', icon: <ListTodoIcon />, badge: (data.os.tasks || []).filter((t) => t.overdue).length || null },
     ] },
     { label: 'Negocio', collapsible: true, items: [
       { to: '/eventos', title: 'Eventos', icon: <TicketIcon /> },
       { to: '/finanzas', title: 'Finanzas', icon: <WalletIcon />, end: true, match: ['/finanzas/transacciones', '/finanzas/cuentas', '/finanzas/por-pagar', '/finanzas/flujo', '/finanzas/presupuestos', '/finanzas/simulador', '/finanzas/datos'], badge: data.os.ledgerSummary.payables.overdue || null },
+      { to: '/ventas', title: 'Ventas y reservas', icon: <ShoppingBagIcon /> },
+      { to: '/promotores', title: 'Promotores', icon: <MegaphoneIcon /> },
       { to: '/inventario', title: 'Inventario y barra', icon: <PackageIcon />, badge: data.os.inventorySummary.low.length || null },
+      { to: '/operaciones', title: 'Operaciones y proveedores', icon: <WrenchIcon /> },
     ] },
     { label: 'Marcas', collapsible: true, items: brands.map((b) => ({ to: `/marcas/${b.id}`, title: b.name, icon: <BrandTile id={b.id} size="xs" className="size-4!" /> })) },
     { label: 'Sistema', collapsible: true, items: [{ to: '/actividad', title: 'Registro de actividad', icon: <HistoryIcon /> }] },
@@ -381,6 +387,8 @@ export default function Shell() {
                 <DropdownMenuItem onSelect={() => setCreating(true)}><TicketIcon />Evento<span className="ml-auto text-[11px] text-muted-foreground">C</span></DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'tx' })}><ArrowLeftRightIcon />Transacción<span className="ml-auto text-[11px] text-muted-foreground">T</span></DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'move' })}><PackageIcon />Movimiento de inventario</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDrawer({ type: 'task' })}><ListTodoIcon />Tarea</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setDrawer({ type: 'contact' })}><UserPlusIcon />Contacto</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'account' })}><WalletIcon />Cuenta</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'product' })}><PackageIcon />Producto</DropdownMenuItem>
@@ -401,6 +409,8 @@ export default function Shell() {
           {drawer?.type === 'account' && <AccountForm key={drawer.id || 'new'} id={drawer.id} onClose={() => setDrawer(null)} />}
           {drawer?.type === 'product' && <ProductForm key={drawer.id || 'new'} id={drawer.id} onClose={() => setDrawer(null)} />}
           {drawer?.type === 'move' && <MoveForm key="mv" preset={drawer.preset} onClose={() => setDrawer(null)} />}
+          {drawer?.type === 'contact' && <ContactForm key={drawer.id || 'new'} id={drawer.id} preset={drawer.preset} onClose={() => setDrawer(null)} />}
+          {drawer?.type === 'task' && <TaskForm key={drawer.id || 'new'} id={drawer.id} preset={drawer.preset} onClose={() => setDrawer(null)} />}
         </SheetContent>
       </Sheet>
       <QuickCreate />

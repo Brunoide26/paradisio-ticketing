@@ -15,6 +15,9 @@ import { EventPage, BrandPage, FinanceData, Attention, Activity, NotFound } from
 import { FinanceOverview, Transactions, Accounts, Pending, CashFlow, Budgets, FinanceTabs } from './pages/Finance.jsx';
 import Simulator from './pages/Simulator.jsx';
 import Inventory from './pages/Inventory.jsx';
+import Sales from './pages/Sales.jsx';
+import Promoters from './pages/Promoters.jsx';
+import Operations, { MyTasks } from './pages/Operations.jsx';
 import { BrandTile } from './ui.jsx';
 
 const evName = (p, d) => (d && d.finance.events.find((e) => e.id === p.id) || {}).name;
@@ -44,6 +47,10 @@ const router = createBrowserRouter([
         { path: 'datos', element: <><FinanceTabs /><FinanceData /></>, handle: { crumb: 'Datos de eventos' } },
       ] },
       { path: 'inventario', element: <Inventory />, handle: { crumb: 'Inventario y barra' } },
+      { path: 'ventas', element: <Sales />, handle: { crumb: 'Ventas y reservas' } },
+      { path: 'promotores', element: <Promoters />, handle: { crumb: 'Promotores' } },
+      { path: 'operaciones', element: <Operations />, handle: { crumb: 'Operaciones y proveedores' } },
+      { path: 'tareas', element: <MyTasks />, handle: { crumb: 'Mis tareas' } },
       { path: 'marcas/:brandId', element: <BrandPage />, handle: { crumb: brandName } },
       { path: 'actividad', element: <Activity />, handle: { crumb: 'Registro de actividad' } },
       { path: '*', element: <NotFound /> },

@@ -31,12 +31,18 @@ const { METRICS, summarize, attention } = require('../lib/os/finance');
 const { readDoc, updateDoc } = require('../lib/os/docs');
 const L = require('../lib/os/ledger');
 const I = require('../lib/os/inventory');
+const SALES = require('../lib/os/sales');
+const PR = require('../lib/os/promoters');
+const OPS = require('../lib/os/ops');
+const { listPromoters } = require('../lib/promoters');
+const limaToday = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 10);
 
 // Libro + inventario + sus resúmenes para un alcance (grupo o marca).
 async function opsPayload(finance, brand = null) {
-  const [ledger, inventory] = await Promise.all([readDoc(redis, 'ledger'), readDoc(redis, 'inventory')]);
+  const [ledger, inventory, promo, ops] = await Promise.all([readDoc(redis, 'ledger'), readDoc(redis, 'inventory'), readDoc(redis, 'promo'), readDoc(redis, 'ops')]);
   return {
-    ledger, inventory,
+    ledger, inventory, promo, ops,
+    tasks: OPS.tasksView(ops, limaToday()),
     ledgerSummary: L.ledgerSummary(ledger, { finance, brand }),
     inventorySummary: I.inventorySummary(inventory),
     // Por evento: pagos/cobros del libro y consumo según los conteos.
@@ -52,6 +58,11 @@ function opsAttention(ops) {
   if (is.low.length) out.push({ level: 'med', title: 'Stock bajo', text: `${is.low.length} producto(s) por debajo del mínimo: ${is.products.filter((p) => p.low).map((p) => p.name).slice(0, 4).join(', ')}.`, route: '/inventario' });
   const noOpening = ls.accounts.filter((a) => !a.archived && a.openingBalance == null);
   if (noOpening.length) out.push({ level: 'low', title: 'Cuentas sin saldo inicial', text: `Sin saldo inicial no se puede calcular la caja: ${noOpening.map((a) => a.name).join(', ')}.`, route: '/finanzas/cuentas' });
+  const overdue = (ops.tasks || []).filter((t) => t.overdue);
+  if (overdue.length) out.push({ level: 'high', title: 'Tareas vencidas', text: `${overdue.length} tarea(s) pasaron su fecha: ${overdue.slice(0, 3).map((t) => t.title).join(' · ')}${overdue.length > 3 ? '…' : ''}.`, route: '/tareas' });
+  const blocked = (ops.tasks || []).filter((t) => t.effective === 'blocked' && t.due && t.due <= new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10));
+  if (blocked.length) out.push({ level: 'med', title: 'Tareas bloqueadas por vencer', text: `${blocked.length} tarea(s) dependen de otras sin terminar y vencen pronto.`, route: '/tareas' });
+  (ops.promoPending || []).forEach((p) => out.push({ level: 'med', title: 'Comisiones de promotores por pagar', text: `${p.name}: ${p.amount.toFixed(2)} soles pendientes según la regla de comisión.`, event: p.event }));
   return out;
 }
 const rank = { high: 0, med: 1, low: 2 };
@@ -193,20 +204,37 @@ module.exports = async (req, res) => {
     const usingStaffPasscode = !process.env.CEO_PASSCODE;
 
     if (action === 'load') {
-      const p = await loadPayload();
+      const p = await loadPayload({ withTickets: true });
+      const ticketsBy = p._ticketsByEvent; delete p._ticketsByEvent; delete p._promoterNames;
       withStages(p.finance);
       const s = summarize(p.finance, { culqi: p.culqi });
       const activity = await redis.lrange(AUDIT_KEY, 0, 29);
       const ops = await opsPayload(p.finance);
+      // Ventas y promotores por evento del OS, leídos de la ticketera (sólo agregados, sin datos personales).
+      const roster = new Map((await listPromoters({ includeRemoved: true })).map((x) => [x.code, x]));
+      const sales = {}, promoters = {};
+      (p.finance.events || []).forEach((e) => {
+        if (!e.liveEventId || !ticketsBy.has(e.liveEventId)) return;
+        const ts = ticketsBy.get(e.liveEventId);
+        sales[e.id] = SALES.salesForEvent(ts, e.date);
+        promoters[e.id] = PR.performance(ts, { promoters: roster, promo: ops.promo, finEventId: e.id, ledger: ops.ledger });
+      });
+      ops.promoPending = Object.entries(promoters).flatMap(([evId, perf]) => {
+        const e = p.finance.events.find((x) => x.id === evId);
+        if (!e || !isActualStage(stageOf(e)) || !perf.rule) return [];
+        return perf.rows.filter((r) => r.pending > 0).map((r) => ({ name: r.name, amount: r.pending, event: evId }));
+      });
       return res.status(200).json({
         ...p,
         version: p.seeded ? null : versionOf(p.finance),
-        ledger: ops.ledger, inventory: ops.inventory,
+        ledger: ops.ledger, inventory: ops.inventory, promo: ops.promo, ops: ops.ops,
         os: {
+          sales, promoters, tasks: ops.tasks,
+          roster: [...roster.values()].map((x) => ({ code: x.code, name: x.name, retired: !!x.retired, active: x.active !== false })),
           stages: STAGES, metrics: METRICS, summary: s, activity,
           attention: merged(attention(s, { culqi: p.culqi, usingStaffPasscode }), opsAttention(ops)),
           ledgerSummary: ops.ledgerSummary, inventorySummary: ops.inventorySummary, byEvent: ops.byEvent,
-          enums: { txKinds: L.KINDS, accountTypes: L.ACCOUNT_TYPES, docTypes: L.DOC_TYPES, moveTypes: I.MOVES, productKinds: I.KINDS },
+          enums: { txKinds: L.KINDS, accountTypes: L.ACCOUNT_TYPES, docTypes: L.DOC_TYPES, moveTypes: I.MOVES, productKinds: I.KINDS, contactTypes: OPS.CONTACT_TYPES, taskStatus: OPS.TASK_STATUS },
         },
       });
     }
@@ -222,6 +250,92 @@ module.exports = async (req, res) => {
     }
 
     // ---------- Libro: cuentas y transacciones ----------
+    // ---------- Promotores: equipos, metas y reglas de comisión ----------
+    if (action.startsWith('promo.')) {
+      const { finance } = await loadFinance();
+      const evOk = (id) => (finance.events || []).some((e) => e.id === id);
+      const code = String(body.code || '').toUpperCase();
+      const r = await updateDoc(redis, 'promo', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+        if (action === 'promo.team.upsert') {
+          const i = d.teams.findIndex((t) => t.id === (body.team || {}).id);
+          const t = PR.cleanTeam(body.team, i >= 0 ? d.teams[i] : null);
+          if (i >= 0) d.teams[i] = t; else d.teams.push(t);
+          return { name: t.name };
+        }
+        if (action === 'promo.team.delete') {
+          const t = d.teams.find((x) => x.id === body.id); if (!t) throw new Error('not_found');
+          d.teams = d.teams.filter((x) => x.id !== body.id);
+          Object.keys(d.members).forEach((k) => { if (d.members[k] === body.id) delete d.members[k]; });
+          return { name: t.name };
+        }
+        if (action === 'promo.member.set') {
+          if (!code) throw new Error('bad_code');
+          if (body.teamId && !d.teams.some((t) => t.id === body.teamId)) throw new Error('bad_team');
+          if (body.teamId) d.members[code] = body.teamId; else delete d.members[code];
+          return { name: code };
+        }
+        if (action === 'promo.rule.set') {
+          if (!evOk(body.eventId)) throw new Error('bad_event');
+          if (body.rule) d.rules[body.eventId] = PR.cleanRule(body.rule); else delete d.rules[body.eventId];
+          return { event: body.eventId, name: 'Regla de comisión' };
+        }
+        if (action === 'promo.target.set') {
+          if (!evOk(body.eventId) || !code) throw new Error('bad_event');
+          d.targets[body.eventId] = d.targets[body.eventId] || {};
+          const v = body.target === '' || body.target == null ? null : Number(body.target);
+          if (v !== null && !(v >= 0)) throw new Error('bad_number');
+          if (v === null) delete d.targets[body.eventId][code]; else d.targets[body.eventId][code] = v;
+          return { event: body.eventId, name: `Meta de ${code}` };
+        }
+        throw new Error('unknown_action');
+      } });
+      return res.status(r.status).json(r.body);
+    }
+
+    // ---------- Operaciones: directorio, tareas, run of show, staff ----------
+    if (action.startsWith('ops.')) {
+      const { finance } = await loadFinance();
+      const events = finance.events || [];
+      const r = await updateDoc(redis, 'ops', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+        if (action === 'ops.contact.upsert') {
+          const i = d.contacts.findIndex((c) => c.id === (body.contact || {}).id);
+          const c = OPS.cleanContact(body.contact, i >= 0 ? d.contacts[i] : null);
+          if (i >= 0) d.contacts[i] = c; else d.contacts.push(c);
+          return { name: c.name };
+        }
+        if (action === 'ops.task.upsert') {
+          const i = d.tasks.findIndex((t) => t.id === (body.task || {}).id);
+          const t = OPS.cleanTask(body.task, { events, tasks: d.tasks }, i >= 0 ? d.tasks[i] : null);
+          const before = i >= 0 ? d.tasks[i] : null;
+          if (i >= 0) d.tasks[i] = t; else d.tasks.push(t);
+          return { name: t.title, event: t.eventId || undefined, ...(before && before.status !== t.status ? { changes: { status: { from: before.status, to: t.status } } } : {}) };
+        }
+        if (action === 'ops.task.delete') {
+          const t = d.tasks.find((x) => x.id === body.id); if (!t) throw new Error('not_found');
+          d.tasks = d.tasks.filter((x) => x.id !== body.id).map((x) => ({ ...x, dependsOn: (x.dependsOn || []).filter((y) => y !== body.id) }));
+          return { name: t.title };
+        }
+        if (action === 'ops.task.template') {
+          const e = events.find((x) => x.id === body.eventId); if (!e) throw new Error('bad_event');
+          const add = OPS.templateTasks(e, d.tasks);
+          d.tasks.push(...add);
+          return { event: e.id, name: `Checklist estándar (${add.length} tareas)` };
+        }
+        if (action === 'ops.ros.set') {
+          if (!events.some((x) => x.id === body.eventId)) throw new Error('bad_event');
+          d.runOfShow[body.eventId] = OPS.cleanRunOfShow(body.items || []);
+          return { event: body.eventId, name: 'Run of show' };
+        }
+        if (action === 'ops.staff.set') {
+          if (!events.some((x) => x.id === body.eventId)) throw new Error('bad_event');
+          d.staff[body.eventId] = OPS.cleanStaff(body.items || [], d.contacts);
+          return { event: body.eventId, name: 'Staff del evento' };
+        }
+        throw new Error('unknown_action');
+      } });
+      return res.status(r.status).json(r.body);
+    }
+
     if (action.startsWith('account.') || action.startsWith('tx.') || action.startsWith('inv.')) {
       const { finance } = await loadFinance();
       const ctx = { events: finance.events || [], brands: finance.brands || [] };

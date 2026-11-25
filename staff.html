@@ -57,6 +57,7 @@
   .result-overlay-type { font-family:'Unbounded',sans-serif; font-weight:900; font-size:15px; letter-spacing:0.3em; text-transform:uppercase; opacity:0.85; }
   .result-overlay-headline { font-family:'Unbounded',sans-serif; font-weight:900; font-size:clamp(1.8rem, 9vw, 3rem); line-height:1.05; text-transform:uppercase; }
   .result-overlay-detail { font-size:16px; font-weight:600; line-height:1.5; max-width:340px; }
+  .result-overlay-via { margin-top:14px; padding:8px 14px; border:2px solid currentColor; border-radius:10px; font-size:17px; font-weight:800; letter-spacing:0.02em; max-width:340px; }
   .result-overlay-hint { margin-top:10px; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; opacity:0.7; }
   /* Deliberately styled as a secondary, outlined action rather than a big
      inviting button -- letting an expired Cortesia in is the exception, so
@@ -104,6 +105,7 @@
     <p class="result-overlay-type" id="result-overlay-type"></p>
     <p class="result-overlay-headline" id="result-overlay-headline"></p>
     <p class="result-overlay-detail" id="result-overlay-detail"></p>
+    <p class="result-overlay-via" id="result-overlay-via" hidden></p>
     <button class="result-overlay-action" id="result-overlay-action" hidden></button>
     <button class="result-overlay-action" id="result-overlay-action2" hidden></button>
     <p class="result-overlay-hint" id="result-overlay-hint">Toca para cerrar</p>
@@ -166,6 +168,9 @@
   const overlayTypeEl = document.getElementById('result-overlay-type');
   const overlayHeadlineEl = document.getElementById('result-overlay-headline');
   const overlayDetailEl = document.getElementById('result-overlay-detail');
+  const overlayViaEl = document.getElementById('result-overlay-via');
+  // De parte de quién viene (promotor), lo fija doCheckin antes de cada pantalla.
+  let currentVia = '';
   const overlayActionEl = document.getElementById('result-overlay-action');
   const overlayAction2El = document.getElementById('result-overlay-action2');
   let overlayAction2 = null;
@@ -182,6 +187,8 @@
     overlayTypeEl.textContent = type;
     overlayHeadlineEl.textContent = headline;
     overlayDetailEl.textContent = detail || '';
+    overlayViaEl.textContent = currentVia;
+    overlayViaEl.hidden = !currentVia;
     overlayAction = action || null;
     overlayAction2 = action2 || null;
     overlayAction2El.hidden = !overlayAction2;
@@ -254,7 +261,11 @@
       });
       const d = await r.json();
       resultEl.innerHTML = '';
+      currentVia = (d && d.ticket && (d.promoterName || d.ticket.promoterCode))
+        ? 'De parte de: ' + (d.promoterName || d.ticket.promoterCode)
+        : (d && d.ticket ? 'Sin promotor' : '');
       if(r.status === 401){
+        currentVia = '';
         showOverlay('bad', 'Error', 'Clave incorrecta', 'Verifica la clave de staff e intenta de nuevo.');
         return;
       }
@@ -270,6 +281,8 @@
           showOverlay('bad', 'Otra fecha', 'QR DE OTRA FECHA', d.ticket.name + ' (' + docLabel(d.ticket) + ') — este QR no es para hoy');
         } else if(d.reason === 'not_approved'){
           showOverlay('bad', d.ticket.type === 'promo' ? 'Invitación' : (d.ticket.skuLabel || 'Entrada'), 'NO APROBADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — su QR nunca se envió');
+        } else if(d.reason === 'rejected'){
+          showOverlay('bad', 'Rechazado', 'RECHAZADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — registro rechazado, NO debe ingresar');
         } else if(d.reason === 'voided'){
           showOverlay('bad', 'Anulado', 'ANULADO', d.ticket.name + ' (' + docLabel(d.ticket) + ') — NO debe ingresar');
         } else if(d.reason === 'cortesia_expired'){
@@ -304,6 +317,7 @@
       document.getElementById('ticket-id').value = '';
       refreshStats();
     } catch(e){
+      currentVia = '';
       showOverlay('bad', 'Error', 'ERROR DE CONEXIÓN', 'Intenta de nuevo.');
     }
   }

@@ -84,7 +84,7 @@ const HTML = `<!doctype html>
 
 // Todo menos las herramientas internas y lo que la propia pantalla necesita:
 //
-//   - /admin y /staff siguen en pie para poder seguir operando con la web
+//   - /administracion (dashboard de CEO), /admin y /staff siguen en pie para poder seguir operando con la web
 //     cerrada al público: mirar tickets, anular, exportar, escanear.
 //   - /api va con ellos por necesidad -- el panel y el scanner no son más que
 //     una fachada sobre esos endpoints, así que taparlos dejaría las dos
@@ -111,7 +111,7 @@ const HTML = `<!doctype html>
 // Los paréntesis de afuera no son un grupo de regex sino el parámetro de
 // path-to-regexp que envuelve al patrón, y por eso sí van tal cual.
 export const config = {
-  matcher: ['/((?!api/|admin(?:\\.html)?$|staff(?:\\.html)?$|entrada(?:\\.html)?$|orden(?:\\.html)?$|promotor(?:\\.html)?$|libro-reclamaciones(?:\\.html)?$|terminos(?:\\.html)?$|privacidad(?:\\.html)?$|devoluciones(?:\\.html)?$|fonts/|logo-script-white\\.png|logo-white\\.png|paradisio-logo\\.png|favicon|apple-touch-icon|android-chrome|site\\.webmanifest).*)'],
+  matcher: ['/((?!api/|admin(?:\\.html)?$|staff(?:\\.html)?$|administracion(?:\\.html)?$|entrada(?:\\.html)?$|orden(?:\\.html)?$|promotor(?:\\.html)?$|libro-reclamaciones(?:\\.html)?$|terminos(?:\\.html)?$|privacidad(?:\\.html)?$|devoluciones(?:\\.html)?$|fonts/|logo-script-white\\.png|logo-white\\.png|paradisio-logo\\.png|favicon|apple-touch-icon|android-chrome|site\\.webmanifest).*)'],
 };
 
 export default function middleware() {

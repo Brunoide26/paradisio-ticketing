@@ -3,27 +3,32 @@
 @theme {
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
-  --color-canvas: #F4F3F0;
+  --color-canvas: #FFFFFF;
   --color-panel: #FFFFFF;
-  --color-line: #E6E4DF;
-  --color-line-soft: #EFEDE9;
-  --color-ink: #141413;
-  --color-ink-2: #55534E;
-  --color-muted: #8B8881;
-  --color-cost: #C9C5BD;
-  --color-good: #12805C;
-  --color-bad: #C8361B;
+  --color-sidebar: #FBFBFA;
+  --color-line: #E8E8E6;
+  --color-line-soft: #F1F1EF;
+  --color-ink: #0A0A0A;
+  --color-ink-2: #525252;
+  --color-muted: #8A8A86;
+  --color-cost: #CFCFCB;
+  --color-good: #059669;
+  --color-bad: #DC3B1A;
   --color-club: #F0441A;
   --color-beats: #0F9BB0;
   --color-icon: #7B45FF;
 }
 
 html, body, #root { height: 100%; }
-body { background: var(--color-canvas); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; font-feature-settings: "ss01", "cv11"; }
-.num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-.recharts-cartesian-axis-tick-value { font-size: 11px; fill: #8B8881; font-variant-numeric: tabular-nums; }
-.recharts-tooltip-cursor { fill: rgba(20,20,19,.04); }
-::selection { background: #F0441A22; }
+body { background: #fff; color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+.recharts-cartesian-axis-tick-value { font-size: 11px; fill: #8A8A86; }
+.recharts-surface:focus, .recharts-wrapper:focus, svg:focus { outline: none; }
+.hatch { background-image: repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 6px); }
+.fade-last tr:nth-last-child(1) td { opacity: .35; }
+.fade-last tr:nth-last-child(2) td { opacity: .7; }
 .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-.scroll-thin::-webkit-scrollbar-thumb { background: #DAD7D1; border-radius: 6px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: #DDDDDA; border-radius: 6px; }
+[cmdk-item][data-selected="true"] { background: #F1F1EF; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

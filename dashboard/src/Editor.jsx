@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
-import { Card, CardHead, Button, BrandTile } from './ui.jsx';
+import { Card, CardHeader, Button, BrandTile } from './ui.jsx';
 import { CATEGORIES, STATUSES, money, totals, fmtDate, today, cn } from './lib.js';
 
 export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEditId, onSave, onDiscard, onReset, saving, withTaxes, seeded }) {
@@ -57,8 +57,8 @@ export default function Editor({ draft, setDraft, dirty, setDirty, editId, setEd
 
         {e ? (
           <Card>
-            <CardHead title={e.name || 'Sin nombre'} hint={t && <>Ingresos <span className="num">{money(t.income)}</span> · Costos <span className="num">{money(t.cost)}</span> · Resultado <span className={cn('num', t.result >= 0 ? 'text-good' : 'text-bad')}>{money(t.result)}</span></>}
-              right={<Button size="sm" variant="danger" onClick={deleteEvent}><Trash2 className="h-3.5 w-3.5" />{sureDel ? 'Toca de nuevo' : 'Eliminar'}</Button>} />
+            <CardHeader title={e.name || 'Sin nombre'} description={t && <>Ingresos <span className="num">{money(t.income)}</span> · Costos <span className="num">{money(t.cost)}</span> · Resultado <span className={cn('num', t.result >= 0 ? 'text-good' : 'text-bad')}>{money(t.result)}</span></>}
+              action={<Button size="sm" variant="danger" onClick={deleteEvent}><Trash2 className="h-3.5 w-3.5" />{sureDel ? 'Toca de nuevo' : 'Eliminar'}</Button>} />
             <div className="grid gap-3 p-5 sm:grid-cols-3">
               <Field label="Nombre" className="sm:col-span-3"><input className={inp} value={e.name} onChange={(v) => setField('name', v.target.value)} /></Field>
               <Field label="Marca"><select className={inp} value={e.brand} onChange={(v) => setField('brand', v.target.value)}>{draft.brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></Field>

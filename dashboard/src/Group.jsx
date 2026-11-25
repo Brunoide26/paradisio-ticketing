@@ -77,7 +77,7 @@ export default function Group({ finance, withTaxes, go, culqi, live }) {
         <Panel className="md:col-span-2">
           <PanelHeader title="Fuentes de datos" description="De dónde sale cada número." />
           <ul className="divide-y">
-            <Source ok={culqiOn} name="Culqi" text={culqiOn ? `Conectado${culqi.mode === 'test' ? ' (prueba)' : ''} · ${money(culqiAmt(real))} cobrados en fechas cerradas` : `No conectado${culqi && culqi.reason ? ` (${culqi.reason})` : ''}`} />
+            <Source ok={culqiOn} name="Culqi" text={culqiOn ? `Conectado${culqi.mode === 'test' ? ' (prueba)' : ''} · ${money(culqiAmt(real))} cobrados en fechas cerradas${culqi.diag ? ` · ${culqi.diag.fetched} cobros leídos${culqi.diag.newest ? `, el último del ${new Date(culqi.diag.newest * 1000).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', timeZone: 'America/Lima' })}` : ''}` : ''}` : `No conectado${culqi && culqi.reason ? ` (${culqi.reason})` : ''}`} />
             <Source ok={!!live && Object.keys(live).length > 0} name="Web de tickets" text="En vivo: registros, QRs, puerta y promotores" />
             <Source warn name="Wally y costos" text="Carga manual: Wally no tiene API. Los cierres se cargan después de cada fecha." />
           </ul>

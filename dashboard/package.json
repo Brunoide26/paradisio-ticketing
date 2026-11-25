@@ -7,6 +7,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@animate-ui/react": "^2.4.6",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@fontsource-variable/geist": "^5.3.0",

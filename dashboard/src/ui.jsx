@@ -1,32 +1,44 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
 import NumberFlow from '@number-flow/react';
-import { TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
+import { ArrowRightIcon } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Delta, DeltaIcon, DeltaValue } from '@/components/delta';
+import { ShareBarList, ShareBarListContent, ShareBarListFill, ShareBarListItem, ShareBarListLabel, ShareBarListValue } from '@/components/share-bar-list';
 import { cn, money, BRAND_STYLE } from './lib.js';
 
-// ---------- Contenedores (estilo efferd / shadcn) ----------
-export function Card({ className, children, delay = 0, dashed, ...p }) {
+// ---------- Tarjetas: real (sólida) y proyectada (punteada) ----------
+// Toda tarjeta con números estimados usa `proj`: borde punteado, fondo rayado suave y la etiqueta "Proyectado".
+export function Panel({ proj, className, children, ...p }) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay, ease: [0.16, 0.84, 0.3, 1] }}
-      className={cn('min-w-0 overflow-hidden rounded-xl border bg-panel', dashed ? 'border-dashed border-[#D6D6D2]' : 'border-line', className)}
-      {...p}
-    >
+    <Card className={cn('gap-0 overflow-hidden py-0', proj && 'border-dashed border-proj-line bg-[#FFFDF9] shadow-none', className)} {...p}>
       {children}
-    </motion.section>
+    </Card>
   );
 }
 
-export function CardHeader({ title, description, action, className }) {
+export function PanelHeader({ title, description, action, className, big }) {
   return (
-    <div className={cn('flex items-start justify-between gap-3 border-b border-line px-4 py-3.5', className)}>
-      <div className="min-w-0">
-        <h3 className="text-[15px] font-medium tracking-tight">{title}</h3>
-        {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
-      </div>
-      {action && <div className="shrink-0">{action}</div>}
+    <CardHeader className={cn('border-b py-4 [.border-b]:pb-4', className)}>
+      <CardTitle className={cn(big ? 'font-mono text-2xl font-medium tabular-nums tracking-tight' : 'text-balance text-[15px] font-medium')}>{title}</CardTitle>
+      {description && <CardDescription className="text-pretty text-[13px]">{description}</CardDescription>}
+      {action && <CardAction>{action}</CardAction>}
+    </CardHeader>
+  );
+}
+
+export { CardContent };
+
+// Encabezado de sección. "Real" arriba y sólido; "Proyectado" aparte y punteado.
+export function SectionTitle({ kind, title, description, className }) {
+  return (
+    <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-1', className)}>
+      {kind && <KindTag real={kind === 'real'} />}
+      <h2 className="text-[17px] font-semibold tracking-tight">{title}</h2>
+      {description && <p className="text-[13px] text-muted-foreground">{description}</p>}
+      <div className={cn('h-px min-w-8 flex-1', kind === 'proj' ? 'border-t border-dashed border-proj-line' : 'bg-border')} />
     </div>
   );
 }
@@ -45,176 +57,167 @@ export function Num({ value, suffix = '', decimals = 0, className }) {
   return <NumberFlow className={cn('mono', className)} value={Number(value) || 0} suffix={suffix} format={{ maximumFractionDigits: decimals }} willChange />;
 }
 
-// Píldora de variación: ▲ / ▼. `good` decide el color (no siempre subir es bueno).
-export function DeltaPill({ value, label, good, format = 'pct', className }) {
+// Variación con el componente Delta del bloque. `good` decide el color (no siempre subir es bueno).
+export function DeltaPill({ value, label, good, format = 'pct' }) {
   if (value == null || !isFinite(value)) return null;
-  const up = value >= 0;
-  const ok = good == null ? up : good;
-  const Icon = up ? TrendingUp : TrendingDown;
-  const text = format === 'money' ? money(Math.abs(value)) : `${Math.abs(Math.round(value * 10) / 10)}%`;
+  const ok = good == null ? value >= 0 : good;
   return (
-    <span className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium', ok ? 'bg-[#E7F6EF] text-good' : 'bg-[#FDEBE6] text-bad', className)}>
-      <Icon className="h-3 w-3" />{text}{label && <span className="font-normal opacity-80">{label}</span>}
-    </span>
+    <Delta value={value} variant="badge" className={cn('rounded-md', ok ? 'bg-emerald-500/10 text-emerald-700' : 'bg-red-500/10 text-red-600')}>
+      <DeltaIcon variant="trend" />
+      {format === 'money' ? <span className="tabular-nums">{money(Math.abs(value))}</span> : <DeltaValue suffix="%" />}
+      {label && <span className="font-normal opacity-80">{label}</span>}
+    </Delta>
   );
 }
 
-export function StatusBadge({ status, className }) {
-  const real = status === 'realizado';
+export function StatusBadge({ status }) {
   const tone = {
-    realizado: 'bg-[#E7F6EF] text-[#047857]',
-    presupuesto: 'bg-[#FFF4E5] text-[#9A5B06]',
+    realizado: 'bg-emerald-500/10 text-emerald-700',
+    presupuesto: 'bg-[#FFF4E5] text-proj',
     confirmado: 'bg-[#E6F4F7] text-[#0B6B7B]',
-    'planificación': 'bg-line-soft text-ink-2',
-  }[status] || 'bg-line-soft text-ink-2';
-  return <span className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium capitalize', tone, className)}>{real ? 'Real' : status}</span>;
+    'planificación': 'bg-muted text-muted-foreground',
+  }[status] || 'bg-muted text-muted-foreground';
+  return <Badge variant="secondary" className={cn('rounded-md capitalize', tone)}>{status === 'realizado' ? 'Real' : status}</Badge>;
 }
 
 export function KindTag({ real }) {
   return real
-    ? <span className="inline-flex items-center gap-1.5 rounded-md border border-[#CDEBDD] bg-[#F1FAF5] px-1.5 py-0.5 text-[11px] font-medium text-[#047857]"><i className="h-1.5 w-1.5 rounded-full bg-good" />Real</span>
-    : <span className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-[#E9C892] bg-[#FFF9F0] px-1.5 py-0.5 text-[11px] font-medium text-[#9A5B06]"><i className="h-1.5 w-1.5 rounded-full border border-[#C58A2E]" />Proyectado</span>;
+    ? <Badge variant="outline" className="rounded-md border-emerald-200 bg-emerald-50 text-emerald-700"><i className="size-1.5 rounded-full bg-good" />Real</Badge>
+    : <Badge variant="outline" className="rounded-md border-dashed border-proj-line bg-proj-soft text-proj"><i className="size-1.5 rounded-full border border-proj" />Proyectado</Badge>;
 }
 
-// ---------- Lista con barras de participación (efferd "share bar list") ----------
-export function ShareBarList({ items, format = (v) => money(v), color, className }) {
+// ---------- Lista con barras (ShareBarList del bloque) ----------
+export function Bars({ items, format = (v) => money(v), color = '#737370', dashed, className, empty = 'Sin datos todavía.' }) {
+  if (!items.length) return <p className={cn('px-6 py-5 text-[13px] text-muted-foreground', className)}>{empty}</p>;
   const max = Math.max(...items.map((i) => Math.abs(i.value)), 1);
   return (
-    <div className={cn('space-y-1.5 py-3', className)}>
-      {items.map((it, i) => {
-        const c = it.color || color || '#A3A3A0';
-        const w = (Math.abs(it.value) / max) * 100;
-        return (
-          <div key={it.label + i} className="relative flex h-9 items-center justify-between pr-4" title={it.title}>
-            <motion.div initial={{ width: 0 }} animate={{ width: `${Math.max(w, 1.5)}%` }} transition={{ duration: 0.9, delay: 0.05 * i, ease: [0.16, 0.84, 0.3, 1] }}
-              className="absolute inset-y-0 left-0 max-w-[calc(100%-120px)] rounded-r-md border-r-2"
-              style={{ background: `linear-gradient(90deg, ${c}10 0%, ${c}40 100%)`, borderColor: c }} />
-            <span className="relative z-10 truncate pl-3 text-[13px] font-medium text-ink">{it.label}</span>
-            <span className="relative z-10 shrink-0 pl-3 text-[13px] text-ink-2"><span className="mono">{format(it.value)}</span>{it.extra && <span className="ml-1.5 text-[11px] text-muted">{it.extra}</span>}</span>
-          </div>
-        );
-      })}
-    </div>
+    <ShareBarList className={cn('py-1', className)}>
+      {items.map((it, i) => (
+        <ShareBarListItem key={it.label + i} value={(Math.abs(it.value) / max) * 62} title={it.title} className="h-11">
+          <ShareBarListContent>
+            <ShareBarListLabel className="truncate font-medium">{it.label}</ShareBarListLabel>
+            <ShareBarListValue className="shrink-0">
+              <span className="mono font-normal text-foreground/80">{format(it.value)}</span>
+              {it.extra && <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">{it.extra}</span>}
+            </ShareBarListValue>
+          </ShareBarListContent>
+          <ShareBarListFill color={it.color || color} dashed={dashed} />
+        </ShareBarListItem>
+      ))}
+    </ShareBarList>
   );
 }
 
-// ---------- Tabla con desvanecido y "Ver todo" ----------
-export function DataTable({ columns, rows, limit = 6, empty = 'Sin datos', className, footer }) {
+// ---------- Tabla (Table del bloque) con desvanecido y "Ver todo" ----------
+export function DataTable({ columns, rows, limit = 6, empty = 'Sin datos', footer, proj }) {
   const [all, setAll] = useState(false);
   const shown = all ? rows : rows.slice(0, limit);
   const more = rows.length > limit;
   return (
-    <div className={className}>
-      <div className="scroll-thin overflow-x-auto">
-        <table className="w-full text-[13px]">
-          <thead>
-            <tr className="border-b border-line">
-              {columns.map((c) => <th key={c.key} className={cn('whitespace-nowrap px-4 py-2.5 text-left font-medium text-ink', c.align === 'right' && 'text-right')}>{c.label}</th>)}
-            </tr>
-          </thead>
-          <tbody className={cn(more && !all && 'fade-last')}>
-            {shown.length === 0 && <tr><td colSpan={columns.length} className="px-4 py-6 text-muted">{empty}</td></tr>}
-            {shown.map((r, i) => (
-              <tr key={i} className={cn('border-b border-line-soft last:border-0', r._strong && 'bg-[#FAFAF9] font-medium')}>
-                {columns.map((c) => <td key={c.key} className={cn('px-4 py-2', c.align === 'right' && 'text-right', c.mono && 'mono', c.className)}>{c.render ? c.render(r) : r[c.key]}</td>)}
-              </tr>
-            ))}
-          </tbody>
-          {footer}
-        </table>
-      </div>
+    <div className="relative">
+      <Table className={cn(proj && '[&_tr]:border-dashed [&_tr]:border-proj-line/70')}>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            {columns.map((c, i) => <TableHead key={c.key} className={cn('text-[12px]', i === 0 && 'pl-6', i === columns.length - 1 && 'pr-6', c.align === 'right' && 'text-end')}>{c.label}</TableHead>)}
+          </TableRow>
+        </TableHeader>
+        <TableBody className={cn(more && !all && 'mask-b-from-60% mask-b-to-100%')}>
+          {shown.length === 0 && <TableRow className="hover:bg-transparent"><TableCell colSpan={columns.length} className="px-6 py-6 text-muted-foreground">{empty}</TableCell></TableRow>}
+          {shown.map((r, ri) => (
+            <TableRow key={ri} className={cn('hover:bg-transparent', r._strong && 'bg-muted/60 font-medium')}>
+              {columns.map((c, i) => <TableCell key={c.key} className={cn('text-[13px]', i === 0 && 'pl-6', i === columns.length - 1 && 'pr-6', c.align === 'right' && 'text-end', c.mono && 'mono', c.className)}>{c.render ? c.render(r) : r[c.key]}</TableCell>)}
+            </TableRow>
+          ))}
+        </TableBody>
+        {footer && <TableFooter className="bg-muted/60">{footer}</TableFooter>}
+      </Table>
       {more && (
-        <button onClick={() => setAll(!all)} className="flex w-full items-center justify-center gap-1.5 border-t border-line py-2.5 text-[13px] font-medium text-ink hover:bg-[#FAFAF9]">
-          {all ? 'Ver menos' : `Ver todo (${rows.length})`} <ArrowRight className={cn('h-3.5 w-3.5 transition-transform', all && '-rotate-90')} />
-        </button>
+        <div className="flex justify-center border-t py-1.5">
+          <Button variant="ghost" size="sm" onClick={() => setAll(!all)}>
+            {all ? 'Ver menos' : `Ver todo (${rows.length})`}<ArrowRightIcon aria-hidden className={cn('transition-transform', all && '-rotate-90')} />
+          </Button>
+        </div>
       )}
     </div>
   );
 }
 
-// ---------- Franja de métricas (efferd "web vitals") ----------
+// ---------- Franja de indicadores (WebVitals del bloque) ----------
 export function MetricStrip({ items }) {
   return (
-    <div className="grid divide-y divide-line sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
+    <ul className="grid gap-6 px-6 py-5 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((m) => (
-        <div key={m.label} className="px-4 py-4">
-          <p className="text-[13px] font-medium">{m.label}</p>
-          <p className="text-[12px] text-muted">{m.sub}</p>
-          <p className={cn('mono mt-2 text-2xl font-medium', m.tone === 'good' && 'text-good', m.tone === 'bad' && 'text-bad')}>{m.value}</p>
-          {m.foot && <p className="mt-1 text-[12px] text-muted">{m.foot}</p>}
-        </div>
+        <li key={m.label} className="flex flex-col gap-1">
+          <p className="text-pretty text-sm font-medium">{m.label}</p>
+          <p className="text-pretty text-xs text-muted-foreground">{m.sub}</p>
+          <p className={cn('mono text-balance text-2xl font-semibold', m.tone === 'good' && 'text-good', m.tone === 'bad' && 'text-bad')}>{m.value}</p>
+          {m.foot && <p className="text-xs text-muted-foreground">{m.foot}</p>}
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
-export function Toggle({ checked, onChange, label }) {
-  return (
-    <button onClick={() => onChange(!checked)} className="flex items-center gap-2 text-[13px] text-ink-2">
-      <span className={cn('relative h-[18px] w-8 rounded-full transition-colors', checked ? 'bg-ink' : 'bg-cost')}>
-        <span className="absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow transition-all" style={{ left: checked ? 16 : 2 }} />
-      </span>
-      {label}
-    </button>
-  );
-}
-
-export function Button({ className, variant = 'solid', size = 'md', ...p }) {
-  const v = {
-    solid: 'bg-ink text-white hover:bg-[#262626]',
-    outline: 'border border-line bg-panel text-ink hover:bg-[#F5F5F4]',
-    ghost: 'text-ink-2 hover:bg-[#F5F5F4] hover:text-ink',
-    danger: 'border border-line text-bad hover:border-bad',
-  }[variant];
-  const s = size === 'sm' ? 'h-8 px-2.5 text-[13px]' : size === 'icon' ? 'h-8 w-8' : 'h-9 px-3.5 text-sm';
-  return <button className={cn('inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors disabled:opacity-50', v, s, className)} {...p} />;
-}
-
+// ---------- Logos ----------
 export function BrandTile({ id, size = 'md', className }) {
   const st = BRAND_STYLE[id];
-  const dims = { xs: 'h-5 w-5 rounded', sm: 'h-7 w-7 rounded-md', md: 'h-10 w-10 rounded-lg', lg: 'h-16 w-16 rounded-xl' }[size];
-  if (!st) return <div className={cn(dims, 'bg-line', className)} />;
+  const dims = { xs: 'h-5 w-5 rounded', sm: 'h-7 w-7 rounded-md', md: 'h-10 w-10 rounded-lg', lg: 'h-14 w-14 rounded-xl' }[size];
+  if (!st) return <div className={cn(dims, 'bg-border', className)} />;
   if (id === 'club') return (
     <div className={cn(dims, 'flex shrink-0 flex-col items-center justify-center bg-[#0B0B0B] px-[3px]', className)}>
       <img src={st.logo} alt="" className="w-full" />
-      {(size === 'md' || size === 'lg') && <span className="mt-0.5 font-semibold uppercase text-white" style={{ fontSize: size === 'lg' ? 9 : 6.5, letterSpacing: '0.3em' }}>club</span>}
+      {(size === 'md' || size === 'lg') && <span className="mt-0.5 font-semibold uppercase text-white" style={{ fontSize: size === 'lg' ? 8 : 6.5, letterSpacing: '0.3em' }}>club</span>}
     </div>
   );
   if (id === 'icon') return <div className={cn(dims, 'flex shrink-0 items-center justify-center bg-[#7B45FF] p-[3px]', className)}><img src={st.logo} alt="" className="w-full" /></div>;
-  return <div className={cn(dims, 'flex shrink-0 items-center justify-center border border-line bg-white p-[3px]', className)}><img src={st.logo} alt="" className="w-full" /></div>;
+  return <div className={cn(dims, 'flex shrink-0 items-center justify-center border bg-white p-[3px]', className)}><img src={st.logo} alt="" className="w-full" /></div>;
 }
 
 export function Empty({ title, children, action }) {
   return (
-    <div className="flex flex-col items-start gap-2 px-4 py-8">
+    <div className="flex flex-col items-start gap-2 px-6 py-8">
       <p className="text-sm font-medium">{title}</p>
-      {children && <div className="max-w-md text-[13px] text-muted">{children}</div>}
+      {children && <div className="max-w-md text-[13px] text-muted-foreground">{children}</div>}
       {action}
     </div>
   );
 }
 
+// Tooltip de gráficos con el mismo estilo que ChartTooltipContent.
 export function TooltipBox({ title, rows, foot }) {
   return (
-    <div className="min-w-44 rounded-lg border border-line bg-white px-3 py-2 text-xs shadow-lg">
-      {title && <p className="mb-1 font-medium text-ink">{title}</p>}
+    <div className="grid min-w-44 gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+      {title && <p className="font-medium">{title}</p>}
       {rows.map((r, i) => (
-        <div key={i} className="flex items-center justify-between gap-4 py-0.5 text-ink-2">
-          <span className="flex items-center gap-1.5">{r.color && <i className={cn('h-2 w-2 rounded-[2px]', r.dashed && 'border border-dashed bg-white')} style={r.dashed ? { borderColor: r.color } : { background: r.color }} />}{r.label}</span>
-          <span className="mono text-ink">{r.value}</span>
+        <div key={i} className="flex items-center justify-between gap-4 text-muted-foreground">
+          <span className="flex items-center gap-1.5">{r.color && <i className={cn('h-2.5 w-2.5 rounded-[2px]', r.dashed && 'border border-dashed bg-transparent')} style={r.dashed ? { borderColor: r.color } : { background: r.color }} />}{r.label}</span>
+          <span className="mono font-medium text-foreground">{r.value}</span>
         </div>
       ))}
-      {foot && <p className="mt-1 border-t border-line pt-1 text-muted">{foot}</p>}
+      {foot && <p className="border-t pt-1 text-muted-foreground">{foot}</p>}
     </div>
   );
 }
 
-export function Segmented({ value, onChange, options }) {
+// Leyenda bajo los gráficos.
+export function Legend({ items }) {
   return (
-    <div className="inline-flex rounded-lg border border-line bg-[#FAFAF9] p-0.5">
-      {options.map((o) => (
-        <button key={o.value} onClick={() => onChange(o.value)} className={cn('rounded-md px-2.5 py-1 text-[13px] font-medium transition-colors', value === o.value ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink-2')}>{o.label}</button>
+    <div className="flex flex-wrap gap-4 border-t px-6 py-2.5 text-[12px] text-muted-foreground">
+      {items.map((it) => (
+        <span key={it.label} className="flex items-center gap-1.5">
+          <i className={cn('h-2.5 w-2.5 rounded-[3px]', it.dashed && 'border border-dashed')} style={it.dashed ? { borderColor: it.color || '#9A5B06' } : { background: it.color || '#171717' }} />{it.label}
+        </span>
       ))}
     </div>
+  );
+}
+
+// Patrón rayado SVG para barras proyectadas.
+export function HatchDefs({ id, color }) {
+  return (
+    <pattern id={id} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill={color} fillOpacity="0.06" />
+      <line x1="0" y1="0" x2="0" y2="6" stroke={color} strokeWidth="1.4" strokeOpacity="0.5" />
+    </pattern>
   );
 }

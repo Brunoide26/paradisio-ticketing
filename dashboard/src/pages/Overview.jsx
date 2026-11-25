@@ -35,7 +35,7 @@ export default function Overview() {
   const setPeriod = (p) => { setPeriodState(p); try { localStorage.setItem('os_period', p); } catch { /* */ } };
   const brand = workspace === 'group' ? null : workspace;
   const { from, to } = periodRange(period);
-  const { summary: S, attention, loading, error } = useSummary({ brand, from, to });
+  const { summary: S, ledger: LS, attention, loading, error } = useSummary({ brand, from, to });
   const brands = data.finance.brands;
   const scopeName = brand ? brands.find((b) => b.id === brand)?.name : 'Paradisio Entertainment Group';
   const metric = (id) => () => setDrawer({ type: 'metric', id, summary: S });
@@ -60,9 +60,9 @@ export default function Overview() {
         <Kpi label="Ingresos reales" value={money(A.revenue)} sub={`${A.count} evento${A.count === 1 ? '' : 's'} cerrado${A.count === 1 ? '' : 's'}`} onClick={metric('revenue')} />
         <Kpi label="Resultado real" value={money(A.result)} tone={signTone(A.result)} sub={A.stock ? `incluye ${money(A.stock)} de stock` : 'sin stock final'} onClick={metric('result')} />
         <Kpi label="Margen" value={pct(A.margin)} tone={signTone(A.margin)} unavailable={A.margin == null ? 'Sin ingresos reales en el período' : null} sub="resultado / ingresos" onClick={metric('margin')} />
-        <Kpi label="Caja disponible" unavailable={S.unavailable.cash} sub="falta registrar cuentas" onClick={metric('cash')} />
-        <Kpi label="Por pagar" unavailable={S.unavailable.payables} sub="falta registrar pagos" onClick={metric('payables')} />
-        <Kpi label="Por cobrar" unavailable={S.unavailable.receivables} sub="falta registrar cobranzas" onClick={metric('receivables')} />
+        <Kpi label="Caja disponible" value={LS && LS.cash != null ? money(LS.cash) : null} unavailable={!LS || LS.cash == null ? (LS && LS.accounts.length ? 'Falta el saldo inicial de alguna cuenta' : 'Registra tus cuentas en Finanzas → Cuentas') : null} sub={LS && LS.accounts.length ? 'bancos, caja y Culqi' : 'falta registrar cuentas'} onClick={() => navigate('/finanzas/cuentas')} />
+        <Kpi label="Por pagar" value={LS && LS.hasData ? money(LS.payables.total) : null} unavailable={LS && LS.hasData ? null : 'Sin transacciones registradas'} tone={LS && LS.payables.overdue ? 'bad' : undefined} sub={LS && LS.hasData ? (LS.payables.overdue ? `${LS.payables.overdue} vencido(s)` : `${LS.payables.count} pendiente(s)`) : 'falta registrar pagos'} onClick={() => navigate('/finanzas/por-pagar')} />
+        <Kpi label="Por cobrar" value={LS && LS.hasData ? money(LS.receivables.total) : null} unavailable={LS && LS.hasData ? null : 'Sin transacciones registradas'} sub={LS && LS.hasData ? `${LS.receivables.count} pendiente(s)` : 'falta registrar cobranzas'} onClick={() => navigate('/finanzas/por-pagar')} />
         <Kpi proj label="Ingresos proyectados" value={money(P.revenue)} sub={`${P.count} evento${P.count === 1 ? '' : 's'} por venir`} onClick={metric('projRevenue')} />
         <Kpi proj label="Utilidad proyectada" value={moneyOrNA(P.profit)} unavailable={P.profit == null ? 'Ningún presupuesto tiene costos' : null} tone={signTone(P.profit)}
           sub={P.incomplete.length ? `${P.completeCount} de ${P.count} presupuestos completos` : 'todos los presupuestos completos'} onClick={metric('projProfit')} />

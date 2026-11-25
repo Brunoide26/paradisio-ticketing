@@ -28,6 +28,34 @@ const { redis, FINANCE_KEY, ceoPasscode, loadFinance, validFinance, loadPayload 
 const { culqiForEvents } = require('../lib/culqi-sync');
 const { STAGES, STAGE_IDS, stageOf, statusForStage, isActualStage } = require('../lib/os/stages');
 const { METRICS, summarize, attention } = require('../lib/os/finance');
+const { readDoc, updateDoc } = require('../lib/os/docs');
+const L = require('../lib/os/ledger');
+const I = require('../lib/os/inventory');
+
+// Libro + inventario + sus resúmenes para un alcance (grupo o marca).
+async function opsPayload(finance, brand = null) {
+  const [ledger, inventory] = await Promise.all([readDoc(redis, 'ledger'), readDoc(redis, 'inventory')]);
+  return {
+    ledger, inventory,
+    ledgerSummary: L.ledgerSummary(ledger, { finance, brand }),
+    inventorySummary: I.inventorySummary(inventory),
+    // Por evento: pagos/cobros del libro y consumo según los conteos.
+    byEvent: Object.fromEntries((finance.events || []).map((e) => [e.id, { payments: L.eventPayments(ledger, e.id), inventory: I.eventConsumption(inventory, e.id) }])),
+  };
+}
+
+// Alertas de caja e inventario que se suman a la lista de atención.
+function opsAttention(ops) {
+  const out = [];
+  const ls = ops.ledgerSummary, is = ops.inventorySummary;
+  if (ls.payables.overdue) out.push({ level: 'high', title: 'Pagos vencidos', text: `${ls.payables.overdue} pago(s) por hacer ya pasaron su fecha de vencimiento.`, route: '/finanzas/por-pagar' });
+  if (is.low.length) out.push({ level: 'med', title: 'Stock bajo', text: `${is.low.length} producto(s) por debajo del mínimo: ${is.products.filter((p) => p.low).map((p) => p.name).slice(0, 4).join(', ')}.`, route: '/inventario' });
+  const noOpening = ls.accounts.filter((a) => !a.archived && a.openingBalance == null);
+  if (noOpening.length) out.push({ level: 'low', title: 'Cuentas sin saldo inicial', text: `Sin saldo inicial no se puede calcular la caja: ${noOpening.map((a) => a.name).join(', ')}.`, route: '/finanzas/cuentas' });
+  return out;
+}
+const rank = { high: 0, med: 1, low: 2 };
+const merged = (a, b) => [...a, ...b].sort((x, y) => rank[x.level] - rank[y.level]);
 
 const HISTORY_KEY = 'ceo:finance:history';
 const AUDIT_KEY = 'os:audit';
@@ -169,10 +197,17 @@ module.exports = async (req, res) => {
       withStages(p.finance);
       const s = summarize(p.finance, { culqi: p.culqi });
       const activity = await redis.lrange(AUDIT_KEY, 0, 29);
+      const ops = await opsPayload(p.finance);
       return res.status(200).json({
         ...p,
         version: p.seeded ? null : versionOf(p.finance),
-        os: { stages: STAGES, metrics: METRICS, summary: s, attention: attention(s, { culqi: p.culqi, usingStaffPasscode }), activity },
+        ledger: ops.ledger, inventory: ops.inventory,
+        os: {
+          stages: STAGES, metrics: METRICS, summary: s, activity,
+          attention: merged(attention(s, { culqi: p.culqi, usingStaffPasscode }), opsAttention(ops)),
+          ledgerSummary: ops.ledgerSummary, inventorySummary: ops.inventorySummary, byEvent: ops.byEvent,
+          enums: { txKinds: L.KINDS, accountTypes: L.ACCOUNT_TYPES, docTypes: L.DOC_TYPES, moveTypes: I.MOVES, productKinds: I.KINDS },
+        },
       });
     }
 
@@ -182,7 +217,64 @@ module.exports = async (req, res) => {
       let culqi = null;
       try { culqi = await culqiForEvents(redis, finance.events || []); } catch (e) { culqi = null; }
       const s = summarize(finance, { brand: body.brand || null, from: body.from || null, to: body.to || null, withTaxes: body.withTaxes !== false, culqi });
-      return res.status(200).json({ summary: s, attention: attention(s, { culqi, usingStaffPasscode }) });
+      const ops = await opsPayload(finance, body.brand || null);
+      return res.status(200).json({ summary: s, ledgerSummary: ops.ledgerSummary, attention: merged(attention(s, { culqi, usingStaffPasscode }), opsAttention(ops)) });
+    }
+
+    // ---------- Libro: cuentas y transacciones ----------
+    if (action.startsWith('account.') || action.startsWith('tx.') || action.startsWith('inv.')) {
+      const { finance } = await loadFinance();
+      const ctx = { events: finance.events || [], brands: finance.brands || [] };
+      let r;
+      if (action === 'account.upsert') {
+        r = await updateDoc(redis, 'ledger', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+          const i = d.accounts.findIndex((a) => a.id === (body.account || {}).id);
+          const acc = L.cleanAccount(body.account, i >= 0 ? d.accounts[i] : null);
+          if (i >= 0) d.accounts[i] = acc; else d.accounts.push(acc);
+          return { account: acc.id, name: acc.name };
+        } });
+      } else if (action === 'tx.upsert') {
+        r = await updateDoc(redis, 'ledger', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+          const i = d.transactions.findIndex((t) => t.id === (body.tx || {}).id);
+          const tx = L.cleanTx(body.tx, { accounts: d.accounts, ...ctx }, i >= 0 ? d.transactions[i] : null);
+          L.assertUniqueRef(d.transactions, tx);
+          const before = i >= 0 ? d.transactions[i] : null;
+          if (i >= 0) d.transactions[i] = tx; else d.transactions.push(tx);
+          return { tx: tx.id, name: tx.description, event: tx.eventId || undefined, changes: { amount: { from: before ? before.amount : null, to: tx.amount }, ...(before && before.paidOn !== tx.paidOn ? { paidOn: { from: before.paidOn, to: tx.paidOn } } : {}) } };
+        } });
+      } else if (action === 'tx.delete') {
+        r = await updateDoc(redis, 'ledger', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+          const t = d.transactions.find((x) => x.id === body.id);
+          if (!t) throw new Error('not_found');
+          d.transactions = d.transactions.filter((x) => x.id !== body.id);
+          return { tx: t.id, name: t.description, changes: { amount: { from: t.amount, to: null } } };
+        } });
+      } else if (action === 'inv.product.upsert') {
+        r = await updateDoc(redis, 'inventory', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+          const i = d.products.findIndex((x) => x.id === (body.product || {}).id);
+          const pr = I.cleanProduct(body.product, i >= 0 ? d.products[i] : null);
+          if (i >= 0) d.products[i] = pr; else d.products.push(pr);
+          return { product: pr.id, name: pr.name };
+        } });
+      } else if (action === 'inv.move.add') {
+        r = await updateDoc(redis, 'inventory', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+          const list = Array.isArray(body.moves) ? body.moves : [body.move];
+          if (!list.length || list.length > 200) throw new Error('bad_moves');
+          const ms = list.map((m) => I.cleanMove(m, { products: d.products, events: ctx.events }));
+          d.movements.push(...ms);
+          return { moves: ms.length, name: ms.length === 1 ? (d.products.find((x) => x.id === ms[0].productId) || {}).name : `${ms.length} movimientos`, event: ms[0].eventId || undefined };
+        } });
+      } else if (action === 'inv.move.delete') {
+        r = await updateDoc(redis, 'inventory', { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+          const m = d.movements.find((x) => x.id === body.id);
+          if (!m) throw new Error('not_found');
+          d.movements = d.movements.filter((x) => x.id !== body.id);
+          return { move: m.id, name: (d.products.find((x) => x.id === m.productId) || {}).name };
+        } });
+      } else {
+        return res.status(400).json({ error: 'unknown_action' });
+      }
+      return res.status(r.status).json(r.body);
     }
 
     if (action === 'activity') {
@@ -233,6 +325,22 @@ module.exports = async (req, res) => {
       delete e.budget;
       next.events = [...(next.events || []), e];
       const r = await write(current, next, body.baseVersion, 'event.create', { event: e.id, name: e.name }, actor);
+      if (r.body.finance) withStages(r.body.finance);
+      return res.status(r.status).json({ ...r.body, id: e.id });
+    }
+
+    if (action === 'event.duplicate') {
+      const src = (next.events || []).find((x) => x.id === body.id);
+      if (!src) return res.status(404).json({ error: 'not_found' });
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(body.date || '')) return res.status(400).json({ error: 'bad_date' });
+      // Copia como plantilla: mismos ingresos y costos como presupuesto; sin stock, barra ni cierre.
+      const e = {
+        id: `${src.brand}-${Date.now().toString(36)}`, brand: src.brand, date: body.date,
+        name: String(body.name || `${src.name} (copia)`).slice(0, 300), venue: src.venue || '', stage: 'concept', status: 'planificación',
+        liveEventId: '', notes: `Duplicado de ${src.name}.`, income: JSON.parse(JSON.stringify(src.income || [])), costs: JSON.parse(JSON.stringify(src.costs || [])), brandInvestment: [],
+      };
+      next.events = [...next.events, e];
+      const r = await write(current, next, body.baseVersion, 'event.create', { event: e.id, name: e.name, from: src.id }, actor);
       if (r.body.finance) withStages(r.body.finance);
       return res.status(r.status).json({ ...r.body, id: e.id });
     }

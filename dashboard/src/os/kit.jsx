@@ -1,6 +1,7 @@
 import React from 'react';
 import { InfoIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { cn, money, pct, brandColor, parseDate } from '../lib.js';
 
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -86,5 +87,15 @@ export function PageHeader({ title, description, actions, children }) {
       <div className="flex flex-wrap items-center gap-2">{actions}</div>
       {children}
     </div>
+  );
+}
+
+export const sel = 'h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30';
+
+export function Field({ label, children, className, hint }) {
+  return (
+    <Label className={cn('flex flex-col items-stretch gap-1.5 text-xs font-normal text-muted-foreground', className)}>
+      {label}{children}{hint && <span className="text-[11px]">{hint}</span>}
+    </Label>
   );
 }

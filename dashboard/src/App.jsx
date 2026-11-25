@@ -11,7 +11,10 @@ import { OSProvider, useOS } from './os/store.jsx';
 import Shell from './os/Shell.jsx';
 import Overview from './pages/Overview.jsx';
 import Events from './pages/Events.jsx';
-import { EventPage, BrandPage, Finance, FinanceData, Attention, Activity, NotFound } from './pages/Pages.jsx';
+import { EventPage, BrandPage, FinanceData, Attention, Activity, NotFound } from './pages/Pages.jsx';
+import { FinanceOverview, Transactions, Accounts, Pending, CashFlow, Budgets, FinanceTabs } from './pages/Finance.jsx';
+import Simulator from './pages/Simulator.jsx';
+import Inventory from './pages/Inventory.jsx';
 import { BrandTile } from './ui.jsx';
 
 const evName = (p, d) => (d && d.finance.events.find((e) => e.id === p.id) || {}).name;
@@ -31,9 +34,16 @@ const router = createBrowserRouter([
         { path: ':id', element: <EventPage />, handle: { crumb: evName } },
       ] },
       { path: 'finanzas', handle: { crumb: 'Finanzas' }, children: [
-        { index: true, element: <Finance /> },
-        { path: 'datos', element: <FinanceData />, handle: { crumb: 'Datos financieros' } },
+        { index: true, element: <FinanceOverview /> },
+        { path: 'transacciones', element: <Transactions />, handle: { crumb: 'Transacciones' } },
+        { path: 'cuentas', element: <Accounts />, handle: { crumb: 'Cuentas' } },
+        { path: 'por-pagar', element: <Pending />, handle: { crumb: 'Por pagar y cobrar' } },
+        { path: 'flujo', element: <CashFlow />, handle: { crumb: 'Flujo de caja' } },
+        { path: 'presupuestos', element: <Budgets />, handle: { crumb: 'Presupuestos' } },
+        { path: 'simulador', element: <Simulator />, handle: { crumb: 'Simulador' } },
+        { path: 'datos', element: <><FinanceTabs /><FinanceData /></>, handle: { crumb: 'Datos de eventos' } },
       ] },
+      { path: 'inventario', element: <Inventory />, handle: { crumb: 'Inventario y barra' } },
       { path: 'marcas/:brandId', element: <BrandPage />, handle: { crumb: brandName } },
       { path: 'actividad', element: <Activity />, handle: { crumb: 'Registro de actividad' } },
       { path: '*', element: <NotFound /> },

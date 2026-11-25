@@ -1,12 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Command } from 'cmdk';
-import * as Dialog from '@radix-ui/react-dialog';
-import { LayoutDashboard, SlidersHorizontal, RefreshCw, LogOut, Search, PanelLeft, Download, KeyRound, CalendarDays, Receipt } from 'lucide-react';
+import { LayoutDashboardIcon, SlidersHorizontalIcon, RefreshCwIcon, DownloadIcon, KeyRoundIcon, CalendarDaysIcon, ReceiptIcon } from 'lucide-react';
+import { AppShell } from '@/components/app-shell';
+import { GroupLogo } from '@/components/app-sidebar';
+import { NavUser } from '@/components/nav-user';
+import { LatestChange } from '@/components/latest-change';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
+import { useKeypress } from '@/hooks/use-keypress';
 import Group from './Group.jsx';
 import Brand from './Brand.jsx';
 import Editor from './Editor.jsx';
-import { BrandTile, Toggle, Button, KindTag } from './ui.jsx';
+import { BrandTile, KindTag } from './ui.jsx';
 import { ss, cn, fmtDate, fmtShort, daysTo, isActual, totals } from './lib.js';
 
 async function api(pass, body = {}) {
@@ -45,7 +55,6 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [cmd, setCmd] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
 
   const flash = (m) => { setToast(m); setTimeout(() => setToast(''), 2600); };
 
@@ -74,10 +83,7 @@ export default function App() {
     const h = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', h); return () => window.removeEventListener('beforeunload', h);
   }, [dirty]);
-  useEffect(() => {
-    const h = (e) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmd((v) => !v); } };
-    window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h);
-  }, []);
+  useKeypress({ combo: ['meta+k', 'ctrl+k'], callback: () => setCmd((v) => !v), enabled: !!data, enableOnInputs: true });
 
   const go = (p, eventId) => {
     setPage(p); setCmd(false);
@@ -85,6 +91,8 @@ export default function App() {
     else if (eventId) setSel((s) => ({ ...s, [p]: eventId }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+  const logout = () => { ss('ceo_pass', null); setData(null); setPass(''); };
+  const refresh = () => load(pass, false).catch(() => {});
 
   if (!data) return <Login onLogin={async (p) => { setPass(p); await load(p); }} />;
 
@@ -102,126 +110,85 @@ export default function App() {
     finally { setSaving(false); }
   };
 
-  const NavItem = ({ id, icon, label }) => (
-    <button onClick={() => go(id)} title={collapsed ? label : undefined} className={cn('flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-left text-[13px] transition-colors', page === id ? 'bg-[#EFEFED] font-medium text-ink' : 'text-ink-2 hover:bg-[#F3F3F1] hover:text-ink', collapsed && 'justify-center px-0')}>
-      {icon}{!collapsed && <span className="truncate">{label}</span>}
-    </button>
+  const navGroups = [
+    { label: 'General', items: [{ id: 'group', title: 'Resumen del grupo', icon: <LayoutDashboardIcon /> }] },
+    { label: 'Marcas', items: brands.map((b) => ({ id: b.id, title: b.name, icon: <BrandTile id={b.id} size="xs" className="size-4!" /> })) },
+    { label: 'Gestión', items: [{ id: 'edit', title: 'Editar datos', icon: <SlidersHorizontalIcon /> }] },
+  ];
+
+  const sidebarNote = (
+    <>
+      {next && (
+        <LatestChange onClick={() => go(next.brand, next.id)}
+          eyebrow={<><CalendarDaysIcon className="size-3.5" />Próxima fecha · en {daysTo(next.date)} días</>}
+          title={<><BrandTile id={next.brand} size="xs" />{next.name}</>}
+          description={<span className="capitalize">{fmtDate(next.date)} · {next.venue || 'por confirmar'}</span>} />
+      )}
+      {data.usingStaffPasscode && (
+        <LatestChange tone="warn" title={<><KeyRoundIcon className="size-3.5" />Clave del staff</>} description="Estás con la clave del staff. Crea CEO_PASSCODE en Vercel." />
+      )}
+    </>
   );
-  const Section = ({ label, children }) => (
-    <div>{!collapsed && <p className="px-2 pb-1 text-[12px] text-muted">{label}</p>}<div className="space-y-0.5">{children}</div></div>
+
+  const headerActions = (
+    <>
+      <div className="flex items-center gap-2">
+        <Switch id="taxes" checked={withTaxes} onCheckedChange={setWithTaxes} />
+        <Label htmlFor="taxes" className="hidden text-[13px] font-normal text-muted-foreground sm:inline">{withTaxes ? 'Con impuestos' : 'Sin impuestos'}</Label>
+      </div>
+      <span className="hidden text-[12px] text-muted-foreground md:inline">Actualizado {updated}</span>
+      <Button variant="outline" size="icon-sm" onClick={() => exportCsv(finance, withTaxes)} aria-label="Exportar CSV" title="Exportar CSV"><DownloadIcon /></Button>
+      <Button variant="outline" size="icon-sm" onClick={refresh} aria-label="Actualizar" title="Actualizar"><RefreshCwIcon className={cn(loading && 'animate-spin')} /></Button>
+    </>
   );
 
   return (
-    <div className="flex min-h-full">
-      {/* Barra lateral (app-shell) */}
-      <aside className={cn('sticky top-0 hidden h-screen shrink-0 flex-col border-r border-line bg-sidebar transition-[width] duration-200 lg:flex', collapsed ? 'w-[60px]' : 'w-[240px]')}>
-        <div className={cn('flex h-[52px] items-center gap-2 px-3', collapsed && 'justify-center px-0')}>
-          {!collapsed && (
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#0B0B0B] px-[3px]"><img src="/administracion/logos/paradisio-orange.png" alt="" className="w-full" /></div>
-              <span className="min-w-0 leading-tight"><span className="block truncate text-[13px] font-semibold tracking-tight">Paradisio</span><span className="block truncate text-[11px] text-muted">Entertainment Group</span></span>
-            </div>
-          )}
-          <button onClick={() => setCollapsed(!collapsed)} className="rounded-md p-1.5 text-muted hover:bg-[#EFEFED] hover:text-ink" aria-label="Contraer barra lateral"><PanelLeft className="h-4 w-4" /></button>
-        </div>
-        <div className="px-2">
-          <button onClick={() => setCmd(true)} className={cn('flex h-8 w-full items-center gap-2 rounded-md border border-line bg-white px-2 text-[13px] text-muted hover:border-[#D4D4D0]', collapsed && 'justify-center px-0')}>
-            <Search className="h-3.5 w-3.5" />{!collapsed && <><span className="flex-1 text-left">Buscar…</span><kbd className="rounded border border-line bg-[#FAFAF9] px-1 text-[10px]">⌘</kbd><kbd className="rounded border border-line bg-[#FAFAF9] px-1 text-[10px]">K</kbd></>}
-          </button>
-        </div>
-        <nav className="flex-1 space-y-5 overflow-y-auto px-2 py-4">
-          <Section label="General"><NavItem id="group" icon={<LayoutDashboard className="h-4 w-4 shrink-0" />} label="Resumen del grupo" /></Section>
-          <Section label="Marcas">{brands.map((b) => <NavItem key={b.id} id={b.id} icon={<BrandTile id={b.id} size="xs" />} label={b.name} />)}</Section>
-          <Section label="Gestión"><NavItem id="edit" icon={<SlidersHorizontal className="h-4 w-4 shrink-0" />} label="Editar datos" /></Section>
-        </nav>
-        {!collapsed && next && (
-          <button onClick={() => go(next.brand, next.id)} className="mx-2 mb-2 rounded-lg border border-line bg-white p-3 text-left hover:border-[#D4D4D0]">
-            <p className="flex items-center gap-1.5 text-[12px] text-muted"><CalendarDays className="h-3.5 w-3.5" />Próxima fecha · en {daysTo(next.date)} días</p>
-            <p className="mt-1.5 flex items-center gap-2 text-[13px] font-medium"><BrandTile id={next.brand} size="xs" />{next.name}</p>
-            <p className="mt-0.5 text-[12px] capitalize text-muted">{fmtDate(next.date)} · {next.venue || 'por confirmar'}</p>
-          </button>
-        )}
-        {!collapsed && data.usingStaffPasscode && (
-          <div className="mx-2 mb-2 flex gap-2 rounded-lg border border-[#F2D9B0] bg-[#FFF8EC] p-2.5 text-[11px] leading-snug text-[#7A4A06]"><KeyRound className="mt-0.5 h-3.5 w-3.5 shrink-0" />Estás con la clave del staff. Crea CEO_PASSCODE en Vercel.</div>
-        )}
-        <div className={cn('flex items-center gap-1 border-t border-line p-2', collapsed && 'flex-col')}>
-          <button onClick={() => exportCsv(finance, withTaxes)} className="rounded-md p-1.5 text-muted hover:bg-[#EFEFED] hover:text-ink" title="Exportar CSV"><Download className="h-4 w-4" /></button>
-          <button onClick={() => { ss('ceo_pass', null); setData(null); setPass(''); }} className="rounded-md p-1.5 text-muted hover:bg-[#EFEFED] hover:text-ink" title="Salir"><LogOut className="h-4 w-4" /></button>
-        </div>
-      </aside>
-
-      <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 border-b border-line bg-white/90 backdrop-blur">
-          <div className="flex h-[52px] items-center gap-3 px-4">
-            <button onClick={() => setCmd(true)} className="rounded-md p-1.5 text-muted hover:bg-[#F3F3F1] lg:hidden"><Search className="h-4 w-4" /></button>
-            <h1 className="flex-1 truncate text-[14px] font-medium lg:text-center">{title}</h1>
-            <div className="flex items-center gap-3">
-              <Toggle checked={withTaxes} onChange={setWithTaxes} label={<span className="hidden sm:inline">{withTaxes ? 'Con impuestos' : 'Sin impuestos'}</span>} />
-              <span className="hidden text-[12px] text-muted md:inline">Actualizado {updated}</span>
-              <Button variant="ghost" size="icon" onClick={() => load(pass, false).catch(() => {})} aria-label="Actualizar"><RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} /></Button>
-            </div>
-          </div>
-          <div className="scroll-thin flex gap-1 overflow-x-auto px-4 pb-2 lg:hidden">
-            {[['group', 'Grupo'], ...brands.map((b) => [b.id, b.name]), ['edit', 'Editar']].map(([id, l]) => (
-              <button key={id} onClick={() => go(id)} className={cn('shrink-0 rounded-md border px-2.5 py-1 text-[12px]', page === id ? 'border-ink bg-ink text-white' : 'border-line text-ink-2')}>{l}</button>
-            ))}
-          </div>
-        </header>
-
-        <main className="mx-auto w-full max-w-[1100px] px-4 py-6 sm:px-6">
-          <AnimatePresence mode="wait">
-            <motion.div key={page} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              {page === 'group' && <Group finance={finance} withTaxes={withTaxes} go={go} culqi={data.culqi} live={data.live} />}
-              {page === 'edit' && draft && <Editor draft={draft} setDraft={setDraft} dirty={dirty} setDirty={setDirty} editId={editId} setEditId={setEditId} withTaxes={withTaxes} seeded={data.seeded}
-                saving={saving} onSave={save} onDiscard={() => { setDraft(JSON.parse(JSON.stringify(finance))); setDirty(false); }}
-                onReset={async () => { try { await api(pass, { action: 'reset' }); setDirty(false); const d = await api(pass); setData(d); setDraft(JSON.parse(JSON.stringify(d.finance))); flash('Datos de arranque restaurados'); } catch { flash('No se pudo restaurar'); } }} />}
-              {page !== 'group' && page !== 'edit' && <Brand brandId={page} finance={finance} live={data.live} culqi={data.culqi} withTaxes={withTaxes} selected={sel[page]} onSelect={(id) => setSel((s) => ({ ...s, [page]: id }))} go={go} />}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-      </div>
+    <TooltipProvider>
+      <AppShell page={page} title={title} navGroups={navGroups} onNavigate={(id) => go(id)} onSearch={() => setCmd(true)}
+        headerActions={headerActions} sidebarNote={sidebarNote}
+        user={<NavUser staff={data.usingStaffPasscode} onExport={() => exportCsv(finance, withTaxes)} onRefresh={refresh} onEdit={() => go('edit')} onLogout={logout} />}>
+        <AnimatePresence mode="wait">
+          <motion.div key={page} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            {page === 'group' && <Group finance={finance} withTaxes={withTaxes} go={go} culqi={data.culqi} live={data.live} />}
+            {page === 'edit' && draft && <Editor draft={draft} setDraft={setDraft} dirty={dirty} setDirty={setDirty} editId={editId} setEditId={setEditId} withTaxes={withTaxes} seeded={data.seeded}
+              saving={saving} onSave={save} onDiscard={() => { setDraft(JSON.parse(JSON.stringify(finance))); setDirty(false); }}
+              onReset={async () => { try { await api(pass, { action: 'reset' }); setDirty(false); const d = await api(pass); setData(d); setDraft(JSON.parse(JSON.stringify(d.finance))); flash('Datos de arranque restaurados'); } catch { flash('No se pudo restaurar'); } }} />}
+            {page !== 'group' && page !== 'edit' && <Brand brandId={page} finance={finance} live={data.live} culqi={data.culqi} withTaxes={withTaxes} selected={sel[page]} onSelect={(id) => setSel((s) => ({ ...s, [page]: id }))} go={go} />}
+          </motion.div>
+        </AnimatePresence>
+      </AppShell>
 
       {/* Paleta de comandos ⌘K */}
-      <Dialog.Root open={cmd} onOpenChange={setCmd}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]" />
-          <Dialog.Content className="fixed left-1/2 top-[18%] z-50 w-[min(560px,calc(100%-2rem))] -translate-x-1/2 overflow-hidden rounded-xl border border-line bg-white shadow-2xl">
-            <Dialog.Title className="sr-only">Buscar</Dialog.Title>
-            <Command loop>
-              <div className="flex items-center gap-2 border-b border-line px-3"><Search className="h-4 w-4 text-muted" /><Command.Input autoFocus placeholder="Busca una marca, una fecha o una acción…" className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-muted" /></div>
-              <Command.List className="scroll-thin max-h-[340px] overflow-y-auto p-1.5">
-                <Command.Empty className="px-3 py-6 text-center text-sm text-muted">Nada encontrado.</Command.Empty>
-                <Command.Group heading="Ir a" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:text-muted">
-                  <Item onSelect={() => go('group')} icon={<LayoutDashboard className="h-4 w-4" />}>Resumen del grupo</Item>
-                  {brands.map((b) => <Item key={b.id} onSelect={() => go(b.id)} icon={<BrandTile id={b.id} size="xs" />}>{b.name}</Item>)}
-                  <Item onSelect={() => go('edit')} icon={<SlidersHorizontal className="h-4 w-4" />}>Editar datos</Item>
-                </Command.Group>
-                <Command.Group heading="Fechas" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:text-muted">
-                  {events.map((e) => <Item key={e.id} value={`${e.name} ${fmtDate(e.date)} ${e.venue}`} onSelect={() => go(e.brand, e.id)} icon={<BrandTile id={e.brand} size="xs" />} right={<KindTag real={isActual(e)} />}>{e.name} <span className="text-muted">· {fmtShort(e.date)}</span></Item>)}
-                </Command.Group>
-                <Command.Group heading="Acciones" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:text-muted">
-                  <Item onSelect={() => { setWithTaxes(!withTaxes); setCmd(false); }} icon={<Receipt className="h-4 w-4" />}>{withTaxes ? 'Ver sin IGV ni renta' : 'Ver con IGV y renta'}</Item>
-                  <Item onSelect={() => { exportCsv(finance, withTaxes); setCmd(false); }} icon={<Download className="h-4 w-4" />}>Exportar todo a CSV (Excel)</Item>
-                  <Item onSelect={() => { load(pass, false).catch(() => {}); setCmd(false); }} icon={<RefreshCw className="h-4 w-4" />}>Actualizar datos</Item>
-                </Command.Group>
-              </Command.List>
-            </Command>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <CommandDialog open={cmd} onOpenChange={setCmd} title="Buscar" description="Busca una marca, una fecha o una acción">
+        <CommandInput placeholder="Busca una marca, una fecha o una acción…" />
+        <CommandList className="scroll-thin">
+          <CommandEmpty>Nada encontrado.</CommandEmpty>
+          <CommandGroup heading="Ir a">
+            <CommandItem onSelect={() => go('group')}><LayoutDashboardIcon />Resumen del grupo</CommandItem>
+            {brands.map((b) => <CommandItem key={b.id} value={`marca ${b.name}`} onSelect={() => go(b.id)}><BrandTile id={b.id} size="xs" />{b.name}</CommandItem>)}
+            <CommandItem onSelect={() => go('edit')}><SlidersHorizontalIcon />Editar datos</CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Fechas">
+            {events.map((e) => (
+              <CommandItem key={e.id} value={`${e.name} ${fmtDate(e.date)} ${e.venue || ''} ${e.id}`} onSelect={() => go(e.brand, e.id)}>
+                <BrandTile id={e.brand} size="xs" /><span className="flex-1 truncate">{e.name} <span className="text-muted-foreground">· {fmtShort(e.date)}</span></span><KindTag real={isActual(e)} />
+              </CommandItem>
+            ))}
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Acciones">
+            <CommandItem onSelect={() => { setWithTaxes(!withTaxes); setCmd(false); }}><ReceiptIcon />{withTaxes ? 'Ver sin IGV ni renta' : 'Ver con IGV y renta'}</CommandItem>
+            <CommandItem onSelect={() => { exportCsv(finance, withTaxes); setCmd(false); }}><DownloadIcon />Exportar todo a CSV (Excel)</CommandItem>
+            <CommandItem onSelect={() => { refresh(); setCmd(false); }}><RefreshCwIcon />Actualizar datos</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
 
       <AnimatePresence>
-        {toast && <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} className="fixed bottom-20 right-6 z-50 rounded-lg bg-ink px-3.5 py-2 text-sm text-white shadow-xl">{toast}</motion.div>}
+        {toast && <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} role="status" className="fixed bottom-20 right-6 z-50 rounded-lg border bg-background px-3.5 py-2 text-sm shadow-xl">{toast}</motion.div>}
       </AnimatePresence>
-    </div>
-  );
-}
-
-function Item({ children, icon, right, onSelect, value }) {
-  return (
-    <Command.Item value={value} onSelect={onSelect} className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-[13px] text-ink">
-      <span className="flex w-5 justify-center text-muted">{icon}</span><span className="flex-1 truncate">{children}</span>{right}
-    </Command.Item>
+    </TooltipProvider>
   );
 }
 
@@ -230,30 +197,38 @@ function Login({ onLogin }) {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   return (
-    <div className="grid min-h-full lg:grid-cols-2">
-      <div className="relative hidden flex-col justify-between border-r border-line bg-sidebar p-10 lg:flex">
+    <div className="grid min-h-full bg-muted lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="hidden flex-col justify-between border-r bg-sidebar p-10 lg:flex">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#0B0B0B] px-[3px]"><img src="/administracion/logos/paradisio-orange.png" alt="" className="w-full" /></div>
+          <GroupLogo />
           <p className="text-[14px] font-semibold tracking-tight">Paradisio Entertainment Group</p>
         </div>
         <div className="space-y-3">
-          {['club', 'beats', 'icon'].map((id, i) => (
+          {[['club', 'Paradisio Club'], ['beats', 'Paradisio Beats'], ['icon', 'Icon']].map(([id, name], i) => (
             <motion.div key={id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.08 }} className="flex items-center gap-3">
               <BrandTile id={id} size="md" />
-              <span className="text-[15px] font-medium">{{ club: 'Paradisio Club', beats: 'Paradisio Beats', icon: 'Icon' }[id]}</span>
+              <span className="text-[15px] font-medium">{name}</span>
             </motion.div>
           ))}
         </div>
-        <p className="text-[12px] text-muted">Acceso privado</p>
+        <p className="text-[12px] text-muted-foreground">Acceso privado</p>
       </div>
-      <div className="flex items-center px-6 py-12 sm:px-16">
-        <form className="w-full max-w-sm" onSubmit={async (e) => { e.preventDefault(); setErr(''); setBusy(true); try { await onLogin(v.trim()); } catch (x) { setErr(x.message === 'unauthorized' ? 'Clave incorrecta.' : 'No se pudo conectar.'); } finally { setBusy(false); } }}>
-          <p className="text-[12px] text-muted lg:hidden">Paradisio Entertainment Group</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Entrar</h1>
-          <input type="password" autoFocus value={v} onChange={(e) => setV(e.target.value)} placeholder="Clave" className="mt-6 h-10 w-full rounded-lg border border-line bg-white px-3 text-sm outline-none focus:border-ink" />
-          <Button className="mt-3 h-10 w-full" disabled={busy || !v}>{busy ? 'Entrando…' : 'Entrar'}</Button>
-          <p className="mt-3 min-h-5 text-sm text-bad">{err}</p>
-        </form>
+      <div className="flex items-start px-6 pt-[14vh] sm:px-16">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <p className="text-[12px] text-muted-foreground lg:hidden">Paradisio Entertainment Group</p>
+            <CardTitle className="text-2xl tracking-tight">Entrar</CardTitle>
+            <CardDescription>Panel de dirección del grupo.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={async (e) => { e.preventDefault(); setErr(''); setBusy(true); try { await onLogin(v.trim()); } catch (x) { setErr(x.message === 'unauthorized' ? 'Clave incorrecta.' : 'No se pudo conectar.'); } finally { setBusy(false); } }}>
+              <Label htmlFor="pass" className="sr-only">Clave</Label>
+              <Input id="pass" type="password" autoFocus value={v} onChange={(e) => setV(e.target.value)} placeholder="Clave" className="h-10" />
+              <Button className="mt-3 h-10 w-full" disabled={busy || !v}>{busy ? 'Entrando…' : 'Entrar'}</Button>
+              <p className="mt-3 min-h-5 text-sm text-destructive">{err}</p>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

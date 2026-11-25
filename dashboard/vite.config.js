@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -6,6 +7,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   base: '/administracion/',
   plugins: [react(), tailwindcss()],
+  resolve: { alias: { '@': path.resolve(import.meta.dirname, './src') } },
   build: { outDir: '../administracion', emptyOutDir: true, chunkSizeWarningLimit: 1200 },
   server: { proxy: { '/api': 'http://localhost:8765' } },
 });

@@ -65,6 +65,48 @@ function opsAttention(ops) {
   (ops.promoPending || []).forEach((p) => out.push({ level: 'med', title: 'Comisiones de promotores por pagar', text: `${p.name}: ${p.amount.toFixed(2)} soles pendientes según la regla de comisión.`, event: p.event }));
   return out;
 }
+// Resumen por marca: qué aporta cada una al grupo y en qué se le va.
+// Todo sale de la misma capa de cálculo (summarize, ledgerSummary, promotores).
+function brandsPayload(finance, { culqi, ledger, promoters, ops }) {
+  const group = summarize(finance, { culqi });
+  const pen = (t) => t.amount * (t.currency === 'USD' ? t.fxRate : 1);
+  const r2 = (n) => Math.round(n * 100) / 100;
+  return Object.fromEntries((finance.brands || []).map((b) => {
+    const S = summarize(finance, { brand: b.id, culqi });
+    const LS = L.ledgerSummary(ledger, { finance, brand: b.id });
+    const evIds = new Set((finance.events || []).filter((e) => e.brand === b.id).map((e) => e.id));
+    const perf = Object.entries(promoters).filter(([id]) => evIds.has(id)).map(([, p]) => p);
+    const withRule = perf.filter((p) => p.rule);
+    // Proveedores: pagos y deudas del libro, y costos de la liquidación (por concepto) de las fechas reales.
+    const sup = new Map();
+    (ledger.transactions || []).filter((t) => t.brand === b.id && (t.kind === 'cost' || t.kind === 'expense' || t.kind === 'inventory') && t.counterparty).forEach((t) => {
+      const o = sup.get(t.counterparty) || { name: t.counterparty, paid: 0, pending: 0, count: 0 };
+      if (t.paidOn) o.paid = r2(o.paid + pen(t)); else o.pending = r2(o.pending + pen(t));
+      o.count++; sup.set(t.counterparty, o);
+    });
+    const staffCost = Object.entries((ops && ops.staff) || {}).filter(([id]) => evIds.has(id));
+    return [b.id, {
+      actual: { ...S.actual, events: undefined, byBrand: undefined },
+      projected: { revenue: S.projected.revenue, profit: S.projected.profit, count: S.projected.count, completeCount: S.projected.completeCount },
+      share: {
+        revenue: group.actual.revenue ? r2((S.actual.revenue / group.actual.revenue) * 100) : null,
+        result: group.actual.result && S.actual.count ? r2((S.actual.result / Math.abs(group.actual.result)) * 100) : null,
+      },
+      events: { done: S.actual.count, upcoming: S.projected.count, total: evIds.size },
+      promoters: perf.length ? {
+        attended: perf.reduce((s, p) => s + p.totals.attended, 0), qrs: perf.reduce((s, p) => s + p.totals.qrs, 0),
+        commission: withRule.length ? r2(withRule.reduce((s, p) => s + p.totals.commission, 0)) : null,
+        paid: r2(perf.reduce((s, p) => s + p.totals.paid, 0)),
+        pending: withRule.length ? r2(withRule.reduce((s, p) => s + p.totals.pending, 0)) : null,
+        top: perf.flatMap((p) => p.rows).reduce((m, r) => m.set(r.code, { name: r.name, attended: (m.get(r.code) || { attended: 0 }).attended + r.attended }), new Map()),
+      } : null,
+      payments: { hasData: LS.hasData, paidOut: r2((ledger.transactions || []).filter((t) => t.brand === b.id && t.paidOn && L.KINDS[t.kind].dir < 0).reduce((s, t) => s + pen(t), 0)), collected: r2((ledger.transactions || []).filter((t) => t.brand === b.id && t.paidOn && L.KINDS[t.kind].dir > 0).reduce((s, t) => s + pen(t), 0)), payables: LS.payables.total, receivables: LS.receivables.total, deposits: LS.deposits.total, corporate: LS.corporate },
+      suppliers: [...sup.values()].sort((a, b2) => b2.paid + b2.pending - (a.paid + a.pending)),
+      staffAssigned: staffCost.reduce((s, [, list]) => s + list.length, 0),
+    }];
+  }));
+}
+
 const rank = { high: 0, med: 1, low: 2 };
 const merged = (a, b) => [...a, ...b].sort((x, y) => rank[x.level] - rank[y.level]);
 
@@ -219,6 +261,8 @@ module.exports = async (req, res) => {
         sales[e.id] = SALES.salesForEvent(ts, e.date);
         promoters[e.id] = PR.performance(ts, { promoters: roster, promo: ops.promo, finEventId: e.id, ledger: ops.ledger });
       });
+      const brands = brandsPayload(p.finance, { culqi: p.culqi, ledger: ops.ledger, promoters, ops: ops.ops });
+      Object.values(brands).forEach((x) => { if (x.promoters) x.promoters.top = [...x.promoters.top.values()].sort((a, b) => b.attended - a.attended).slice(0, 5); });
       ops.promoPending = Object.entries(promoters).flatMap(([evId, perf]) => {
         const e = p.finance.events.find((x) => x.id === evId);
         if (!e || !isActualStage(stageOf(e)) || !perf.rule) return [];
@@ -229,7 +273,7 @@ module.exports = async (req, res) => {
         version: p.seeded ? null : versionOf(p.finance),
         ledger: ops.ledger, inventory: ops.inventory, promo: ops.promo, ops: ops.ops,
         os: {
-          sales, promoters, tasks: ops.tasks,
+          sales, promoters, tasks: ops.tasks, brands, groupActual: { revenue: s.actual.revenue, result: s.actual.result },
           roster: [...roster.values()].map((x) => ({ code: x.code, name: x.name, retired: !!x.retired, active: x.active !== false })),
           stages: STAGES, metrics: METRICS, summary: s, activity,
           attention: merged(attention(s, { culqi: p.culqi, usingStaffPasscode }), opsAttention(ops)),

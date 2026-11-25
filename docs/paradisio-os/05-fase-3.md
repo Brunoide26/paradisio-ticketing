@@ -74,3 +74,33 @@ Alcance: ventas y reservas, promotores y gestión operativa.
 
 ## Pendiente (Fases 4 y 5)
 Marketing y contenido, sponsorships, equipo, CRM con consentimiento, documentos, integraciones, analítica avanzada y modo en vivo.
+
+## Ajuste posterior: espacios por marca
+
+Pedido del dueño: cada marca tiene que verse por separado, con qué le entra al grupo y qué le queda, y lo mismo para promotores, proveedores y pagos.
+
+- **Comparativo de marcas** (`/marcas`):
+  - una tarjeta por marca, con su proyectado aparte;
+  - una tabla lado a lado: fechas, ingresos, costos, personal, resultado, margen, % del grupo, comisiones, pagado y por pagar, con la columna Grupo;
+  - un gráfico de resultado por marca.
+
+  Si una marca no tiene fechas realizadas muestra "—", no cero.
+- **Espacio de cada marca** (`/marcas/:id`):
+  - *Resumen*:
+    - qué le entra, en qué se le va, **personal por área** (barra, seguridad, limpieza, caja) y promotores;
+    - sus fechas reales y proyectadas en tablas separadas;
+    - sus pagos.
+  - *Fechas*: la vista de siempre.
+  - *Costos y proveedores*: costos reales y presupuestados en tablas separadas, proveedores del libro y staff asignado.
+  - *Promotores*.
+- **Barra lateral**: en Marcas, "Comparativo de marcas" y cada marca (con la etiqueta "nueva" mientras no tenga fechas realizadas).
+- **Servidor**: `os.brands` calcula, por marca, con la misma capa de cálculo; `staffArea()` clasifica el personal por área según el concepto del costo.
+
+Datos cargados en producción (con la llave, auditados como "claude", sin tocar las finanzas):
+- **Directorio**: 5 equipos (seguridad, bartenders, mozos, cajera, limpieza).
+- **Staff asignado**:
+  - 14/11 (real): S/ 800 + 505 + 140 + 100 + 140;
+  - 05/12 (presupuesto): S/ 760 + 680 + 140.
+- **Inventario**: 12 productos con el conteo de cierre del 14/11, por S/ 1,558.73. La diferencia de S/ 0.15 con finanzas es redondeo de costos unitarios.
+  - Las líneas que mezclan varios productos ("Gin, Campari y vermouth", "Mixers y jarabes", "Vodka y Kahlúa", "Pisco y vino") quedaron como **lote** con su costo total, porque no hay costo por botella.
+  - Para separarlas, edita el producto o crea los productos individuales y haz un ajuste.

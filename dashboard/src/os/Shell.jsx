@@ -276,6 +276,7 @@ function Palette() {
           {[['/', 'Resumen ejecutivo', <LayoutDashboardIcon key="i" />], ['/atencion', 'Atención', <InboxIcon key="i" />], ['/calendario', 'Calendario', <CalendarDaysIcon key="i" />], ['/eventos', 'Eventos', <TicketIcon key="i" />], ['/finanzas', 'Finanzas', <WalletIcon key="i" />], ['/finanzas/transacciones', 'Transacciones', <ArrowLeftRightIcon key="i" />], ['/finanzas/cuentas', 'Cuentas', <WalletIcon key="i" />], ['/finanzas/por-pagar', 'Por pagar y por cobrar', <WalletIcon key="i" />], ['/finanzas/flujo', 'Flujo de caja', <WalletIcon key="i" />], ['/finanzas/presupuestos', 'Presupuestos', <WalletIcon key="i" />], ['/finanzas/simulador', 'Simulador de rentabilidad', <CalculatorIcon key="i" />], ['/finanzas/datos', 'Datos de eventos', <SlidersHorizontalIcon key="i" />], ['/inventario', 'Inventario y barra', <PackageIcon key="i" />], ['/ventas', 'Ventas y reservas', <ShoppingBagIcon key="i" />], ['/promotores', 'Promotores', <MegaphoneIcon key="i" />], ['/operaciones', 'Operaciones y proveedores', <WrenchIcon key="i" />], ['/tareas', 'Mis tareas', <ListTodoIcon key="i" />], ['/actividad', 'Registro de actividad', <HistoryIcon key="i" />]].map(([to, l, icon]) => (
             <CommandItem key={to} value={`ir ${l}`} onSelect={() => run(() => navigate(to))}>{icon}{l}</CommandItem>
           ))}
+          <CommandItem value="marcas comparativo" onSelect={() => run(() => navigate('/marcas'))}><Building2Icon />Comparativo de marcas</CommandItem>
           {brands.map((b) => <CommandItem key={b.id} value={`marca ${b.name}`} onSelect={() => run(() => navigate(`/marcas/${b.id}`))}><BrandTile id={b.id} size="xs" />{b.name}</CommandItem>)}
         </CommandGroup>
         <CommandSeparator />
@@ -343,7 +344,10 @@ export default function Shell() {
       { to: '/inventario', title: 'Inventario y barra', icon: <PackageIcon />, badge: data.os.inventorySummary.low.length || null },
       { to: '/operaciones', title: 'Operaciones y proveedores', icon: <WrenchIcon /> },
     ] },
-    { label: 'Marcas', collapsible: true, items: brands.map((b) => ({ to: `/marcas/${b.id}`, title: b.name, icon: <BrandTile id={b.id} size="xs" className="size-4!" /> })) },
+    { label: 'Marcas', collapsible: true, items: [
+      { to: '/marcas', title: 'Comparativo de marcas', icon: <Building2Icon />, end: true },
+      ...brands.map((b) => ({ to: `/marcas/${b.id}`, title: b.name, icon: <BrandTile id={b.id} size="xs" className="size-4!" />, badge: (data.os.brands && data.os.brands[b.id] && !data.os.brands[b.id].events.done) ? 'nueva' : null })),
+    ] },
     { label: 'Sistema', collapsible: true, items: [{ to: '/actividad', title: 'Registro de actividad', icon: <HistoryIcon /> }] },
   ];
 

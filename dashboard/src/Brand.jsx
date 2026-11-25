@@ -4,7 +4,7 @@ import { Pencil } from 'lucide-react';
 import { Card, CardHeader, Money, Num, DeltaPill, KindTag, ShareBarList, DataTable, MetricStrip, BrandTile, Button, Empty, TooltipBox } from './ui.jsx';
 import { money, short, pct, sum, totals, isActual, fmtShort, fmtDate, daysTo, brandColor, byCategory, cn } from './lib.js';
 
-export default function Brand({ brandId, finance, live, withTaxes, selected, onSelect, go }) {
+export default function Brand({ brandId, finance, live, culqi, withTaxes, selected, onSelect, go }) {
   const brand = (finance.brands || []).find((b) => b.id === brandId) || { id: brandId, name: brandId };
   const color = brandColor(brandId);
   const events = (finance.events || []).filter((e) => e.brand === brandId).sort((a, b) => a.date.localeCompare(b.date));
@@ -36,12 +36,12 @@ export default function Brand({ brandId, finance, live, withTaxes, selected, onS
       )}
       {!sel ? (
         <Card><Empty title="Todavía no hay fechas" action={<Button size="sm" onClick={() => go('edit')}>Crear fecha</Button>}>Crea la primera fecha de {brand.name} en Editar datos.</Empty></Card>
-      ) : <EventView key={sel.id + withTaxes} e={sel} events={events} live={live} withTaxes={withTaxes} color={color} brandId={brandId} go={go} />}
+      ) : <EventView key={sel.id + withTaxes} e={sel} events={events} live={live} culqi={culqi} withTaxes={withTaxes} color={color} brandId={brandId} go={go} />}
     </div>
   );
 }
 
-function EventView({ e, events, live, withTaxes, color, brandId, go }) {
+function EventView({ e, events, live, culqi, withTaxes, color, brandId, go }) {
   const t = totals(e, withTaxes);
   const real = isActual(e);
   const noCosts = !(e.costs || []).length;
@@ -139,6 +139,8 @@ function EventView({ e, events, live, withTaxes, color, brandId, go }) {
           (e.brandInvestment || []).length ? { label: 'Inversión en marca', sub: 'Activos que se reusan, aparte', value: money(t.inv) } : { label: 'Stock que quedó', sub: 'A costo', value: money(t.stock) },
         ]} />
       </Card>
+
+      <CulqiCard c={culqi} e={e} color={color} />
 
       {showOps ? (
         <div className="flex items-center gap-3 pt-6">
@@ -295,5 +297,53 @@ function Stock({ items }) {
         rows={items.slice().sort((a, b) => b.cost - a.cost)}
       />
     </Card>
+  );
+}
+
+function CulqiCard({ c, e, color }) {
+  if (!c) return null;
+  if (!c.connected) {
+    return (
+      <Card>
+        <CardHeader title="Culqi" description="Cobros reales automáticos" />
+        <p className="px-4 py-4 text-[13px] text-muted">No se pudo leer Culqi ({c.reason || 'sin conexión'}). Los montos de esta fecha siguen siendo los que cargaste a mano.</p>
+      </Card>
+    );
+  }
+  const x = c.byEvent && c.byEvent[e.id];
+  if (!x) return null;
+  const w = x.window ? `${fmtShort(new Date(x.window.from * 1000 - 5 * 3600 * 1000).toISOString().slice(0, 10))} – ${fmtShort(new Date(x.window.to * 1000 - 5 * 3600 * 1000).toISOString().slice(0, 10))}` : '';
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <Card>
+        <div className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4">
+          <div>
+            <div className="flex items-center gap-2"><span className="inline-flex items-center gap-1.5 rounded-md border border-[#CDEBDD] bg-[#F1FAF5] px-1.5 py-0.5 text-[11px] font-medium text-[#047857]"><i className="h-1.5 w-1.5 rounded-full bg-good" />Culqi conectado{c.mode === 'test' ? ' (modo prueba)' : ''}</span><span className="text-[13px] text-muted">{w}</span></div>
+            <p className="mt-2 text-[32px] font-medium leading-none tracking-tight"><Money value={x.amount} /></p>
+            <p className="mt-1.5 text-[13px] text-muted">Cobrado por Culqi en la venta de esta fecha · {x.count} cobro{x.count === 1 ? '' : 's'} exitoso{x.count === 1 ? '' : 's'}{x.failed ? ` · ${x.failed} rechazado${x.failed === 1 ? '' : 's'}` : ''}</p>
+          </div>
+          <div className="text-right text-[13px]">
+            <p className="text-muted">Comisión <span className="mono text-ink">{money(x.fee, 2)}</span></p>
+            <p className="text-muted">Neto <span className="mono font-medium text-ink">{money(x.net, 2)}</span></p>
+          </div>
+        </div>
+        <div className="h-[140px] px-2 pb-2 pt-3">
+          {x.byDay.length ? (
+            <ResponsiveContainer>
+              <BarChart data={x.byDay.map((d) => ({ name: fmtShort(d.d), v: d.amount }))}>
+                <XAxis dataKey="name" tickLine={false} axisLine={false} minTickGap={16} />
+                <Tooltip cursor={{ fill: 'rgba(10,10,10,.03)' }} content={({ active, payload }) => active && payload && payload.length ? <TooltipBox title={payload[0].payload.name} rows={[{ label: 'Cobrado', value: money(payload[0].value), color }]} /> : null} />
+                <Bar dataKey="v" fill={color} radius={[2, 2, 0, 0]} animationDuration={900} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : <p className="px-2 text-[13px] text-muted">Sin cobros en Culqi para esta fecha todavía.</p>}
+        </div>
+        <p className="border-t border-line px-4 py-2.5 text-[12px] text-muted">Se actualiza solo cada 10 minutos. Incluye lo que pasa por la API de Culqi (web: entradas, boxes y mesas).</p>
+      </Card>
+      <Card>
+        <CardHeader title="Por medio de pago" description="Cobros exitosos en Culqi." />
+        {x.byMethod.length ? <ShareBarList color="#525252" items={x.byMethod.map((m) => ({ label: m.label, value: m.amount, extra: `${m.n}` }))} /> : <p className="px-4 py-4 text-[13px] text-muted">Sin cobros todavía.</p>}
+      </Card>
+    </div>
   );
 }

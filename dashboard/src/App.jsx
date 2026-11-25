@@ -171,11 +171,11 @@ export default function App() {
         <main className="mx-auto w-full max-w-[1100px] px-4 py-6 sm:px-6">
           <AnimatePresence mode="wait">
             <motion.div key={page} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              {page === 'group' && <Group finance={finance} withTaxes={withTaxes} go={go} />}
+              {page === 'group' && <Group finance={finance} withTaxes={withTaxes} go={go} culqi={data.culqi} live={data.live} />}
               {page === 'edit' && draft && <Editor draft={draft} setDraft={setDraft} dirty={dirty} setDirty={setDirty} editId={editId} setEditId={setEditId} withTaxes={withTaxes} seeded={data.seeded}
                 saving={saving} onSave={save} onDiscard={() => { setDraft(JSON.parse(JSON.stringify(finance))); setDirty(false); }}
                 onReset={async () => { try { await api(pass, { action: 'reset' }); setDirty(false); const d = await api(pass); setData(d); setDraft(JSON.parse(JSON.stringify(d.finance))); flash('Datos de arranque restaurados'); } catch { flash('No se pudo restaurar'); } }} />}
-              {page !== 'group' && page !== 'edit' && <Brand brandId={page} finance={finance} live={data.live} withTaxes={withTaxes} selected={sel[page]} onSelect={(id) => setSel((s) => ({ ...s, [page]: id }))} go={go} />}
+              {page !== 'group' && page !== 'edit' && <Brand brandId={page} finance={finance} live={data.live} culqi={data.culqi} withTaxes={withTaxes} selected={sel[page]} onSelect={(id) => setSel((s) => ({ ...s, [page]: id }))} go={go} />}
             </motion.div>
           </AnimatePresence>
         </main>

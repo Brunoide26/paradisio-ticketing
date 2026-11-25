@@ -24,7 +24,7 @@ import { useOS } from './store.jsx';
 import { TxForm, AccountForm, ProductForm, MoveForm, ContactForm, TaskForm } from './forms.jsx';
 import { StageBadge, BrandDot, fmtDay, fmtDayYear, relDays, Unavailable, moneyOrNA } from './kit.jsx';
 import { BrandTile, KindTag } from '../ui.jsx';
-import { cn, money, pct, isActual, totals, limaISO } from '../lib.js';
+import { cn, money, pct, isActual, totals, limaISO, brandColor } from '../lib.js';
 
 export { sel, Field } from './kit.jsx';
 import { sel, Field } from './kit.jsx';
@@ -43,6 +43,32 @@ export function exportCsv(finance, withTaxes) {
   a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
   a.download = `paradisio-os-${limaISO()}.csv`;
   a.click();
+}
+
+// Botones de marca arriba de cada sección: Grupo / Club / Beats / Icon.
+// Es el mismo filtro que el selector de la barra lateral (se recuerda al cambiar de sección).
+function BrandBar({ brands }) {
+  const { workspace, setWorkspace, data } = useOS();
+  const B = data.os.brands || {};
+  const opts = [{ id: 'group', name: 'Todo el grupo' }, ...brands];
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Ver por marca">
+      {opts.map((b) => {
+        const on = workspace === b.id;
+        const c = b.id === 'group' ? null : brandColor(b.id);
+        const done = b.id === 'group' ? null : (B[b.id] || { events: {} }).events.done;
+        return (
+          <button key={b.id} type="button" role="tab" aria-selected={on} onClick={() => setWorkspace(b.id)}
+            className={cn('flex h-9 items-center gap-2 rounded-lg border px-3 text-[13px] font-medium transition-colors', on ? 'text-white shadow-sm' : 'bg-background text-foreground hover:border-ring')}
+            style={on ? { background: c || 'var(--primary)', borderColor: c || 'var(--primary)', color: c ? '#fff' : 'var(--primary-foreground)' } : undefined}>
+            {b.id === 'group' ? <Building2Icon className="size-4" /> : <BrandTile id={b.id} size="xs" className={on ? 'ring-1 ring-white/60' : ''} />}
+            {b.name}
+            {done === 0 && <span className={cn('rounded px-1 text-[10px] font-normal', on ? 'bg-white/20' : 'bg-muted text-muted-foreground')}>sin fechas</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function WorkspaceSwitcher({ brands }) {
@@ -351,6 +377,9 @@ export default function Shell() {
     { label: 'Sistema', collapsible: true, items: [{ to: '/actividad', title: 'Registro de actividad', icon: <HistoryIcon /> }] },
   ];
 
+  // En las secciones generales; no en la página de una marca ni en el detalle de un evento.
+  const showBrandBar = !/^\/(marcas|eventos\/[^/]+|finanzas\/datos)/.test(location.pathname);
+
   const openAttention = (a) => (a.event ? setDrawer({ type: 'event', id: a.event }) : navigate(a.route || '/atencion'));
 
   return (
@@ -402,6 +431,7 @@ export default function Shell() {
         )}
         user={<NavUser staff={data.usingStaffPasscode} onExport={() => exportCsv(data.finance, withTaxes)} onRefresh={() => load(undefined, { quiet: false }).catch(() => {})} onEdit={() => navigate('/finanzas/datos')} onLogout={logout} />}
       >
+        {showBrandBar && <BrandBar brands={brands} />}
         <Outlet />
       </AppShell>
 

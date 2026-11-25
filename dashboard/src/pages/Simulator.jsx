@@ -55,9 +55,11 @@ function compute(s, fixed) {
 }
 
 export default function Simulator({ eventId: fixedEvent }) {
-  const { data, saveEventNumbers } = useOS();
+  const { data, saveEventNumbers, workspace } = useOS();
+  const inScope = (e) => workspace === 'group' || e.brand === workspace || (fixedEvent && e.id === fixedEvent);
+  // Partir de cualquier fecha real (de otra marca también sirve como referencia); guardar sólo en fechas de la marca elegida.
   const actual = data.finance.events.filter(isActual).sort((a, b) => b.date.localeCompare(a.date));
-  const targets = data.finance.events.filter((e) => !isActual(e) && e.stage !== 'cancelled').sort((a, b) => a.date.localeCompare(b.date));
+  const targets = data.finance.events.filter((e) => !isActual(e) && e.stage !== 'cancelled' && inScope(e)).sort((a, b) => a.date.localeCompare(b.date));
   const [baseId, setBaseId] = useState(actual[0]?.id || '');
   const base = useMemo(() => baseFrom(data.finance.events.find((e) => e.id === baseId), data.live), [baseId, data.finance, data.live]); // eslint-disable-line react-hooks/exhaustive-deps
   const init = (b) => {

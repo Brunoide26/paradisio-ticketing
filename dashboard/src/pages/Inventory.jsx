@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOS } from '../os/store.jsx';
 import DataTable from '../os/DataTable.jsx';
 import { CountDialog } from '../os/forms.jsx';
-import { PageHeader, Kpi, Unavailable, fmtDay, moneyOrNA, sel, BrandDot } from '../os/kit.jsx';
+import { PageHeader, Kpi, Unavailable, fmtDay, moneyOrNA, sel, BrandDot, useScope } from '../os/kit.jsx';
 import { PanelBar } from './Overview.jsx';
 import { Panel } from '../ui.jsx';
 import { cn, money } from '../lib.js';
@@ -16,11 +16,18 @@ export default function Inventory() {
   const [countFor, setCountFor] = useState(null);
   const IS = data.os.inventorySummary;
   const inv = data.inventory;
-  const events = data.finance.events.slice().sort((a, b) => b.date.localeCompare(a.date));
-  const [evSel, setEvSel] = useState(events[0]?.id || '');
+  const scope = useScope();
+  const events = data.finance.events.filter((e) => scope.inScope(e.brand)).sort((a, b) => b.date.localeCompare(a.date));
+  const [pick, setEvSel] = useState('');
+  const evSel = events.some((e) => e.id === pick) ? pick : events[0]?.id || '';
+  // Consumo y stock final contado en las fechas de la marca (el stock en sí es compartido).
+  const byEv = data.os.byEvent || {};
+  const evInv = events.map((e) => (byEv[e.id] || {}).inventory).filter((c) => c && c.rows.length);
+  const consumed = evInv.filter((c) => c.consumedCost != null);
+  const closed = evInv.filter((c) => c.closeValue != null);
   return (
     <div className="flex flex-col gap-3">
-      <PageHeader title="Inventario" description="Compartido entre las marcas. Comprar suma stock; el consumo de un evento sale de sus conteos de apertura y cierre."
+      <PageHeader title="Inventario" description={scope.brand ? `El stock es compartido entre las marcas; abajo, el consumo en las fechas de ${scope.name}.` : 'Compartido entre las marcas. Comprar suma stock; el consumo de un evento sale de sus conteos de apertura y cierre.'}
         actions={<>
           <Button size="sm" variant="outline" onClick={() => setDrawer({ type: 'product' })}><PlusIcon />Producto</Button>
           <Button size="sm" variant="outline" onClick={() => setDrawer({ type: 'move' })}><PlusIcon />Movimiento</Button>
@@ -30,6 +37,9 @@ export default function Inventory() {
         <Kpi label="Valor del inventario" value={moneyOrNA(IS.value)} unavailable={IS.value == null ? 'Sin productos contados o comprados' : null} sub="a costo" />
         <Kpi label="Productos" value={String(IS.products.length)} sub={IS.uncounted ? `${IS.uncounted} sin contar` : 'todos con stock conocido'} />
         <Kpi label="Stock bajo" value={String(IS.low.length)} tone={IS.low.length ? 'bad' : undefined} sub="debajo del mínimo" onClick={IS.low.length ? () => setTab('products') : undefined} />
+        <Kpi label={scope.brand ? `Consumido por ${scope.name}` : 'Consumido en fechas'} value={consumed.length ? money(consumed.reduce((t, c) => t + c.consumedCost, 0)) : null}
+          unavailable={consumed.length ? null : (evInv.length ? 'Falta conteo de apertura o cierre' : `${scope.brand ? scope.name + ' no tiene' : 'No hay'} conteos de fechas todavía`)}
+          sub={closed.length ? `stock final contado ${money(closed.reduce((t, c) => t + c.closeValue, 0))}` : 'apertura + compras − cierre'} onClick={() => setTab('events')} />
       </div>
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-8"><TabsTrigger value="products" className="text-[12px]">Productos</TabsTrigger><TabsTrigger value="moves" className="text-[12px]">Movimientos</TabsTrigger><TabsTrigger value="events" className="text-[12px]">Consumo por evento</TabsTrigger></TabsList>
@@ -57,7 +67,7 @@ export default function Inventory() {
       {tab === 'events' && (
         <Panel>
           <PanelBar title="Consumo por evento" description="Apertura + compras para el evento − cierre. Sin conteo de cierre, el consumo no está disponible."
-            action={<div className="flex items-center gap-2"><select aria-label="Evento" className={cn(sel, 'h-8 w-64 text-[13px]')} value={evSel} onChange={(e) => setEvSel(e.target.value)}>{events.map((e) => <option key={e.id} value={e.id}>{fmtDay(e.date)} · {e.name}</option>)}</select><Button size="sm" variant="outline" onClick={() => setCountFor(evSel)}>Contar</Button></div>} />
+            action={<div className="flex items-center gap-2"><select aria-label="Evento" className={cn(sel, 'h-8 w-64 text-[13px]')} value={evSel} onChange={(e) => setEvSel(e.target.value)} disabled={!events.length}>{!events.length && <option>Sin fechas</option>}{events.map((e) => <option key={e.id} value={e.id}>{fmtDay(e.date)} · {e.name}</option>)}</select><Button size="sm" variant="outline" onClick={() => setCountFor(evSel)}>Contar</Button></div>} />
           <EventConsumption eventId={evSel} />
         </Panel>
       )}

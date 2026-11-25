@@ -7,6 +7,9 @@ import DataTable from '../os/DataTable.jsx';
 import { CountDialog } from '../os/forms.jsx';
 import { EventConsumption } from './Inventory.jsx';
 import Simulator from './Simulator.jsx';
+import { SalesView } from './Sales.jsx';
+import { EventPromoters } from './Promoters.jsx';
+import { EventProduction } from './Operations.jsx';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -28,6 +31,7 @@ export function EventPage() {
   const [dup, setDup] = useState(false);
   const e = data.finance.events.find((x) => x.id === id);
   const pay = ((data.os.byEvent || {})[id] || {}).payments;
+  const evTasks = (data.os.tasks || []).filter((t) => t.eventId === id);
   if (!e) return <NotFound what="Este evento no existe o fue eliminado." />;
   const f = data.os.summary.events.find((x) => x.id === id);
   const stages = data.os.stages;
@@ -90,6 +94,9 @@ export function EventPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-8">
           <TabsTrigger value="resumen" className="text-[12px]">Finanzas y operación</TabsTrigger>
+          <TabsTrigger value="produccion" className="text-[12px]">Producción{evTasks.length ? ` (${evTasks.filter((t) => t.status === 'done').length}/${evTasks.length})` : ''}</TabsTrigger>
+          {data.os.sales[e.id] && <TabsTrigger value="ventas" className="text-[12px]">Ventas y reservas</TabsTrigger>}
+          {data.os.promoters[e.id] && <TabsTrigger value="promotores" className="text-[12px]">Promotores</TabsTrigger>}
           <TabsTrigger value="pagos" className="text-[12px]">Pagos y cobros{pay ? ` (${pay.count})` : ''}</TabsTrigger>
           <TabsTrigger value="inventario" className="text-[12px]">Inventario</TabsTrigger>
           {!real && e.stage !== 'cancelled' && <TabsTrigger value="simulador" className="text-[12px]">Simulador</TabsTrigger>}
@@ -97,6 +104,9 @@ export function EventPage() {
       </Tabs>
       {tab === 'resumen' && <EventView key={e.id + withTaxes} e={e} events={events} live={data.live} culqi={data.culqi} withTaxes={withTaxes} color={brandColor(e.brand)} brandId={e.brand} go={navigate} />}
       {tab === 'pagos' && <EventPayments e={e} />}
+      {tab === 'produccion' && <EventProduction e={e} />}
+      {tab === 'ventas' && data.os.sales[e.id] && <SalesView e={e} S={data.os.sales[e.id]} />}
+      {tab === 'promotores' && data.os.promoters[e.id] && <EventPromoters eventId={e.id} />}
       {tab === 'inventario' && (
         <Panel>
           <PanelBar title="Consumo de inventario" description="Conteo de apertura + compras para el evento − conteo de cierre." action={<Button size="sm" variant="outline" onClick={() => setCounting(true)}><ClipboardListIcon />Conteo</Button>} />

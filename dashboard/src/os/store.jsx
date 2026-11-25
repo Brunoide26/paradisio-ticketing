@@ -17,7 +17,8 @@ const ERRORS = {
   expense_has_event: 'Un gasto corporativo no lleva evento; si es de un evento, usa "Costo de evento"',
   bad_ruc: 'RUC (11 dígitos) o DNI (8 dígitos) inválido', bad_fx: 'Falta el tipo de cambio', duplicate_external_ref: 'Esa referencia ya está registrada: sería un doble registro',
   bad_igv: 'El IGV no puede ser mayor que el monto', transfer_needs_date: 'Una transferencia necesita fecha de pago', bad_qty: 'Cantidad inválida',
-  bad_opening_date: 'Falta la fecha del saldo inicial', bad_product: 'Elige un producto', too_large: 'Demasiados datos en un solo documento',
+  bad_opening_date: 'Falta la fecha del saldo inicial', bad_contact_name: 'Falta el nombre', bad_email: 'Correo inválido', bad_task_title: 'Falta el título de la tarea',
+  dependency_cycle: 'Esa dependencia haría un círculo entre tareas', bad_ros_item: 'Cada línea del run of show necesita hora (HH:MM) y descripción', bad_team_name: 'Falta el nombre del equipo', bad_number: 'Número inválido', bad_time: 'Hora inválida (HH:MM)', bad_product: 'Elige un producto', too_large: 'Demasiados datos en un solo documento',
 };
 
 export async function osApi(pass, body = {}) {
@@ -107,6 +108,8 @@ export function OSProvider({ children }) {
   const upsertProduct = (product) => docMutate('inventory', { action: 'inv.product.upsert', product }, 'Producto guardado');
   const addMoves = (moves, msg = 'Movimiento registrado') => docMutate('inventory', { action: 'inv.move.add', moves }, msg);
   const deleteMove = (id) => docMutate('inventory', { action: 'inv.move.delete', id }, 'Movimiento eliminado');
+  const promo = (action, body, msg) => docMutate('promo', { action, ...body }, msg);
+  const opsAct = (action, body, msg) => docMutate('ops', { action, ...body }, msg);
   const duplicateEvent = (id, date, name) => mutate({ action: 'event.duplicate', id, date, name }, 'Evento duplicado');
   const saveEventNumbers = (id, numbers, source, msg = 'Presupuesto guardado') => mutate({ action: 'event.numbers', id, numbers, source }, msg);
   const updateEvent = (id, patch, msg = 'Evento actualizado') => mutate({ action: 'event.update', id, patch }, msg);
@@ -117,7 +120,7 @@ export function OSProvider({ children }) {
     pass, data, loading, login, logout, load, osApi: (b) => osApi(pass, b),
     workspace, setWorkspace, withTaxes, setWithTaxes, theme, setTheme,
     drawer, setDrawer, creating, setCreating, cmd, setCmd, toast, flash,
-    updateEvent, createEvent, saveFinance, upsertAccount, upsertTx, deleteTx, upsertProduct, addMoves, deleteMove, duplicateEvent, saveEventNumbers,
+    updateEvent, createEvent, saveFinance, upsertAccount, upsertTx, deleteTx, upsertProduct, addMoves, deleteMove, duplicateEvent, saveEventNumbers, promo, opsAct,
   }), [pass, data, loading, workspace, withTaxes, theme, drawer, creating, cmd, toast]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

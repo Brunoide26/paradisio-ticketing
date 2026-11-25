@@ -238,3 +238,86 @@ export function CountDialog({ open, onOpenChange, eventId, phase: initialPhase =
     </Dialog>
   );
 }
+
+export function ContactForm({ id, preset, onClose }) {
+  const { data, opsAct } = useOS();
+  const existing = id ? (data.ops.contacts || []).find((c) => c.id === id) : null;
+  const [f, setF] = useState(existing ? { ...existing, rate: existing.rate ?? '', rating: existing.rating ?? '' } : { type: 'supplier', name: '', role: '', company: '', phone: '', email: '', instagram: '', ruc: '', rate: '', rateUnit: '', rating: '', notes: '', ...(preset || {}) });
+  const [busy, setBusy] = useState(false);
+  const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
+  const staffIn = Object.entries(data.ops.staff || {}).filter(([, list]) => list.some((s) => s.contactId === id)).map(([evId]) => data.finance.events.find((e) => e.id === evId)).filter(Boolean);
+  const paidTx = existing ? (data.ledger.transactions || []).filter((t) => t.counterparty && t.counterparty.toLowerCase() === existing.name.toLowerCase()) : [];
+  return (
+    <>
+      <SheetHeader className="border-b pb-3"><SheetTitle>{existing ? existing.name : 'Nuevo contacto'}</SheetTitle><SheetDescription>Locales, artistas y DJs, proveedores, staff y contratistas.</SheetDescription></SheetHeader>
+      <form id="ct-form" className="scroll-thin grid flex-1 content-start gap-3 overflow-y-auto p-4 sm:grid-cols-2" onSubmit={async (e) => { e.preventDefault(); setBusy(true); try { await opsAct('ops.contact.upsert', { contact: f }, 'Contacto guardado'); onClose(); } catch { /* */ } finally { setBusy(false); } }}>
+        <Field label="Tipo"><select className={sel} value={f.type} onChange={set('type')}>{Object.entries(data.os.enums.contactTypes).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <Field label="Nombre"><Input required value={f.name} onChange={set('name')} /></Field>
+        <Field label="Rol / servicio"><Input value={f.role} onChange={set('role')} placeholder="DJ, seguridad, sonido, bartender…" /></Field>
+        <Field label="Empresa"><Input value={f.company} onChange={set('company')} /></Field>
+        <Field label="Celular"><Input value={f.phone} onChange={set('phone')} /></Field>
+        <Field label="Correo"><Input type="email" value={f.email} onChange={set('email')} /></Field>
+        <Field label="Instagram"><Input value={f.instagram} onChange={set('instagram')} /></Field>
+        <Field label="RUC o DNI"><Input value={f.ruc} onChange={set('ruc')} /></Field>
+        <Field label="Tarifa (S/)"><Input type="number" step="0.01" min="0" className="mono" value={f.rate} onChange={set('rate')} /></Field>
+        <Field label="Por"><Input value={f.rateUnit} onChange={set('rateUnit')} placeholder="noche, hora, set…" /></Field>
+        <Field label="Calificación (1 a 5)"><Input type="number" min="1" max="5" value={f.rating} onChange={set('rating')} /></Field>
+        <Field label="Notas, acuerdos y cotizaciones" className="sm:col-span-2"><Textarea value={f.notes} onChange={set('notes')} className="min-h-20" /></Field>
+        {existing && <label className="flex items-center gap-2 text-[13px] sm:col-span-2"><Switch checked={!!f.archived} onCheckedChange={(v) => setF((x) => ({ ...x, archived: v }))} />Archivado</label>}
+        {existing && (staffIn.length > 0 || paidTx.length > 0) && (
+          <div className="rounded-md border p-3 text-[12px] sm:col-span-2">
+            <p className="font-medium">Historial</p>
+            {staffIn.map((e) => <p key={e.id} className="text-muted-foreground">Staff en {e.name} · {fmtDay(e.date)}</p>)}
+            {paidTx.length > 0 && <p className="text-muted-foreground">{paidTx.length} pago(s) registrados por {money(paidTx.reduce((s, t) => s + t.amount, 0))}</p>}
+          </div>
+        )}
+      </form>
+      <div className="flex justify-end gap-2 border-t p-3"><Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button><Button type="submit" form="ct-form" size="sm" disabled={busy}>{busy ? 'Guardando…' : 'Guardar'}</Button></div>
+    </>
+  );
+}
+
+export function TaskForm({ id, preset, onClose }) {
+  const { data, opsAct } = useOS();
+  const tasks = data.ops.tasks || [];
+  const existing = id ? tasks.find((t) => t.id === id) : null;
+  const view = id ? (data.os.tasks || []).find((t) => t.id === id) : null;
+  const [f, setF] = useState(existing ? { ...existing, due: existing.due || '', eventId: existing.eventId || '' } : { title: '', eventId: '', owner: '', due: '', status: 'todo', dependsOn: [], notes: '', group: '', ...(preset || {}) });
+  const [busy, setBusy] = useState(false);
+  const [sure, setSure] = useState(false);
+  const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.value }));
+  const events = data.finance.events.slice().sort((a, b) => b.date.localeCompare(a.date));
+  const candidates = tasks.filter((t) => t.id !== id && (!f.eventId || t.eventId === f.eventId));
+  const owners = [...new Set(tasks.map((t) => t.owner).filter(Boolean))];
+  return (
+    <>
+      <SheetHeader className="border-b pb-3"><SheetTitle>{existing ? 'Tarea' : 'Nueva tarea'}</SheetTitle>{view && view.blockedBy.length > 0 && <SheetDescription className="text-[#C98500]">Bloqueada por: {view.blockedBy.map((b) => b.title).join(' · ')}</SheetDescription>}</SheetHeader>
+      <form id="tk-form" className="scroll-thin grid flex-1 content-start gap-3 overflow-y-auto p-4 sm:grid-cols-2" onSubmit={async (e) => { e.preventDefault(); setBusy(true); try { await opsAct('ops.task.upsert', { task: { ...f, eventId: f.eventId || null, due: f.due || null } }, 'Tarea guardada'); onClose(); } catch { /* */ } finally { setBusy(false); } }}>
+        <Field label="Tarea" className="sm:col-span-2"><Input required value={f.title} onChange={set('title')} /></Field>
+        <Field label="Evento"><select className={sel} value={f.eventId} onChange={set('eventId')}><option value="">General (sin evento)</option>{events.map((e) => <option key={e.id} value={e.id}>{fmtDay(e.date)} · {e.name}</option>)}</select></Field>
+        <Field label="Estado"><select className={sel} value={f.status} onChange={set('status')}>{Object.entries(data.os.enums.taskStatus).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <Field label="Responsable"><Input list="owners" value={f.owner} onChange={set('owner')} /></Field>
+        <datalist id="owners">{owners.map((o) => <option key={o} value={o} />)}</datalist>
+        <Field label="Fecha límite"><Input type="date" value={f.due} onChange={set('due')} /></Field>
+        <Field label="Área"><Input value={f.group} onChange={set('group')} placeholder="Producción, Barra, Pagos…" /></Field>
+        <Field label="Depende de" className="sm:col-span-2">
+          <div className="scroll-thin max-h-36 space-y-1 overflow-y-auto rounded-md border p-2">
+            {candidates.length === 0 && <span className="text-[12px] text-muted-foreground">No hay otras tareas{f.eventId ? ' en este evento' : ''}.</span>}
+            {candidates.map((t) => (
+              <label key={t.id} className="flex items-center gap-2 text-[12px] text-foreground">
+                <input type="checkbox" checked={(f.dependsOn || []).includes(t.id)} onChange={(e) => setF((x) => ({ ...x, dependsOn: e.target.checked ? [...(x.dependsOn || []), t.id] : (x.dependsOn || []).filter((d) => d !== t.id) }))} />
+                <span className={cn(t.status === 'done' && 'text-muted-foreground line-through')}>{t.title}</span>
+              </label>
+            ))}
+          </div>
+        </Field>
+        <Field label="Notas" className="sm:col-span-2"><Textarea value={f.notes} onChange={set('notes')} className="min-h-16" /></Field>
+      </form>
+      <div className="flex items-center gap-2 border-t p-3">
+        {existing && <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={async () => { if (!sure) { setSure(true); return; } try { await opsAct('ops.task.delete', { id: existing.id }, 'Tarea eliminada'); onClose(); } catch { /* */ } }}><Trash2Icon />{sure ? 'Confirmar' : 'Eliminar'}</Button>}
+        <Button variant="outline" size="sm" className="ml-auto" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" form="tk-form" size="sm" disabled={busy}>{busy ? 'Guardando…' : 'Guardar'}</Button>
+      </div>
+    </>
+  );
+}

@@ -13,7 +13,7 @@ import { cn, money, BRAND_STYLE } from './lib.js';
 // Toda tarjeta con números estimados usa `proj`: borde punteado, fondo rayado suave y la etiqueta "Proyectado".
 export function Panel({ proj, className, children, ...p }) {
   return (
-    <Card className={cn('gap-0 overflow-hidden py-0', proj && 'border-dashed border-proj-line bg-[#FFFDF9] shadow-none', className)} {...p}>
+    <Card className={cn('gap-0 overflow-hidden py-0', proj && 'border-dashed border-proj-line bg-proj-soft/40 shadow-none', className)} {...p}>
       {children}
     </Card>
   );

@@ -1,6 +1,6 @@
 # Paradisio OS — Auditoría y plan de implementación
 
-Estado: propuesta para aprobación. No se ha cambiado código de la aplicación.
+Estado: aprobado con cambios. **Decisiones del dueño (25/11):** los datos se quedan en el Redis del admin (sin Postgres) y entra una sola persona con la clave de administración (sin cuentas ni roles). Las secciones 3 y 4 quedan como referencia para cuando haga falta más de un usuario. Avance de la Fase 1: ver `02-fase-1.md`.
 Fecha de la auditoría: 25/11/2026 (rama `main` en `59730be`).
 
 ---

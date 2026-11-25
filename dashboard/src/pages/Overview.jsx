@@ -9,6 +9,7 @@ import { fmtStamp } from '../os/kit.jsx';
 import { t as tr } from '../os/motion.jsx';
 import { cn, money, pct, limaISO } from '../lib.js';
 import WidgetGrid from './overview/WidgetGrid.jsx';
+import RevenueChart from './overview/RevenueChart.jsx';
 import {
   Fig, NA, ProjTag, RealTag, actionLabel, BreakdownWidget, EventsWidget, UpcomingWidget, AttentionWidget, CashWidget, StaffWidget,
   PortfolioWidget, VarianceWidget, ActivityWidget, InventoryWidget, TasksWidget, AudienceWidget, SponsorsWidget,
@@ -20,6 +21,7 @@ const PERIODS = [
   { id: '90d', label: 'Últimos 90 días' },
   { id: 'year', label: 'Este año' },
   { id: 'lastyear', label: 'Año pasado' },
+  { id: 'custom', label: 'Rango personalizado' },
 ];
 function periodRange(id) {
   const t = limaISO(); const y = Number(t.slice(0, 4));
@@ -27,6 +29,7 @@ function periodRange(id) {
   if (id === '90d') { const d = new Date(Date.now() - 90 * 86400000); return { from: limaISO(d), to: t }; }
   if (id === 'year') return { from: `${y}-01-01`, to: t };
   if (id === 'lastyear') return { from: `${y - 1}-01-01`, to: `${y - 1}-12-31` };
+  if (id === 'custom') return { from: ls('os_period_from') || null, to: ls('os_period_to') || null };
   return { from: null, to: null };
 }
 const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } return null; };
@@ -74,7 +77,10 @@ export default function Overview() {
   const [period, setPeriodState] = useState(() => ls('os_period') || 'all');
   const setPeriod = (p) => { setPeriodState(p); ls('os_period', p); };
   const brand = workspace === 'group' ? null : workspace;
+  const [, bump] = useState(0);
   const { from, to } = periodRange(period);
+  const setCustom = (k, v) => { ls(k === 'from' ? 'os_period_from' : 'os_period_to', v); bump((n) => n + 1); };
+  const rangeLabel = period === 'custom' ? `${from || 'inicio'} → ${to || 'hoy'}` : PERIODS.find((p) => p.id === period).label;
   const { summary: S, ledger: LS, attention, loading, error } = useSummary({ brand, from, to });
   const [layout, setLayoutState] = useState(loadLayout);
   const [editing, setEditing] = useState(false);
@@ -110,6 +116,13 @@ export default function Overview() {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          {period === 'custom' && (
+            <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
+              <input type="date" aria-label="Desde" value={from || ''} onChange={(e) => setCustom('from', e.target.value)} className="num h-8 rounded-md border border-input bg-background px-2 text-[12.5px] text-foreground" />
+              →
+              <input type="date" aria-label="Hasta" value={to || ''} onChange={(e) => setCustom('to', e.target.value)} className="num h-8 rounded-md border border-input bg-background px-2 text-[12.5px] text-foreground" />
+            </span>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 gap-1.5 font-normal"><span className="hidden sm:inline">Vista:</span> {PRESETS[layout.preset].label}{layout.custom && <span className="text-muted-foreground">· editada</span>}<ChevronDownIcon className="text-muted-foreground" /></Button>
@@ -130,6 +143,8 @@ export default function Overview() {
           </Button>
         </div>
       </div>
+
+      <RevenueChart from={from} to={to} rangeLabel={rangeLabel} />
 
       <Hero S={S} LS={LS} loading={loading} metric={metric} navigate={navigate} setDrawer={setDrawer} withTaxes={withTaxes} />
 
@@ -188,11 +203,8 @@ function Hero({ S, LS, loading, metric, navigate, setDrawer }) {
         <span className="text-[11.5px] text-muted-foreground">{A.count ? `${A.count} fecha${A.count === 1 ? '' : 's'} en Liquidación o Cerrada${A.count === 1 ? '' : 's'}` : 'Sin fechas cerradas en el período'}</span>
         <span className="h-px flex-1 bg-divider" />
       </div>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4 lg:gap-x-0">
-        <Lead big label="Ingresos" onClick={metric('revenue')} sub={A.count ? (topIncome ? `${topIncome.key} ${Math.round((topIncome.value / (A.revenue || 1)) * 100)}% del ingreso` : '—') : 'Sin fechas cerradas'}>
-          {A.count ? <Fig value={A.revenue} /> : <NA>—</NA>}
-        </Lead>
-        <Lead big label="Resultado" onClick={metric('result')} sub={A.count ? `Margen ${pct(A.margin)}${A.stock ? ` · incluye ${money(A.stock)} de stock` : ''}` : '—'}>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-3 lg:gap-x-0">
+        <Lead big label="Resultado" onClick={metric('result')} sub={A.count ? `${money(A.revenue)} de ingresos − ${money(A.costs)} de costos${A.stock ? ` + ${money(A.stock)} de stock` : ''}` : '—'}>
           {A.count ? <span className={A.result < 0 ? 'text-bad' : 'text-good'}><Fig value={A.result} /></span> : <NA>—</NA>}
         </Lead>
         <Lead label="Caja disponible" onClick={() => (LS && LS.accounts.length ? navigate('/finanzas/cuentas') : setDrawer({ type: 'account' }))}

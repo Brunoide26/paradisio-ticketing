@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, XAxis, YAxis } from 'recharts';
-import { ArrowRightIcon } from 'lucide-react';
-import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
+import { AnimatePresence, motion } from 'motion/react';
+import { ArrowUpRightIcon, ChevronDownIcon, LayoutGridIcon, CheckIcon, PlusIcon, RotateCcwIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useOS, useSummary } from '../os/store.jsx';
-import { Kpi, Section, StageBadge, BrandDot, Unavailable, fmtDay, fmtStamp, relDays, moneyOrNA, signTone, PageHeader } from '../os/kit.jsx';
-import { sel } from '../os/Shell.jsx';
-import { Panel, TooltipBox, BrandTile, KindTag } from '../ui.jsx';
-import { cn, money, pct, short, brandColor, limaISO } from '../lib.js';
+import { fmtStamp } from '../os/kit.jsx';
+import { t as tr } from '../os/motion.jsx';
+import { cn, money, pct, limaISO } from '../lib.js';
+import WidgetGrid from './overview/WidgetGrid.jsx';
+import {
+  Fig, NA, ProjTag, RealTag, actionLabel, BreakdownWidget, EventsWidget, UpcomingWidget, AttentionWidget, CashWidget, StaffWidget,
+  PortfolioWidget, VarianceWidget, ActivityWidget, InventoryWidget, TasksWidget, AudienceWidget, SponsorsWidget,
+} from './overview/widgets.jsx';
 
 const PERIODS = [
   { id: 'all', label: 'Todo el historial' },
@@ -26,158 +29,243 @@ function periodRange(id) {
   if (id === 'lastyear') return { from: `${y - 1}-01-01`, to: `${y - 1}-12-31` };
   return { from: null, to: null };
 }
-const lsGet = (k, d) => { try { return localStorage.getItem(k) || d; } catch { return d; } };
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } return null; };
 
+// ---------- Widgets y presets ----------
+const LinkAction = ({ to, children = 'Ver todo' }) => {
+  const navigate = useNavigate();
+  return <button type="button" onClick={() => navigate(to)} className="inline-flex items-center gap-0.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground">{children}<ArrowUpRightIcon className="size-3" /></button>;
+};
+export const REGISTRY = {
+  breakdown: { title: 'Composición del resultado', kind: 'real', render: (c) => <BreakdownWidget S={c.S} />, action: <LinkAction to="/finanzas" /> },
+  events: { title: 'Rendimiento por fecha', kind: 'real', render: (c) => <EventsWidget S={c.S} />, action: <LinkAction to="/eventos" /> },
+  upcoming: { title: 'Próximas fechas', kind: 'proj', render: (c) => <UpcomingWidget S={c.S} />, action: <LinkAction to="/calendario">Calendario</LinkAction> },
+  attention: { title: 'Requiere atención', render: (c) => <AttentionWidget items={c.attention} />, action: <LinkAction to="/atencion">Bandeja</LinkAction> },
+  cash: { title: 'Caja y obligaciones', render: (c) => <CashWidget LS={c.LS} />, action: <LinkAction to="/finanzas/cuentas">Cuentas</LinkAction> },
+  staff: { title: 'Costos de personal', kind: 'real', render: (c) => <StaffWidget S={c.S} />, action: <LinkAction to="/operaciones">Staff</LinkAction> },
+  portfolio: { title: 'Marcas', kind: 'real', render: (c) => <PortfolioWidget S={c.S} />, action: <LinkAction to="/marcas">Comparar</LinkAction> },
+  variance: { title: 'Real vs. presupuesto', render: (c) => <VarianceWidget S={c.S} /> },
+  activity: { title: 'Actividad reciente', render: () => <ActivityWidget />, action: <LinkAction to="/actividad" /> },
+  inventory: { title: 'Barra e inventario', render: () => <InventoryWidget />, action: <LinkAction to="/inventario" /> },
+  tasks: { title: 'Producción pendiente', render: () => <TasksWidget />, action: <LinkAction to="/tareas" /> },
+  audience: { title: 'Audiencia', render: () => <AudienceWidget />, action: <LinkAction to="/audiencia" /> },
+  sponsors: { title: 'Sponsors', kind: 'proj', render: () => <SponsorsWidget />, action: <LinkAction to="/sponsors" /> },
+};
+export const PRESETS = {
+  executive: { label: 'Dirección', hint: 'Resultado, caja y lo que viene', items: [['breakdown', 'l'], ['attention', 's'], ['upcoming', 'l'], ['portfolio', 's'], ['events', 'l'], ['cash', 's'], ['variance', 'm'], ['activity', 'm']] },
+  finance: { label: 'Finanzas', hint: 'Caja, costos y desviaciones', items: [['cash', 'm'], ['breakdown', 'm'], ['events', 'f'], ['staff', 's'], ['variance', 's'], ['inventory', 's'], ['attention', 'm'], ['activity', 'm']] },
+  production: { label: 'Producción de eventos', hint: 'Fechas, tareas, staff y barra', items: [['upcoming', 'l'], ['tasks', 's'], ['staff', 's'], ['inventory', 's'], ['attention', 's'], ['activity', 'f']] },
+  commercial: { label: 'Comercial', hint: 'Audiencia, sponsors y marcas', items: [['audience', 's'], ['sponsors', 's'], ['portfolio', 's'], ['upcoming', 'l'], ['attention', 's'], ['events', 'f']] },
+};
+const LAYOUT_KEY = 'os_overview_layout_v1';
+const presetItems = (p) => PRESETS[p].items.map(([id, size]) => ({ id, size }));
+function loadLayout() {
+  try {
+    const o = JSON.parse(ls(LAYOUT_KEY) || 'null');
+    if (o && PRESETS[o.preset] && Array.isArray(o.items)) return { preset: o.preset, items: o.items.filter((i) => REGISTRY[i.id]), custom: !!o.custom };
+  } catch { /* */ }
+  return { preset: 'executive', items: presetItems('executive'), custom: false };
+}
+
+// ---------- Página ----------
 export default function Overview() {
   const { data, workspace, setDrawer, withTaxes } = useOS();
   const navigate = useNavigate();
-  const [period, setPeriodState] = useState(lsGet('os_period', 'all'));
-  const setPeriod = (p) => { setPeriodState(p); try { localStorage.setItem('os_period', p); } catch { /* */ } };
+  const [period, setPeriodState] = useState(() => ls('os_period') || 'all');
+  const setPeriod = (p) => { setPeriodState(p); ls('os_period', p); };
   const brand = workspace === 'group' ? null : workspace;
   const { from, to } = periodRange(period);
   const { summary: S, ledger: LS, attention, loading, error } = useSummary({ brand, from, to });
+  const [layout, setLayoutState] = useState(loadLayout);
+  const [editing, setEditing] = useState(false);
+  const setLayout = (l) => { setLayoutState(l); ls(LAYOUT_KEY, JSON.stringify(l)); };
+  const setItems = (items) => setLayout({ ...layout, items, custom: true });
+  useEffect(() => { if (!editing) return undefined; const k = (e) => e.key === 'Escape' && setEditing(false); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [editing]);
+
   const brands = data.finance.brands;
   const scopeName = brand ? brands.find((b) => b.id === brand)?.name : 'Paradisio Entertainment Group';
+  if (error) return <div className="rounded-lg border p-6 text-sm">No se pudo calcular el resumen. <Button size="sm" variant="outline" onClick={() => window.location.reload()}>Reintentar</Button></div>;
+  if (!S) return <OverviewSkeleton items={layout.items} />;
+
+  const hidden = Object.keys(REGISTRY).filter((id) => !layout.items.some((i) => i.id === id));
   const metric = (id) => () => setDrawer({ type: 'metric', id, summary: S });
 
-  if (error) return <Panel className="p-6 text-sm">No se pudo calcular el resumen. <Button size="sm" variant="outline" onClick={() => window.location.reload()}>Reintentar</Button></Panel>;
-  if (!S) return <Skeleton />;
-  const A = S.actual, P = S.projected;
-  const upcoming = S.events.filter((f) => f.kind === 'budget').sort((a, b) => a.date.localeCompare(b.date));
-  const closed = S.events.filter((f) => f.kind === 'actual' && A.events.includes(f.id));
-  const activity = (data.os.activity || []).slice(0, 8);
-
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader
-        title="Resumen ejecutivo"
-        description={<>{scopeName} · {PERIODS.find((p) => p.id === period).label.toLowerCase()} · {withTaxes ? 'con' : 'sin'} IGV y renta{loading && ' · calculando…'}</>}
-        actions={<select aria-label="Período" className={cn(sel, 'h-8 w-auto text-[13px]')} value={period} onChange={(e) => setPeriod(e.target.value)}>{PERIODS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>}
-      />
-
-      {/* KPIs: lo real primero y sólido; lo proyectado al final, punteado. */}
-      <div className={cn('grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8', loading && 'opacity-60')}>
-        <Kpi label="Ingresos reales" value={money(A.revenue)} sub={`${A.count} evento${A.count === 1 ? '' : 's'} cerrado${A.count === 1 ? '' : 's'}`} onClick={metric('revenue')} />
-        <Kpi label="Resultado real" value={money(A.result)} tone={signTone(A.result)} sub={A.stock ? `incluye ${money(A.stock)} de stock` : 'sin stock final'} onClick={metric('result')} />
-        <Kpi label="Margen" value={pct(A.margin)} tone={signTone(A.margin)} unavailable={A.margin == null ? 'Sin ingresos reales en el período' : null} sub="resultado / ingresos" onClick={metric('margin')} />
-        <Kpi label="Caja disponible" value={LS && LS.cash != null ? money(LS.cash) : null} unavailable={!LS || LS.cash == null ? (LS && LS.accounts.length ? 'Falta el saldo inicial de alguna cuenta' : 'Registra tus cuentas en Finanzas → Cuentas') : null} sub={LS && LS.accounts.length ? 'bancos, caja y Culqi' : 'falta registrar cuentas'} onClick={() => navigate('/finanzas/cuentas')} />
-        <Kpi label="Por pagar" value={LS && LS.hasData ? money(LS.payables.total) : null} unavailable={LS && LS.hasData ? null : 'Sin transacciones registradas'} tone={LS && LS.payables.overdue ? 'bad' : undefined} sub={LS && LS.hasData ? (LS.payables.overdue ? `${LS.payables.overdue} vencido(s)` : `${LS.payables.count} pendiente(s)`) : 'falta registrar pagos'} onClick={() => navigate('/finanzas/por-pagar')} />
-        <Kpi label="Por cobrar" value={LS && LS.hasData ? money(LS.receivables.total) : null} unavailable={LS && LS.hasData ? null : 'Sin transacciones registradas'} sub={LS && LS.hasData ? `${LS.receivables.count} pendiente(s)` : 'falta registrar cobranzas'} onClick={() => navigate('/finanzas/por-pagar')} />
-        <Kpi proj label="Ingresos proyectados" value={money(P.revenue)} sub={`${P.count} evento${P.count === 1 ? '' : 's'} por venir`} onClick={metric('projRevenue')} />
-        <Kpi proj label="Utilidad proyectada" value={moneyOrNA(P.profit)} unavailable={P.profit == null ? 'Ningún presupuesto tiene costos' : null} tone={signTone(P.profit)}
-          sub={P.incomplete.length ? `${P.completeCount} de ${P.count} presupuestos completos` : 'todos los presupuestos completos'} onClick={metric('projProfit')} />
+    <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6">
+      {/* Encabezado editorial */}
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <p className="text-[12px] text-muted-foreground">{scopeName}</p>
+          <h1 className="mt-0.5 text-[24px] font-semibold leading-tight tracking-[-0.025em]">Resumen</h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 font-normal">{PERIODS.find((p) => p.id === period).label}<ChevronDownIcon className="text-muted-foreground" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">Período</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={period} onValueChange={setPeriod}>
+                {PERIODS.map((p) => <DropdownMenuRadioItem key={p.id} value={p.id}>{p.label}</DropdownMenuRadioItem>)}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 font-normal"><span className="hidden sm:inline">Vista:</span> {PRESETS[layout.preset].label}{layout.custom && <span className="text-muted-foreground">· editada</span>}<ChevronDownIcon className="text-muted-foreground" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">Vistas</DropdownMenuLabel>
+              {Object.entries(PRESETS).map(([id, p]) => (
+                <DropdownMenuItem key={id} onSelect={() => setLayout({ preset: id, items: presetItems(id), custom: false })} className="items-start">
+                  <span className="flex size-4 items-center justify-center pt-0.5">{layout.preset === id && <CheckIcon className="size-3.5" />}</span>
+                  <span><span className="block text-[13px]">{p.label}</span><span className="block text-[11.5px] text-muted-foreground">{p.hint}</span></span>
+                </DropdownMenuItem>
+              ))}
+              {layout.custom && (<><DropdownMenuSeparator /><DropdownMenuItem onSelect={() => setLayout({ preset: layout.preset, items: presetItems(layout.preset), custom: false })}><RotateCcwIcon />Restaurar “{PRESETS[layout.preset].label}”</DropdownMenuItem></>)}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button size="sm" variant={editing ? 'default' : 'outline'} className="h-8 gap-1.5" onClick={() => setEditing(!editing)} aria-pressed={editing}>
+            {editing ? <CheckIcon /> : <LayoutGridIcon />}{editing ? 'Listo' : 'Personalizar'}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-12">
-        <Panel className="xl:col-span-8">
-          <Header title="Resultado por evento" description="Eventos en Liquidación o Cerrados." action={<KindTag real />} />
-          <div className="px-2 pb-2 pt-3">
-            {closed.length ? <ResultChart events={closed} brands={brands} onPick={(id) => setDrawer({ type: 'event', id })} /> : <p className="px-3 py-10 text-[13px] text-muted-foreground">No hay eventos cerrados en este período.</p>}
-          </div>
-        </Panel>
+      <Hero S={S} LS={LS} loading={loading} metric={metric} navigate={navigate} setDrawer={setDrawer} withTaxes={withTaxes} />
 
-        <Panel className="xl:col-span-4">
-          <Header title="Requiere atención" description="Calculado con los datos actuales." action={<Button variant="ghost" size="sm" onClick={() => navigate('/atencion')}>Ver todo<ArrowRightIcon /></Button>} />
-          <ul className="divide-y">
-            {attention.length === 0 && <li className="px-4 py-6 text-[13px] text-muted-foreground">Nada pendiente.</li>}
-            {attention.slice(0, 6).map((a, i) => (
-              <li key={i}>
-                <button type="button" onClick={() => (a.event ? setDrawer({ type: 'event', id: a.event }) : navigate('/atencion'))} className="flex w-full gap-2.5 px-4 py-2.5 text-left hover:bg-muted/60">
-                  <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', a.level === 'high' ? 'bg-bad' : a.level === 'med' ? 'bg-[#C98500]' : 'bg-muted-foreground/50')} />
-                  <span className="min-w-0"><span className="block text-[13px] font-medium">{a.title}</span><span className="line-clamp-2 block text-[12px] text-muted-foreground">{a.text}</span></span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Panel>
+      <AnimatePresence initial={false}>
+        {editing && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={tr.layout} className="-mb-3 overflow-hidden">
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-[12.5px] text-muted-foreground">
+              Arrastra desde <span className="inline-flex items-center rounded border px-1">⋮⋮</span> para ordenar, cambia el tamaño con S·M·L·XL o quita widgets. Se guarda en este navegador.
+              <span className="ml-auto flex gap-1.5">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild><Button size="sm" variant="outline" className="h-7 gap-1" disabled={!hidden.length}><PlusIcon />Añadir widget</Button></DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {hidden.map((id) => <DropdownMenuItem key={id} onSelect={() => setItems([...layout.items, { id, size: 's' }])}>{REGISTRY[id].title}</DropdownMenuItem>)}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button size="sm" variant="ghost" className="h-7" onClick={() => setLayout({ preset: layout.preset, items: presetItems(layout.preset), custom: false })}><RotateCcwIcon />Restaurar</Button>
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <Panel proj className="xl:col-span-8">
-          <Header title="Próximos eventos" description="Presupuestos. No se suman a lo real." action={<KindTag />} />
-          <Table>
-            <TableHeader><TableRow className="hover:bg-transparent [&_th]:h-9 [&_th]:text-[12px]">
-              <TableHead className="pl-4">Evento</TableHead><TableHead>Etapa</TableHead><TableHead className="text-end">Ingresos proy.</TableHead><TableHead className="text-end">Costos proy.</TableHead><TableHead className="pr-4 text-end">Utilidad proy.</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {upcoming.length === 0 && <TableRow><TableCell colSpan={5} className="px-4 py-6 text-[13px] text-muted-foreground">No hay eventos por venir.</TableCell></TableRow>}
-              {upcoming.map((f) => (
-                <TableRow key={f.id} className="cursor-pointer border-dashed border-proj-line/60" onClick={() => setDrawer({ type: 'event', id: f.id })}>
-                  <TableCell className="pl-4"><div className="flex items-center gap-2"><BrandTile id={f.brand} size="xs" /><div className="min-w-0"><p className="truncate text-[13px] font-medium">{f.name}</p><p className="text-[11px] text-muted-foreground">{fmtDay(f.date)} · {relDays(f.daysTo)}</p></div></div></TableCell>
-                  <TableCell><StageBadge stage={f.stage} stages={data.os.stages} /></TableCell>
-                  <TableCell className="mono text-end text-[13px]">{f.hasIncome ? money(f.revenue) : <Unavailable reason="Sin ingresos presupuestados" />}</TableCell>
-                  <TableCell className="mono text-end text-[13px]">{f.hasCosts ? money(f.costs) : <Unavailable reason="Sin costos presupuestados" />}</TableCell>
-                  <TableCell className={cn('mono pr-4 text-end text-[13px]', f.result != null && (f.result >= 0 ? 'text-good' : 'text-bad'))}>{f.result == null ? <span className="text-[12px] text-proj">Incompleto</span> : money(f.result)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Panel>
-
-        <Panel className="xl:col-span-4">
-          <Header title="Portafolio" description="Resultado real por marca en el período." />
-          <ul className="divide-y">
-            {A.byBrand.map((b) => {
-              const br = brands.find((x) => x.id === b.brand);
-              const nUp = S.events.filter((f) => f.kind === 'budget' && f.brand === b.brand).length;
-              return (
-                <li key={b.brand}>
-                  <button type="button" onClick={() => navigate(`/marcas/${b.brand}`)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/60" style={{ boxShadow: `inset 2px 0 0 ${brandColor(b.brand)}` }}>
-                    <BrandTile id={b.brand} size="sm" />
-                    <span className="min-w-0 flex-1"><span className="block text-[13px] font-medium">{br?.name}</span><span className="block text-[11px] text-muted-foreground">{b.count} cerrado{b.count === 1 ? '' : 's'} · {nUp} por venir</span></span>
-                    <span className="text-right">
-                      {b.count ? <span className={cn('mono block text-[13px] font-medium', b.result >= 0 ? 'text-good' : 'text-bad')}>{money(b.result)}</span> : <Unavailable reason="Sin eventos cerrados" className="text-[12px]" />}
-                      {b.count > 0 && <span className="mono block text-[11px] text-muted-foreground">{money(b.revenue)} · {pct(b.margin)}</span>}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </Panel>
-
-        <Panel className="xl:col-span-8">
-          <Header title="Real vs. presupuesto" description="Eventos cerrados que tenían presupuesto aprobado." />
-          {S.variance ? (
-            <Table>
-              <TableHeader><TableRow className="hover:bg-transparent [&_th]:h-9 [&_th]:text-[12px]"><TableHead className="pl-4">Evento</TableHead><TableHead className="text-end">Presupuesto</TableHead><TableHead className="text-end">Real</TableHead><TableHead className="pr-4 text-end">Variación</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {S.variance.events.map((v) => { const f = S.events.find((x) => x.id === v.id); return (
-                  <TableRow key={v.id} className="cursor-pointer" onClick={() => setDrawer({ type: 'event', id: v.id })}>
-                    <TableCell className="pl-4 text-[13px]"><span className="flex items-center gap-2"><BrandDot id={f.brand} />{f.name}</span></TableCell>
-                    <TableCell className="mono text-end text-[13px] text-muted-foreground">{money(v.budget)}</TableCell>
-                    <TableCell className="mono text-end text-[13px]">{money(v.actual)}</TableCell>
-                    <TableCell className={cn('mono pr-4 text-end text-[13px]', v.diff >= 0 ? 'text-good' : 'text-bad')}>{v.diff >= 0 ? '+' : ''}{money(v.diff)}</TableCell>
-                  </TableRow>); })}
-              </TableBody>
-            </Table>
-          ) : <p className="px-4 py-6 text-[13px] text-muted-foreground">Todavía no hay comparaciones: los eventos cerrados no tenían presupuesto guardado. Desde ahora, al pasar un evento a Liquidación, su presupuesto queda guardado y aparece aquí.</p>}
-        </Panel>
-
-        <Panel className="xl:col-span-4">
-          <Header title="Actividad reciente" action={<Button variant="ghost" size="sm" onClick={() => navigate('/actividad')}>Ver todo<ArrowRightIcon /></Button>} />
-          <ul className="divide-y">
-            {activity.length === 0 && <li className="px-4 py-6 text-[13px] text-muted-foreground">Sin cambios registrados todavía. Cada cambio hecho desde el OS queda aquí.</li>}
-            {activity.map((a, i) => <ActivityRow key={i} a={a} onOpen={(id) => setDrawer({ type: 'event', id })} />)}
-          </ul>
-        </Panel>
+      <div className={cn('transition-opacity duration-[var(--dur-standard)]', loading && 'opacity-60')}>
+        <WidgetGrid items={layout.items} setItems={setItems} registry={REGISTRY} editing={editing} ctx={{ S, LS, attention }} />
       </div>
     </div>
   );
 }
 
+// ---------- Cifras principales: lo real arriba y sólido; lo proyectado aparte ----------
+function Lead({ label, children, sub, onClick, big }) {
+  return (
+    <button type="button" onClick={onClick} className="group min-w-0 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50 lg:border-l lg:border-divider lg:pl-6 lg:first:border-l-0 lg:first:pl-0">
+      <span className="flex items-center gap-1 text-[12.5px] text-muted-foreground transition-colors group-hover:text-foreground">{label}<ArrowUpRightIcon className="size-3 opacity-0 transition-opacity group-hover:opacity-60" /></span>
+      <span className={cn('mt-2 flex items-end truncate font-medium leading-none tracking-[-0.035em]', big ? 'h-9 text-[30px] md:h-11 md:text-[40px]' : 'h-9 text-[26px] md:h-11 md:text-[32px]')}>{children}</span>
+      {sub && <span className="mt-2.5 block truncate text-[12px] text-muted-foreground">{sub}</span>}
+    </button>
+  );
+}
+
+function Hero({ S, LS, loading, metric, navigate, setDrawer }) {
+  const A = S.actual, P = S.projected;
+  const topIncome = (A.byIncomeCategory || [])[0];
+  const completeRevenue = S.events.filter((f) => f.kind === 'budget' && f.complete).reduce((s, f) => s + (f.revenue || 0), 0);
+  const cashNA = !LS || LS.cash == null;
+  const secondary = [
+    ['Margen', A.margin == null ? null : pct(A.margin), metric('margin'), A.margin != null && A.margin < 0],
+    ['Stock final', A.stock ? money(A.stock) : null, metric('stock')],
+    ['Inversión en marca', A.brandInvestment ? money(A.brandInvestment) : null, metric('brandInvestment')],
+    ['Por cobrar', LS && LS.hasData ? money(LS.receivables.total) : null, () => navigate('/finanzas/por-pagar')],
+  ];
+  return (
+    <section aria-label="Cifras principales" className={cn('transition-opacity duration-[var(--dur-standard)]', loading && 'opacity-60')}>
+      <div className="mb-3 flex items-center gap-3">
+        <RealTag />
+        <span className="text-[11.5px] text-muted-foreground">{A.count ? `${A.count} fecha${A.count === 1 ? '' : 's'} en Liquidación o Cerrada${A.count === 1 ? '' : 's'}` : 'Sin fechas cerradas en el período'}</span>
+        <span className="h-px flex-1 bg-divider" />
+      </div>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4 lg:gap-x-0">
+        <Lead big label="Ingresos" onClick={metric('revenue')} sub={A.count ? (topIncome ? `${topIncome.key} ${Math.round((topIncome.value / (A.revenue || 1)) * 100)}% del ingreso` : '—') : 'Sin fechas cerradas'}>
+          {A.count ? <Fig value={A.revenue} /> : <NA>—</NA>}
+        </Lead>
+        <Lead big label="Resultado" onClick={metric('result')} sub={A.count ? `Margen ${pct(A.margin)}${A.stock ? ` · incluye ${money(A.stock)} de stock` : ''}` : '—'}>
+          {A.count ? <span className={A.result < 0 ? 'text-bad' : 'text-good'}><Fig value={A.result} /></span> : <NA>—</NA>}
+        </Lead>
+        <Lead label="Caja disponible" onClick={() => (LS && LS.accounts.length ? navigate('/finanzas/cuentas') : setDrawer({ type: 'account' }))}
+          sub={cashNA ? (LS && LS.accounts.length ? 'Falta el saldo inicial de una cuenta' : 'Registra tus cuentas para verla →') : `${LS.accounts.length} cuenta${LS.accounts.length === 1 ? '' : 's'}: bancos, caja y Culqi`}>
+          {cashNA ? <NA className="pb-0.5 text-[17px] tracking-[-0.015em] md:text-[20px]">No disponible</NA> : <Fig value={LS.cash} />}
+        </Lead>
+        <Lead label="Por pagar" onClick={() => navigate('/finanzas/por-pagar')}
+          sub={LS && LS.hasData ? (LS.payables.overdue ? `${LS.payables.overdue} vencido(s)` : `${LS.payables.count} pendiente(s)`) : 'Sin pagos registrados'}>
+          {LS && LS.hasData ? <span className={LS.payables.overdue ? 'text-bad' : ''}><Fig value={LS.payables.total} /></span> : <NA className="pb-0.5 text-[17px] tracking-[-0.015em] md:text-[20px]">No disponible</NA>}
+        </Lead>
+      </div>
+      <ul className="mt-6 flex flex-wrap gap-x-8 gap-y-2 border-t border-divider pt-3">
+        {secondary.map(([l, v, on, bad]) => (
+          <li key={l}><button type="button" onClick={on} className="flex items-baseline gap-2 text-[12.5px] hover:underline-offset-4 hover:[&>span:first-child]:text-foreground">
+            <span className="text-muted-foreground transition-colors">{l}</span>
+            {v == null ? <span className="text-faint">—</span> : <span className={cn('num font-medium', bad && 'text-bad')}>{v}</span>}
+          </button></li>
+        ))}
+      </ul>
+
+      {/* Proyectado: aparte, rayado, nunca sumado a lo real. */}
+      <div className="mt-5 rounded-lg border border-dashed border-proj-line bg-proj-soft/50 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+          <ProjTag />
+          <button type="button" onClick={metric('projRevenue')} className="flex items-baseline gap-2 text-left">
+            <span className="text-[12.5px] text-muted-foreground">Ingresos proyectados</span>
+            <span className="text-[17px] font-medium tracking-tight text-foreground/85"><Fig value={P.revenue} /></span>
+            <span className="text-[11.5px] text-muted-foreground">{P.count} fecha{P.count === 1 ? '' : 's'} por venir</span>
+          </button>
+          <button type="button" onClick={metric('projProfit')} className="flex items-baseline gap-2 text-left">
+            <span className="text-[12.5px] text-muted-foreground">Utilidad proyectada</span>
+            {P.profit == null ? <span className="text-[13px] text-proj">Incompleta: ningún presupuesto tiene costos</span>
+              : <span className={cn('text-[17px] font-medium tracking-tight', P.profit >= 0 ? 'text-good' : 'text-bad')}><Fig value={P.profit} /></span>}
+            {P.profit != null && <span className="text-[11.5px] text-muted-foreground" title={`Sólo presupuestos con costos: ${money(completeRevenue)} de ingreso proyectado`}>de {P.completeCount} fecha{P.completeCount === 1 ? '' : 's'} con costos</span>}
+          </button>
+          <span className="ml-auto flex items-center gap-2 text-[11.5px] text-muted-foreground" title="Presupuestos con ingresos y costos cargados">
+            <span className="flex gap-0.5">{Array.from({ length: P.count }).map((_, i) => <i key={i} className={cn('h-2 w-3.5 rounded-[2px]', i < P.completeCount ? 'bg-proj' : 'border border-dashed border-proj-line')} />)}</span>
+            {P.completeCount}/{P.count} presupuestos completos
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Esqueleto con las mismas medidas que el contenido final (sin saltos al cargar).
+const SKEL = { s: 'col-span-12 md:col-span-6 xl:col-span-4', m: 'col-span-12 md:col-span-6', l: 'col-span-12 xl:col-span-8', f: 'col-span-12' };
+function OverviewSkeleton({ items }) {
+  return (
+    <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6" aria-busy="true" aria-label="Cargando resumen">
+      <div><div className="skeleton h-3 w-40" /><div className="skeleton mt-2 h-7 w-32" /></div>
+      <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">{[0, 1, 2, 3].map((i) => <div key={i}><div className="skeleton h-3 w-20" /><div className="skeleton mt-3 h-9 w-40" /><div className="skeleton mt-3 h-3 w-32" /></div>)}</div>
+      <div className="skeleton h-12 w-full rounded-lg" />
+      <div className="grid grid-cols-12 gap-3">{items.map((i) => <div key={i.id} className={cn(SKEL[i.size] || SKEL.m, 'skeleton h-[260px] rounded-lg')} />)}</div>
+    </div>
+  );
+}
+
+// ---------- Compartidos con otras páginas ----------
 export function ActivityRow({ a, onOpen, stages }) {
-  const label = { 'event.update': 'Editó', 'event.create': 'Creó', 'finance.save': 'Guardó datos financieros', 'event.numbers': 'Cargó números de' }[a.action] || a.action;
   const money2 = (v) => (typeof v === 'number' ? money(v) : v);
-  const ch = a.changes ? Object.entries(a.changes).map(([k, v]) => `${{ stage: 'etapa', name: 'nombre', date: 'fecha', venue: 'local', brand: 'marca', notes: 'notas', openingStock: 'inventario inicial', liveEventId: 'fecha en la web', income: 'ingresos', costs: 'costos', brandInvestment: 'inversión en marca', stockLeft: 'stock final', stock: 'detalle de stock', bar: 'barra' }[k] || k}${k === 'stage' && stages ? `: ${stages.find((s) => s.id === v.to)?.label || v.to}` : ['income', 'costs', 'brandInvestment', 'stockLeft', 'openingStock'].includes(k) ? ` ${money2(v.from)} → ${money2(v.to)}` : ''}`).join(', ') : '';
+  const ch = a.changes ? Object.entries(a.changes).map(([k, v]) => `${{ stage: 'etapa', name: 'nombre', date: 'fecha', venue: 'local', brand: 'marca', notes: 'notas', openingStock: 'inventario inicial', liveEventId: 'fecha en la web', income: 'ingresos', costs: 'costos', brandInvestment: 'inversión en marca', stockLeft: 'stock final', stock: 'detalle de stock', bar: 'barra', capacity: 'aforo' }[k] || k}${k === 'stage' && stages ? `: ${stages.find((s) => s.id === v.to)?.label || v.to}` : ['income', 'costs', 'brandInvestment', 'stockLeft', 'openingStock'].includes(k) ? ` ${money2(v.from)} → ${money2(v.to)}` : ''}`).join(', ') : '';
   return (
     <li className="flex items-start gap-2.5 px-4 py-2.5">
-      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+      <span className={cn('mt-1.5 size-1.5 shrink-0 rounded-full', a.actor === 'claude' ? 'bg-foreground' : 'bg-faint')} />
       <span className="min-w-0 flex-1 text-[13px]">
-        {label} {a.event ? <button type="button" className="font-medium hover:underline" onClick={() => onOpen(a.event)}>{a.name || a.event}</button> : a.events ? <span className="text-muted-foreground">({a.events} eventos)</span> : null}
+        <span className="text-muted-foreground">{actionLabel(a.action)} </span>
+        {a.event && String(a.action).startsWith('event') ? <button type="button" className="font-medium hover:underline" onClick={() => onOpen(a.event)}>{a.name || a.event}</button> : a.name ? <span className="font-medium">{a.name}</span> : a.events ? <span className="text-muted-foreground">({a.events} eventos)</span> : null}
         {a.actor === 'claude' && <span className="ml-1.5 rounded border px-1 text-[10px] font-medium text-muted-foreground">Claude</span>}
         {ch && <span className="block text-[12px] text-muted-foreground">{ch}</span>}
         {a.source && <span className="block text-[11px] text-muted-foreground">Fuente: {a.source}</span>}
       </span>
-      <span className="shrink-0 text-[11px] text-muted-foreground">{fmtStamp(a.at)}</span>
+      <span className="num shrink-0 text-[11px] text-muted-foreground">{fmtStamp(a.at)}</span>
     </li>
   );
 }
@@ -191,34 +279,3 @@ function Header({ title, description, action }) {
   );
 }
 export { Header as PanelBar };
-
-function ResultChart({ events, brands, onPick }) {
-  const rows = events.map((f) => ({ id: f.id, name: fmtDay(f.date), f, v: f.result }));
-  return (
-    <ChartContainer config={{ v: { label: 'Resultado' } }} className="aspect-auto h-56 w-full">
-      <BarChart accessibilityLayer data={rows} margin={{ left: 4, right: 12 }} barCategoryGap="30%" onClick={(s) => s && s.activePayload && onPick(s.activePayload[0].payload.id)}>
-        <CartesianGrid vertical={false} />
-        <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-        <YAxis tickFormatter={short} tickLine={false} axisLine={false} width={64} domain={[(min) => Math.min(0, min), (max) => Math.max(0, max)]} />
-        <ReferenceLine y={0} stroke="var(--border)" />
-        <ChartTooltip cursor={{ fill: 'var(--muted)' }} content={({ active, payload }) => {
-          if (!active || !payload || !payload.length) return null; const f = payload[0].payload.f;
-          return <TooltipBox title={f.name} rows={[{ label: 'Ingresos', value: money(f.revenue), color: brandColor(f.brand) }, { label: 'Costos', value: money(f.costs) }, { label: 'Resultado', value: money(f.result) }]} foot={`${brands.find((b) => b.id === f.brand)?.name} · margen ${pct(f.margin)}`} />;
-        }} />
-        <Bar dataKey="v" radius={[3, 3, 3, 3]} maxBarSize={56} isAnimationActive={false} className="cursor-pointer">
-          {rows.map((r) => <Cell key={r.id} fill={brandColor(r.f.brand)} fillOpacity={r.v >= 0 ? 1 : 0.55} />)}
-        </Bar>
-      </BarChart>
-    </ChartContainer>
-  );
-}
-
-function Skeleton() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="h-10 w-64 animate-pulse rounded-md bg-background" />
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-[78px] animate-pulse rounded-lg bg-background" />)}</div>
-      <div className="grid gap-4 xl:grid-cols-12"><div className="h-72 animate-pulse rounded-xl bg-background xl:col-span-8" /><div className="h-72 animate-pulse rounded-xl bg-background xl:col-span-4" /></div>
-    </div>
-  );
-}

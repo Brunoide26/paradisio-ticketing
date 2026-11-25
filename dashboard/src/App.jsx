@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { GroupLogo } from '@/components/app-sidebar';
+import { GroupLogo } from './os/Frame.jsx';
+import { MotionRoot } from './os/motion.jsx';
 import { OSProvider, useOS } from './os/store.jsx';
 import Shell from './os/Shell.jsx';
 import Overview from './pages/Overview.jsx';
@@ -81,7 +82,7 @@ function Gate() {
 export default function App() {
   return (
     <OSProvider>
-      <TooltipProvider><Gate /></TooltipProvider>
+      <MotionRoot><TooltipProvider delayDuration={300}><Gate /></TooltipProvider></MotionRoot>
     </OSProvider>
   );
 }

@@ -50,7 +50,13 @@ export function OSProvider({ children }) {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
-  const setTheme = (t) => { setThemeState(t); ls('os_theme', t); };
+  // Cambio de tema suave: la transición de colores sólo dura lo que dura el cambio.
+  const setTheme = (t) => {
+    const root = document.documentElement;
+    root.classList.add('theme-transition');
+    setThemeState(t); ls('os_theme', t);
+    window.setTimeout(() => root.classList.remove('theme-transition'), 350);
+  };
   const setWorkspace = (w) => { setWorkspaceState(w); ls('os_workspace', w); };
 
   const logout = useCallback(() => { ss('ceo_pass', null); setPass(''); setData(null); }, []);

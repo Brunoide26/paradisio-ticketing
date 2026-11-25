@@ -19,6 +19,7 @@ import Sales from './pages/Sales.jsx';
 import Promoters from './pages/Promoters.jsx';
 import Operations, { MyTasks } from './pages/Operations.jsx';
 import { BrandsCompare, BrandHome } from './pages/Brands.jsx';
+import { Marketing, Sponsors, Team, Audience, Documents } from './pages/Commercial.jsx';
 import { BrandTile } from './ui.jsx';
 
 const evName = (p, d) => (d && d.finance.events.find((e) => e.id === p.id) || {}).name;
@@ -52,6 +53,11 @@ const router = createBrowserRouter([
       { path: 'promotores', element: <Promoters />, handle: { crumb: 'Promotores' } },
       { path: 'operaciones', element: <Operations />, handle: { crumb: 'Operaciones y proveedores' } },
       { path: 'tareas', element: <MyTasks />, handle: { crumb: 'Mis tareas' } },
+      { path: 'marketing', element: <Marketing />, handle: { crumb: 'Marketing y contenido' } },
+      { path: 'sponsors', element: <Sponsors />, handle: { crumb: 'Sponsors y alianzas' } },
+      { path: 'equipo', element: <Team />, handle: { crumb: 'Equipo' } },
+      { path: 'audiencia', element: <Audience />, handle: { crumb: 'Audiencia' } },
+      { path: 'documentos', element: <Documents />, handle: { crumb: 'Documentos' } },
       { path: 'marcas', handle: { crumb: 'Marcas' }, children: [
         { index: true, element: <BrandsCompare />, handle: { crumb: 'Comparativo' } },
         { path: ':brandId', element: <BrandHome />, handle: { crumb: brandName } },

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Trash2Icon } from 'lucide-react';
+import { Trash2Icon, PlusIcon, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -88,6 +88,12 @@ export function TxForm({ id, preset, onClose }) {
           <Field label="Marca (opcional)"><select className={sel} value={f.brand || ''} onChange={set('brand')}><option value="">Grupo (corporativo)</option>{brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></Field>
         )}
         {f.kind !== 'transfer' && <Field label="Categoría"><Input list="tx-cats" value={f.category} onChange={set('category')} placeholder="Local, Talento, Contador…" /></Field>}
+        {(data.marketing.campaigns || []).length > 0 && f.kind !== 'transfer' && !isIn && (
+          <Field label="Campaña (gasto de medios)"><select className={sel} value={f.campaignId || ''} onChange={set('campaignId')}><option value="">Ninguna</option>{data.marketing.campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+        )}
+        {(data.sponsors.deals || []).length > 0 && isIn && (
+          <Field label="Sponsor (cobro del acuerdo)"><select className={sel} value={f.sponsorId || ''} onChange={set('sponsorId')}><option value="">Ninguno</option>{data.sponsors.deals.map((d) => <option key={d.id} value={d.id}>{d.sponsor}</option>)}</select></Field>
+        )}
         <datalist id="tx-cats">{['Local', 'Talento', 'Personal', 'Barra', 'Promotores', 'Producción', 'Marketing', 'Comisiones', 'Impuestos', 'Contador', 'Software', 'Oficina', 'Legal', 'Transporte'].map((c) => <option key={c} value={c} />)}</datalist>
         {f.kind !== 'transfer' && <>
           <Field label="Proveedor / cliente"><Input value={f.counterparty} onChange={set('counterparty')} /></Field>
@@ -319,5 +325,175 @@ export function TaskForm({ id, preset, onClose }) {
         <Button type="submit" form="tk-form" size="sm" disabled={busy}>{busy ? 'Guardando…' : 'Guardar'}</Button>
       </div>
     </>
+  );
+}
+
+// ---------- Fase 4: formularios genéricos de marketing, sponsors y documentos ----------
+function useBase() {
+  const { data } = useOS();
+  return { events: data.finance.events.slice().sort((a, b) => b.date.localeCompare(a.date)), brands: data.finance.brands, E: data.os.enums };
+}
+const EventSelect = ({ value, onChange, events, label = 'Evento (opcional)', className }) => (
+  <Field label={label} className={className}><select className={sel} value={value || ''} onChange={onChange}><option value="">Ninguno</option>{events.map((e) => <option key={e.id} value={e.id}>{fmtDay(e.date)} · {e.name}</option>)}</select></Field>
+);
+const BrandSelect = ({ value, onChange, brands, label = 'Marca' }) => (
+  <Field label={label}><select className={sel} value={value || ''} onChange={onChange}><option value="">Grupo / varias</option>{brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></Field>
+);
+
+function ItemSheet({ title, description, formId, onClose, onDelete, busy, children }) {
+  const [sure, setSure] = useState(false);
+  return (
+    <>
+      <SheetHeader className="border-b pb-3"><SheetTitle>{title}</SheetTitle>{description && <SheetDescription>{description}</SheetDescription>}</SheetHeader>
+      {children}
+      <div className="flex items-center gap-2 border-t p-3">
+        {onDelete && <Button type="button" variant="outline" size="sm" className="text-destructive" onClick={async () => { if (!sure) { setSure(true); return; } await onDelete(); }}><Trash2Icon />{sure ? 'Confirmar' : 'Eliminar'}</Button>}
+        <Button variant="outline" size="sm" className="ml-auto" onClick={onClose}>Cancelar</Button>
+        <Button type="submit" form={formId} size="sm" disabled={busy}>{busy ? 'Guardando…' : 'Guardar'}</Button>
+      </div>
+    </>
+  );
+}
+
+function useItemForm(doc, list, action, id, blank, preset, onClose, msg) {
+  const { data, com } = useOS();
+  const existing = id ? (data[doc][list] || []).find((x) => x.id === id) : null;
+  const [f, setF] = useState(() => ({ ...blank, ...(existing || {}), ...(existing ? {} : preset || {}) }));
+  const [busy, setBusy] = useState(false);
+  const set = (k) => (e) => setF((x) => ({ ...x, [k]: e && e.target ? e.target.value : e }));
+  const submit = async (e, transform = (x) => x) => { e.preventDefault(); setBusy(true); try { await com(doc, `${action}.upsert`, { item: transform(f) }, msg); onClose(); } catch { /* toast */ } finally { setBusy(false); } };
+  const remove = existing ? async () => { try { await com(doc, `${action}.delete`, { id: existing.id }, 'Eliminado'); onClose(); } catch { /* */ } } : null;
+  return { f, setF, set, busy, submit, remove, existing };
+}
+
+export function ContentForm({ id, preset, onClose }) {
+  const { data } = useOS();
+  const { events, brands, E } = useBase();
+  const { f, set, busy, submit, remove, existing } = useItemForm('marketing', 'content', 'mkt.content', id, { title: '', brand: '', eventId: '', campaignId: '', channel: 'ig_post', status: 'idea', owner: '', designer: '', due: '', publishOn: '', link: '', notes: '', results: { reach: '', interactions: '' } }, preset, onClose, 'Contenido guardado');
+  const [res, setRes] = useState(f.results || { reach: '', interactions: '' });
+  return (
+    <ItemSheet title={existing ? 'Contenido' : 'Nuevo contenido'} description="Una pieza: post, reel, story, correo o flyer." formId="ct4-form" onClose={onClose} onDelete={remove} busy={busy}>
+      <form id="ct4-form" className="scroll-thin grid flex-1 content-start gap-3 overflow-y-auto p-4 sm:grid-cols-2" onSubmit={(e) => submit(e, (x) => ({ ...x, results: res }))}>
+        <Field label="Título" className="sm:col-span-2"><Input required value={f.title} onChange={set('title')} placeholder="Reel anuncio line-up 5/12" /></Field>
+        <Field label="Canal"><select className={sel} value={f.channel} onChange={set('channel')}>{Object.entries(E.channels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <Field label="Estado"><select className={sel} value={f.status} onChange={set('status')}>{Object.entries(E.contentStatus).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <BrandSelect value={f.brand} onChange={set('brand')} brands={brands} />
+        <EventSelect value={f.eventId} onChange={set('eventId')} events={events} />
+        <Field label="Campaña" className="sm:col-span-2"><select className={sel} value={f.campaignId || ''} onChange={set('campaignId')}><option value="">Ninguna</option>{(data.marketing.campaigns || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+        <Field label="Responsable"><Input value={f.owner} onChange={set('owner')} /></Field>
+        <Field label="Diseñador/a"><Input value={f.designer} onChange={set('designer')} /></Field>
+        <Field label="Entrega (para aprobar)"><Input type="date" value={f.due || ''} onChange={set('due')} /></Field>
+        <Field label="Publicación"><Input type="date" value={f.publishOn || ''} onChange={set('publishOn')} /></Field>
+        <Field label="Enlace (arte, Drive o publicación)" className="sm:col-span-2"><Input value={f.link} onChange={set('link')} placeholder="https://…" /></Field>
+        <Field label="Alcance (si ya se publicó)"><Input type="number" min="0" className="mono" value={res.reach ?? ''} onChange={(e) => setRes((x) => ({ ...x, reach: e.target.value }))} /></Field>
+        <Field label="Interacciones"><Input type="number" min="0" className="mono" value={res.interactions ?? ''} onChange={(e) => setRes((x) => ({ ...x, interactions: e.target.value }))} /></Field>
+        <Field label="Notas / brief" className="sm:col-span-2"><Textarea value={f.notes} onChange={set('notes')} className="min-h-20" /></Field>
+      </form>
+    </ItemSheet>
+  );
+}
+
+export function CampaignForm({ id, preset, onClose }) {
+  const { events, brands, E } = useBase();
+  const { f, setF, set, busy, submit, remove, existing } = useItemForm('marketing', 'campaigns', 'mkt.campaign', id, { name: '', brand: '', eventId: '', objective: '', channels: [], budget: '', start: '', end: '', status: 'planned', notes: '' }, preset, onClose, 'Campaña guardada');
+  return (
+    <ItemSheet title={existing ? existing.name : 'Nueva campaña'} description="El gasto real sale de las transacciones ligadas a esta campaña." formId="cmp-form" onClose={onClose} onDelete={remove} busy={busy}>
+      <form id="cmp-form" className="scroll-thin grid flex-1 content-start gap-3 overflow-y-auto p-4 sm:grid-cols-2" onSubmit={submit}>
+        <Field label="Nombre" className="sm:col-span-2"><Input required value={f.name} onChange={set('name')} /></Field>
+        <BrandSelect value={f.brand} onChange={set('brand')} brands={brands} />
+        <EventSelect value={f.eventId} onChange={set('eventId')} events={events} />
+        <Field label="Objetivo" className="sm:col-span-2"><Input value={f.objective} onChange={set('objective')} placeholder="Vender boxes del 5/12, 300 registros…" /></Field>
+        <Field label="Presupuesto de medios (S/)"><Input type="number" step="0.01" min="0" className="mono" value={f.budget ?? ''} onChange={set('budget')} /></Field>
+        <Field label="Estado"><select className={sel} value={f.status} onChange={set('status')}>{Object.entries(E.campaignStatus).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <Field label="Inicio"><Input type="date" value={f.start || ''} onChange={set('start')} /></Field>
+        <Field label="Fin"><Input type="date" value={f.end || ''} onChange={set('end')} /></Field>
+        <Field label="Canales" className="sm:col-span-2">
+          <div className="flex flex-wrap gap-2">{Object.entries(E.channels).map(([k, v]) => (
+            <label key={k} className="flex items-center gap-1 text-[12px] text-foreground"><input type="checkbox" checked={(f.channels || []).includes(k)} onChange={(e) => setF((x) => ({ ...x, channels: e.target.checked ? [...(x.channels || []), k] : (x.channels || []).filter((c) => c !== k) }))} />{v}</label>
+          ))}</div>
+        </Field>
+        <Field label="Notas" className="sm:col-span-2"><Textarea value={f.notes} onChange={set('notes')} className="min-h-16" /></Field>
+      </form>
+    </ItemSheet>
+  );
+}
+
+export function AssetForm({ id, preset, onClose }) {
+  const { brands, E } = useBase();
+  const { f, set, busy, submit, remove, existing } = useItemForm('marketing', 'assets', 'mkt.asset', id, { name: '', type: 'logo', brand: '', url: '', tags: '', notes: '' }, preset, onClose, 'Recurso guardado');
+  return (
+    <ItemSheet title={existing ? existing.name : 'Nuevo recurso de marca'} description="Enlace a la carpeta o archivo (Drive, Dropbox, Canva…)." formId="ast-form" onClose={onClose} onDelete={remove} busy={busy}>
+      <form id="ast-form" className="grid flex-1 content-start gap-3 overflow-y-auto p-4 sm:grid-cols-2" onSubmit={submit}>
+        <Field label="Nombre" className="sm:col-span-2"><Input required value={f.name} onChange={set('name')} /></Field>
+        <Field label="Tipo"><select className={sel} value={f.type} onChange={set('type')}>{Object.entries(E.assetTypes).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <BrandSelect value={f.brand} onChange={set('brand')} brands={brands} />
+        <Field label="Enlace" className="sm:col-span-2"><Input required value={f.url} onChange={set('url')} placeholder="https://drive.google.com/…" /></Field>
+        <Field label="Etiquetas" className="sm:col-span-2"><Input value={f.tags} onChange={set('tags')} placeholder="logo blanco, png, 2026" /></Field>
+        <Field label="Notas" className="sm:col-span-2"><Textarea value={f.notes} onChange={set('notes')} className="min-h-14" /></Field>
+      </form>
+    </ItemSheet>
+  );
+}
+
+export function DealForm({ id, preset, onClose }) {
+  const { events, brands, E } = useBase();
+  const { f, setF, set, busy, submit, remove, existing } = useItemForm('sponsors', 'deals', 'sp.deal', id, { sponsor: '', contactName: '', email: '', phone: '', stage: 'prospect', brands: [], eventIds: [], cash: '', inKind: '', inKindValue: '', contractStart: '', contractEnd: '', renewalDate: '', deliverables: [], proposalUrl: '', notes: '' }, preset, onClose, 'Sponsor guardado');
+  const toggle = (k, v) => (e) => setF((x) => ({ ...x, [k]: e.target.checked ? [...(x[k] || []), v] : (x[k] || []).filter((y) => y !== v) }));
+  const setDl = (i, k, v) => setF((x) => ({ ...x, deliverables: x.deliverables.map((d, j) => (j === i ? { ...d, [k]: v } : d)) }));
+  return (
+    <ItemSheet title={existing ? existing.sponsor : 'Nuevo sponsor'} description="El monto del acuerdo es proyectado; lo real es lo cobrado (transacciones con este sponsor)." formId="deal-form" onClose={onClose} onDelete={remove} busy={busy}>
+      <form id="deal-form" className="scroll-thin grid flex-1 content-start gap-3 overflow-y-auto p-4 sm:grid-cols-2" onSubmit={submit}>
+        <Field label="Sponsor / marca" className="sm:col-span-2"><Input required value={f.sponsor} onChange={set('sponsor')} /></Field>
+        <Field label="Etapa"><select className={sel} value={f.stage} onChange={set('stage')}>{Object.entries(E.dealStages).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <Field label="Contacto"><Input value={f.contactName} onChange={set('contactName')} /></Field>
+        <Field label="Correo"><Input type="email" value={f.email} onChange={set('email')} /></Field>
+        <Field label="Celular"><Input value={f.phone} onChange={set('phone')} /></Field>
+        <Field label="Marcas que cubre" className="sm:col-span-2"><div className="flex flex-wrap gap-3">{brands.map((b) => <label key={b.id} className="flex items-center gap-1.5 text-[12px] text-foreground"><input type="checkbox" checked={(f.brands || []).includes(b.id)} onChange={toggle('brands', b.id)} />{b.name}</label>)}</div></Field>
+        <Field label="Fechas que cubre" className="sm:col-span-2"><div className="scroll-thin max-h-28 space-y-1 overflow-y-auto rounded-md border p-2">{events.map((e) => <label key={e.id} className="flex items-center gap-1.5 text-[12px] text-foreground"><input type="checkbox" checked={(f.eventIds || []).includes(e.id)} onChange={toggle('eventIds', e.id)} />{fmtDay(e.date)} · {e.name}</label>)}</div></Field>
+        <Field label="Aporte en efectivo (S/)"><Input type="number" step="0.01" min="0" className="mono" value={f.cash ?? ''} onChange={set('cash')} /></Field>
+        <Field label="Valor del aporte en especie (S/)"><Input type="number" step="0.01" min="0" className="mono" value={f.inKindValue ?? ''} onChange={set('inKindValue')} /></Field>
+        <Field label="Qué aporta en especie" className="sm:col-span-2"><Input value={f.inKind} onChange={set('inKind')} placeholder="Ej. 20 botellas, barra con marca, staff de activación" /></Field>
+        <Field label="Inicio del contrato"><Input type="date" value={f.contractStart || ''} onChange={set('contractStart')} /></Field>
+        <Field label="Fin del contrato"><Input type="date" value={f.contractEnd || ''} onChange={set('contractEnd')} /></Field>
+        <Field label="Fecha de renovación"><Input type="date" value={f.renewalDate || ''} onChange={set('renewalDate')} /></Field>
+        <Field label="Propuesta / contrato (enlace)"><Input value={f.proposalUrl} onChange={set('proposalUrl')} placeholder="https://…" /></Field>
+        <Field label="Entregables al sponsor" className="sm:col-span-2">
+          <div className="space-y-1.5">
+            {(f.deliverables || []).map((d, i) => (
+              <div key={d.id || i} className="flex items-center gap-2">
+                <input type="checkbox" checked={!!d.done} onChange={(e) => setDl(i, 'done', e.target.checked)} aria-label="Hecho" />
+                <Input className="h-8 flex-1" value={d.title} onChange={(e) => setDl(i, 'title', e.target.value)} placeholder="Logo en flyer, mención en stories…" />
+                <Input type="date" className="h-8 w-36" value={d.due || ''} onChange={(e) => setDl(i, 'due', e.target.value)} />
+                <Button type="button" size="icon-sm" variant="ghost" aria-label="Quitar" onClick={() => setF((x) => ({ ...x, deliverables: x.deliverables.filter((_, j) => j !== i) }))}><XIcon /></Button>
+              </div>
+            ))}
+            <Button type="button" size="sm" variant="outline" onClick={() => setF((x) => ({ ...x, deliverables: [...(x.deliverables || []), { title: '', due: '', done: false }] }))}><PlusIcon />Entregable</Button>
+          </div>
+        </Field>
+        <Field label="Notas" className="sm:col-span-2"><Textarea value={f.notes} onChange={set('notes')} className="min-h-16" /></Field>
+      </form>
+    </ItemSheet>
+  );
+}
+
+export function DocumentForm({ id, preset, onClose }) {
+  const { data } = useOS();
+  const { events, brands, E } = useBase();
+  const { f, set, busy, submit, remove, existing } = useItemForm('documents', 'documents', 'doc.item', id, { title: '', type: 'contract', url: '', brand: '', eventId: '', contactId: '', sponsorId: '', signedOn: '', expires: '', notes: '' }, preset, onClose, 'Documento guardado');
+  return (
+    <ItemSheet title={existing ? existing.title : 'Nuevo documento'} description="Guarda el enlace (Drive, Dropbox…), no el archivo." formId="doc-form" onClose={onClose} onDelete={remove} busy={busy}>
+      <form id="doc-form" className="scroll-thin grid flex-1 content-start gap-3 overflow-y-auto p-4 sm:grid-cols-2" onSubmit={submit}>
+        <Field label="Título" className="sm:col-span-2"><Input required value={f.title} onChange={set('title')} /></Field>
+        <Field label="Tipo"><select className={sel} value={f.type} onChange={set('type')}>{Object.entries(E.docTypes4).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+        <BrandSelect value={f.brand} onChange={set('brand')} brands={brands} />
+        <Field label="Enlace" className="sm:col-span-2"><Input required value={f.url} onChange={set('url')} placeholder="https://drive.google.com/…" /></Field>
+        <EventSelect value={f.eventId} onChange={set('eventId')} events={events} className="sm:col-span-2" />
+        <Field label="Proveedor / contacto"><select className={sel} value={f.contactId || ''} onChange={set('contactId')}><option value="">Ninguno</option>{(data.ops.contacts || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+        <Field label="Sponsor"><select className={sel} value={f.sponsorId || ''} onChange={set('sponsorId')}><option value="">Ninguno</option>{(data.sponsors.deals || []).map((d) => <option key={d.id} value={d.id}>{d.sponsor}</option>)}</select></Field>
+        <Field label="Firmado el"><Input type="date" value={f.signedOn || ''} onChange={set('signedOn')} /></Field>
+        <Field label="Vence el" hint="Avisa 30 días antes."><Input type="date" value={f.expires || ''} onChange={set('expires')} /></Field>
+        <Field label="Notas" className="sm:col-span-2"><Textarea value={f.notes} onChange={set('notes')} className="min-h-14" /></Field>
+      </form>
+    </ItemSheet>
   );
 }

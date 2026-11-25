@@ -34,14 +34,17 @@ const I = require('../lib/os/inventory');
 const SALES = require('../lib/os/sales');
 const PR = require('../lib/os/promoters');
 const OPS = require('../lib/os/ops');
+const COM = require('../lib/os/commercial');
+const CRM = require('../lib/os/crm');
+const { listEvents } = require('../lib/events');
 const { listPromoters } = require('../lib/promoters');
 const limaToday = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 10);
 
 // Libro + inventario + sus resúmenes para un alcance (grupo o marca).
 async function opsPayload(finance, brand = null) {
-  const [ledger, inventory, promo, ops] = await Promise.all([readDoc(redis, 'ledger'), readDoc(redis, 'inventory'), readDoc(redis, 'promo'), readDoc(redis, 'ops')]);
+  const [ledger, inventory, promo, ops, marketing, sponsors, documents] = await Promise.all(['ledger', 'inventory', 'promo', 'ops', 'marketing', 'sponsors', 'documents'].map((d) => readDoc(redis, d)));
   return {
-    ledger, inventory, promo, ops,
+    ledger, inventory, promo, ops, marketing, sponsors, documents,
     tasks: OPS.tasksView(ops, limaToday()),
     ledgerSummary: L.ledgerSummary(ledger, { finance, brand }),
     inventorySummary: I.inventorySummary(inventory),
@@ -62,6 +65,7 @@ function opsAttention(ops) {
   if (overdue.length) out.push({ level: 'high', title: 'Tareas vencidas', text: `${overdue.length} tarea(s) pasaron su fecha: ${overdue.slice(0, 3).map((t) => t.title).join(' · ')}${overdue.length > 3 ? '…' : ''}.`, route: '/tareas' });
   const blocked = (ops.tasks || []).filter((t) => t.effective === 'blocked' && t.due && t.due <= new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10));
   if (blocked.length) out.push({ level: 'med', title: 'Tareas bloqueadas por vencer', text: `${blocked.length} tarea(s) dependen de otras sin terminar y vencen pronto.`, route: '/tareas' });
+  (ops.commercial || []).forEach((a) => out.push(a));
   (ops.promoPending || []).forEach((p) => out.push({ level: 'med', title: 'Comisiones de promotores por pagar', text: `${p.name}: ${p.amount.toFixed(2)} soles pendientes según la regla de comisión.`, event: p.event }));
   return out;
 }
@@ -262,6 +266,19 @@ module.exports = async (req, res) => {
         promoters[e.id] = PR.performance(ts, { promoters: roster, promo: ops.promo, finEventId: e.id, ledger: ops.ledger });
       });
       const brands = brandsPayload(p.finance, { culqi: p.culqi, ledger: ops.ledger, promoters, ops: ops.ops });
+      // Fase 4: campañas, sponsors, documentos y audiencia.
+      const today = limaToday();
+      const campaigns = COM.campaignsView(ops.marketing, { ledger: ops.ledger, sales, today });
+      const deals = COM.dealsView(ops.sponsors, { ledger: ops.ledger, today });
+      const named = new Map(listEvents([...ticketsBy.keys()]).map((x) => [x.id, x.name]));
+      const metaOf = (liveId) => {
+        const e = (p.finance.events || []).find((x) => x.liveEventId === liveId);
+        // La web de tickets es de Paradisio Club: una fecha sin evento enlazado en el OS se cuenta como Club.
+        return e ? { name: e.name, date: e.date, brand: e.brand, osId: e.id } : { name: named.get(liveId) || liveId, date: liveId, brand: 'club', osId: null };
+      };
+      const audience = { group: CRM.audience(ticketsBy, metaOf) };
+      (p.finance.brands || []).forEach((b) => { audience[b.id] = CRM.audience(ticketsBy, metaOf, { brand: b.id }); });
+      ops.commercial = COM.commercialAttention({ mkt: ops.marketing, sponsors: deals, documents: ops.documents, today });
       Object.values(brands).forEach((x) => { if (x.promoters) x.promoters.top = [...x.promoters.top.values()].sort((a, b) => b.attended - a.attended).slice(0, 5); });
       ops.promoPending = Object.entries(promoters).flatMap(([evId, perf]) => {
         const e = p.finance.events.find((x) => x.id === evId);
@@ -271,14 +288,15 @@ module.exports = async (req, res) => {
       return res.status(200).json({
         ...p,
         version: p.seeded ? null : versionOf(p.finance),
-        ledger: ops.ledger, inventory: ops.inventory, promo: ops.promo, ops: ops.ops,
+        ledger: ops.ledger, inventory: ops.inventory, promo: ops.promo, ops: ops.ops, marketing: ops.marketing, sponsors: ops.sponsors, documents: ops.documents,
         os: {
+          campaigns, deals, audience,
           sales, promoters, tasks: ops.tasks, brands, groupActual: { revenue: s.actual.revenue, result: s.actual.result },
           roster: [...roster.values()].map((x) => ({ code: x.code, name: x.name, retired: !!x.retired, active: x.active !== false })),
           stages: STAGES, metrics: METRICS, summary: s, activity,
           attention: merged(attention(s, { culqi: p.culqi, usingStaffPasscode }), opsAttention(ops)),
           ledgerSummary: ops.ledgerSummary, inventorySummary: ops.inventorySummary, byEvent: ops.byEvent,
-          enums: { txKinds: L.KINDS, accountTypes: L.ACCOUNT_TYPES, docTypes: L.DOC_TYPES, moveTypes: I.MOVES, productKinds: I.KINDS, contactTypes: OPS.CONTACT_TYPES, taskStatus: OPS.TASK_STATUS },
+          enums: { txKinds: L.KINDS, accountTypes: L.ACCOUNT_TYPES, docTypes: L.DOC_TYPES, moveTypes: I.MOVES, productKinds: I.KINDS, contactTypes: OPS.CONTACT_TYPES, taskStatus: OPS.TASK_STATUS, contentStatus: COM.CONTENT_STATUS, channels: COM.CHANNELS, campaignStatus: COM.CAMPAIGN_STATUS, assetTypes: COM.ASSET_TYPES, dealStages: COM.DEAL_STAGES, docTypes4: COM.DOC_TYPES },
         },
       });
     }
@@ -294,6 +312,44 @@ module.exports = async (req, res) => {
     }
 
     // ---------- Libro: cuentas y transacciones ----------
+    // ---------- Fase 4: marketing, sponsors, documentos ----------
+    if (action.startsWith('mkt.') || action.startsWith('sp.') || action.startsWith('doc.')) {
+      const { finance } = await loadFinance();
+      const ctx = { events: finance.events || [], brands: finance.brands || [] };
+      const docName = action.startsWith('mkt.') ? 'marketing' : action.startsWith('sp.') ? 'sponsors' : 'documents';
+      // Upsert / delete genérico sobre una lista del documento.
+      const LISTS = {
+        'mkt.content': ['content', COM.cleanContent, (x) => x.title], 'mkt.campaign': ['campaigns', COM.cleanCampaign, (x) => x.name],
+        'mkt.asset': ['assets', COM.cleanAsset, (x) => x.name], 'sp.deal': ['deals', COM.cleanDeal, (x) => x.sponsor], 'doc.item': ['documents', COM.cleanDocument, (x) => x.title],
+      };
+      const base = action.replace(/\.(upsert|delete|toggle)$/, '');
+      const r = await updateDoc(redis, docName, { baseVersion: body.baseVersion, action, actor, mutate: (d) => {
+        if (action === 'sp.deliverable.toggle') {
+          const deal = d.deals.find((x) => x.id === body.dealId); if (!deal) throw new Error('not_found');
+          const dl = deal.deliverables.find((x) => x.id === body.id); if (!dl) throw new Error('not_found');
+          dl.done = !dl.done;
+          return { name: `${deal.sponsor}: ${dl.title}`, changes: { done: { from: !dl.done, to: dl.done } } };
+        }
+        const L4 = LISTS[base]; if (!L4) throw new Error('unknown_action');
+        const [list, clean, label] = L4;
+        if (action.endsWith('.delete')) {
+          const x = d[list].find((y) => y.id === body.id); if (!x) throw new Error('not_found');
+          d[list] = d[list].filter((y) => y.id !== body.id);
+          if (base === 'mkt.campaign') d.content = d.content.map((c) => (c.campaignId === body.id ? { ...c, campaignId: null } : c));
+          return { name: label(x) };
+        }
+        const item = body.item || {};
+        const i = d[list].findIndex((y) => y.id === item.id);
+        const clean2 = clean(item, ctx, i >= 0 ? d[list][i] : null);
+        if (base === 'mkt.content' && clean2.campaignId && !d.campaigns.some((c) => c.id === clean2.campaignId)) throw new Error('bad_campaign');
+        const before = i >= 0 ? d[list][i] : null;
+        if (i >= 0) d[list][i] = clean2; else d[list].push(clean2);
+        const st = before && (before.status || before.stage) !== (clean2.status || clean2.stage) ? { changes: { status: { from: before.status || before.stage, to: clean2.status || clean2.stage } } } : {};
+        return { name: label(clean2), event: clean2.eventId || undefined, ...st };
+      } });
+      return res.status(r.status).json(r.body);
+    }
+
     // ---------- Promotores: equipos, metas y reglas de comisión ----------
     if (action.startsWith('promo.')) {
       const { finance } = await loadFinance();

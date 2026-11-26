@@ -71,8 +71,9 @@ function Cell({ label, children, sub, onClick, proj, spark, className }) {
   );
 }
 
+// NumberFlow anima dígito por dígito: el lector de pantalla recibe la cifra completa aparte.
 const Fig = ({ value, className }) => (
-  <NumberFlow value={value} locales="es-PE" format={{ style: 'currency', currency: 'PEN', maximumFractionDigits: 0 }} className={cn('num', className)} transformTiming={NUM} spinTiming={NUM} willChange />
+  <><span className="sr-only">{money(value)}</span><NumberFlow aria-hidden="true" value={value} locales="es-PE" format={{ style: 'currency', currency: 'PEN', maximumFractionDigits: 0 }} className={cn('num', className)} transformTiming={NUM} spinTiming={NUM} willChange /></>
 );
 const NA = ({ children = 'No disponible' }) => <span className="text-[20px] text-muted-foreground">{children}</span>;
 
@@ -82,7 +83,6 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
   const results = actualEvents.map((f) => f.result);
   const cashOk = LS && LS.cash != null;
   const hasAccounts = LS && LS.accounts && LS.accounts.length;
-  const payables = LS && LS.hasData ? LS.payables : null;
   return (
     <section aria-label="Indicadores" className="surface grid grid-cols-1 divide-y divide-divider overflow-hidden sm:grid-cols-2 sm:divide-y-0 xl:grid-cols-4 [&>*]:border-divider sm:[&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(-n+2)]:border-b xl:[&>*]:border-b-0 xl:[&>*:not(:last-child)]:border-r">
       <Cell label="Resultado real" onClick={onMetric('result')}
@@ -95,7 +95,7 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
         {cashOk ? <Fig value={LS.cash} /> : <NA />}
       </Cell>
       <Cell label="Por cobrar" onClick={() => navigate('/finanzas/por-pagar')}
-        sub={LS && LS.hasData ? (payables.overdue ? <span className="text-bad">{payables.overdue} pago{payables.overdue === 1 ? '' : 's'} por hacer vencido{payables.overdue === 1 ? '' : 's'}</span> : `${LS.receivables.count} cobro${LS.receivables.count === 1 ? '' : 's'} pendiente${LS.receivables.count === 1 ? '' : 's'}${payables.count ? `; debes ${money(payables.total)}` : ''}`) : 'Sin movimientos registrados'}
+        sub={LS && LS.hasData ? `${LS.receivables.count} cobro${LS.receivables.count === 1 ? '' : 's'} pendiente${LS.receivables.count === 1 ? '' : 's'}` : 'Sin movimientos registrados'}
         spark={null}>
         {LS && LS.hasData ? <Fig value={LS.receivables.total} /> : <NA />}
       </Cell>

@@ -15,9 +15,9 @@ const NUM_TIMING = { duration: 450, easing: 'cubic-bezier(0.2, 0, 0, 1)' };
 export function Fig({ value, currency = true, decimals = 0, suffix, className }) {
   if (value == null || !isFinite(value)) return null;
   return (
-    <NumberFlow className={cn('num', className)} value={value} locales="es-PE" suffix={suffix} willChange
+    <><span className="sr-only">{currency ? money(value, decimals) : `${value}${suffix || ''}`}</span><NumberFlow aria-hidden="true" className={cn('num', className)} value={value} locales="es-PE" suffix={suffix} willChange
       format={currency ? { style: 'currency', currency: 'PEN', minimumFractionDigits: decimals, maximumFractionDigits: decimals } : { minimumFractionDigits: 0, maximumFractionDigits: decimals }}
-      transformTiming={NUM_TIMING} spinTiming={NUM_TIMING} opacityTiming={{ duration: 250, easing: 'ease-out' }} />
+      transformTiming={NUM_TIMING} spinTiming={NUM_TIMING} opacityTiming={{ duration: 250, easing: 'ease-out' }} /></>
   );
 }
 
@@ -79,7 +79,7 @@ export function BreakdownWidget({ S }) {
             className={cn('flex min-w-0 items-center gap-1.5 text-[12px] transition-opacity', hover && hover !== x.key && 'opacity-40')}>
             <i className="size-2 shrink-0 rounded-[2px]" style={{ background: x.color }} />
             <span className="truncate text-muted-foreground">{x.key}</span>
-            <span className="num ml-auto shrink-0">{Math.round((x.value / (base || 1)) * 100)}%</span>
+            <span className="num ml-1 shrink-0 text-foreground">{Math.round((x.value / (base || 1)) * 100)}%</span>
           </li>
         ))}
       </ul>

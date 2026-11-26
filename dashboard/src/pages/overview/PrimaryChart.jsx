@@ -193,15 +193,15 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
     : `${metric.long} ${rangeLabel.toLowerCase()}: ${R.hasReal ? money(R.total) : 'sin datos reales'}` +
       `${R.realPeriods ? ` en ${R.realPeriods} ${R.realPeriods === 1 ? unit[0] : unit[1]} con valor` : ''}.` +
       `${R.hasProj ? ` Proyectado aparte: ${money(R.projTotal)}.` : ''}${R.missing ? ` ${R.missing} fecha${R.missing === 1 ? '' : 's'} sin liquidar.` : ''}${R.incomplete ? ` ${R.incomplete} presupuesto${R.incomplete === 1 ? '' : 's'} incompleto${R.incomplete === 1 ? '' : 's'}.` : ''}`;
-  const announce = shown ? describeBucket(shown, group) : '';
+  const announce = shown ? describeBucket(shown, group) : pin ? describeBucket(pin, group) : '';
 
   return (
     <section aria-labelledby={`${uid}-h`} className="surface relative px-4 pb-3 pt-4 md:px-6 md:pt-5">
       {/* Cabecera: métrica (dominante), selector y lectura de contexto */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-[13px] text-muted-foreground">
-            <h2 id={`${uid}-h`} className="inline">{metric.long}, {rangeLabel.toLowerCase()}</h2>{' '}
+          <div className="flex items-start gap-1 text-[13px] text-muted-foreground">
+            <h2 id={`${uid}-h`} className="min-w-0 pt-px">{metric.long}, {rangeLabel.toLowerCase()}</h2>
             <GlossaryButton g={glossary} onOpen={() => setDrawer({ type: 'metric', id: metric.glossary })} serverMetric={!!data.os.metrics[metric.glossary]} />
           </div>
           <Figure metric={metric} R={R} isCash={isCash} cash={avail.cash} />
@@ -265,7 +265,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                     {todayIdx >= 0 && todayIdx < n - 1 && (
                       <g>
                         <line x1={xc(todayIdx) + bw / 2} x2={xc(todayIdx) + bw / 2} y1={6} y2={H - M.bottom} stroke="var(--hairline)" strokeDasharray="1 3" />
-                        <text x={xc(todayIdx) + bw / 2 + 6} y={12} className="chart-axis">hoy</text>
+                        <text x={xc(todayIdx) + bw / 2 - 6} y={12} textAnchor="end" className="chart-axis">hoy</text>
                       </g>
                     )}
 
@@ -299,7 +299,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                           {long.length > 0 && <path d={pathFor(vals, true)} fill={`url(#${uid}-proj)`} />}
                           {long.length > 0 && <path d={pathFor(vals, true)} fill="none" stroke="var(--proj)" strokeWidth="1.25" strokeDasharray="4 3" strokeLinejoin="round" />}
                           {lone.filter((i) => buckets[i]).map((i) => {
-                            const names = buckets[i].items.filter((it) => it.state === 'proj');
+                            const names = buckets[i].items.filter((it) => it.state === 'proj').sort((a, b) => (b.value || 0) - (a.value || 0));
                             return (
                               <g key={'pj' + i}>
                                 <line x1={xc(i)} x2={xc(i)} y1={base} y2={y(tw.proj[i])} stroke="var(--proj)" strokeWidth="1.25" strokeDasharray="3 3" />
@@ -328,7 +328,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                         <circle cx={xc(i)} cy={y(tw.real[i] ?? b.real)} r="4.5" fill="var(--chart-ink)" />
                         {!mobile && active !== i && (
                           <text x={xc(i) > width * 0.66 ? xc(i) - 10 : xc(i) + 10} textAnchor={xc(i) > width * 0.66 ? 'end' : 'start'} y={y(tw.real[i] ?? b.real) - 4} className="chart-axis" style={{ fill: 'var(--foreground)' }}>
-                            {b.items.filter((it) => it.state === 'real').map((it) => it.name).slice(0, 1).join('')}
+                            {b.items.filter((it) => it.state === 'real').sort((x, z) => (z.value || 0) - (x.value || 0)).map((it) => it.name).slice(0, 1).join('')}
                             {b.items.filter((it) => it.state === 'real').length > 1 ? ` y ${b.items.filter((it) => it.state === 'real').length - 1} más` : ''}
                           </text>
                         )}
@@ -343,7 +343,13 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                         {tw.proj[active] != null && <circle cx={xc(active)} cy={y(tw.proj[active])} r="4" fill="var(--panel)" stroke="var(--proj)" strokeWidth="1.5" strokeDasharray="2 1.5" />}
                       </g>
                     )}
-                    {pin && pinned !== active && <line x1={xc(pinned)} x2={xc(pinned)} y1={M.top} y2={H - M.bottom} stroke="var(--chart-ink)" strokeOpacity="0.5" strokeDasharray="3 3" />}
+                    {pin && pinned !== active && (
+                      <g>
+                        <line x1={xc(pinned)} x2={xc(pinned)} y1={M.top} y2={H - M.bottom} stroke="var(--chart-ink)" strokeOpacity="0.5" strokeDasharray="3 3" />
+                        {tw.real[pinned] != null && pin.hasReal && <circle cx={xc(pinned)} cy={y(tw.real[pinned])} r="5" fill="var(--panel)" stroke="var(--chart-ink)" strokeWidth="1.75" />}
+                        {tw.proj[pinned] != null && <circle cx={xc(pinned)} cy={y(tw.proj[pinned])} r="5" fill="var(--panel)" stroke="var(--proj)" strokeWidth="1.75" />}
+                      </g>
+                    )}
 
                     {/* Eje X */}
                     {buckets.map((b, i) => (i % every === 0 || i === n - 1) && (i === n - 1 ? (n - 1) % every >= every / 2 || every === 1 : true) && (
@@ -390,6 +396,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
   );
 }
 
+const shortPeriod = (b, g) => (g === 'week' ? (b.key.slice(5, 7) === b.end.slice(5, 7) ? `${+b.key.slice(8, 10)}–${dm(b.end)}` : `${dm(b.key)}–${dm(b.end)}`) : g === 'day' ? dm(b.key) : periodLabel(b.key, g));
 const stamp = (iso) => new Date(iso).toLocaleString('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 function describeBucket(b, group) {
@@ -415,8 +422,9 @@ function Figure({ metric, R, isCash, cash }) {
         </span>
       ) : (
         <>
-          <span className="text-[20px] text-muted-foreground">{neg ? '−S/' : 'S/'}</span>
-          <NumberFlow value={Math.abs(value)} locales="es-PE" format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+          <span className="text-[20px] text-muted-foreground" aria-hidden="true">{neg ? '−S/' : 'S/'}</span><span className="sr-only">{neg ? 'menos ' : ''}</span>
+          <span className="sr-only">{money(Math.abs(value), 2)}</span>
+          <NumberFlow aria-hidden="true" value={Math.abs(value)} locales="es-PE" format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
             className={cn('figure-hero text-[44px] md:text-[54px]', metric.projOnly && 'text-proj')} transformTiming={NUM} spinTiming={NUM} opacityTiming={{ duration: 250, easing: 'ease-out' }} willChange />
           {neg && <span className="ml-1 self-center rounded-md border border-bad/40 px-1.5 py-0.5 text-[12px] text-bad">Pérdida</span>}
         </>
@@ -493,7 +501,7 @@ function GlossaryButton({ g, onOpen, serverMetric }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" aria-label={`Qué es ${g.label}`} className="press -my-1.5 inline-flex size-8 translate-y-[3px] items-center sm:size-5 sm:my-0 justify-center rounded text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><InfoIcon className="size-3.5" /></button>
+        <button type="button" aria-label={`Qué es ${g.label}`} className="press -my-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded sm:my-0 sm:size-6 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><InfoIcon className="size-3.5" /></button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 text-[13px]">
         <p className="font-medium">{g.label}</p>
@@ -523,6 +531,7 @@ function Segmented({ value, onChange, options, label }) {
 }
 
 function Toggle({ on, disabled, onClick, children, hint }) {
+  if (disabled) return null; // aparece cuando hay datos para usarlo (sin controles muertos en la barra)
   // En móvil un control desactivado sólo ocupa espacio: se oculta (en escritorio queda con su explicación).
   const btn = (
     <button type="button" aria-pressed={on} aria-disabled={disabled || undefined} onClick={disabled ? undefined : onClick}
@@ -551,10 +560,10 @@ function ChartTip({ b, idx, x, yv, width, group, metric, brandSeries, H }) {
           style={{ width: W }} className="float-shadow pointer-events-none absolute left-0 top-0 z-20 rounded-lg bg-tooltip px-3 py-2.5 text-[12px] text-tooltip-foreground">
           <div className="flex items-baseline justify-between gap-3">
             <span className="font-mono text-[14px] font-light tracking-[-0.02em]">{b.real != null ? money(b.real, 2) : b.proj != null ? money(b.proj, 2) : '—'}</span>
-            <span className="text-tooltip-muted">{periodLabel(b.key, group)}</span>
+            <span className="shrink-0 text-tooltip-muted">{shortPeriod(b, group)}</span>
           </div>
-          {b.missing.length > 0 && <p className="mt-1 text-tooltip-muted">{b.future ? 'Presupuesto incompleto' : 'Sin dato real'}: {b.missing[0].note.toLowerCase()}{b.missing.length > 1 ? ` (y ${b.missing.length - 1} más)` : ''}.</p>}
-          {b.real === 0 && !b.missing.length && <p className="mt-1 text-tooltip-muted">{metric.source === 'events' ? `Sin fechas cerradas en este ${UNIT[group][0]}.` : `Sin ventas en este ${UNIT[group][0]}.`}</p>}
+          {b.missing.length > 0 && <p className="mt-1 text-tooltip-muted">{b.future ? '' : 'Sin dato real: '}{b.future ? b.missing[0].note : b.missing[0].note.toLowerCase()}{b.missing.length > 1 ? ` (y ${b.missing.length - 1} más)` : ''}.</p>}
+          {b.real === 0 && !b.missing.length && <p className="mt-1 text-tooltip-muted">{`${metric.source === 'events' ? 'Sin fechas cerradas' : 'Sin ventas'} ${{ day: 'este día', week: 'esta semana', month: 'este mes' }[group]}.`}</p>}
           {b.real == null && b.future && !b.missing.length && b.proj == null && <p className="mt-1 text-tooltip-muted">Todavía no ocurre.</p>}
           {b.real != null && b.proj != null && <p className="mt-1 flex justify-between gap-3"><span className="text-tooltip-muted">Proyectado aparte</span><span className="num">{money(b.proj)}</span></p>}
           {brandSeries.length > 0 && brandSeries.map((s) => s.values[idx] ? <p key={s.id} className="mt-0.5 flex items-center justify-between gap-3"><span className="flex items-center gap-1.5 text-tooltip-muted"><i className="size-1.5 rounded-full" style={{ background: brandColor(s.id) }} />{s.name}</span><span className="num">{money(s.values[idx])}</span></p> : null)}
@@ -579,12 +588,14 @@ function ChartTip({ b, idx, x, yv, width, group, metric, brandSeries, H }) {
 
 // ---------- Detalle del período fijado ----------
 function PeriodDetail({ b, group, onClose, onOpen }) {
+  const ref = useRef(null);
+  useEffect(() => { const el = ref.current; if (!el) return; const r = el.getBoundingClientRect(); if (r.bottom > window.innerHeight) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [b.key]);
   return (
-    <div className="mt-3 rounded-lg bg-muted/60 px-3 py-2.5">
+    <div ref={ref} className="mt-3 rounded-lg bg-muted/60 px-3 py-2.5">
       <div className="flex items-center gap-2">
         <p className="text-[13px] font-medium">{periodLabel(b.key, group)}</p>
         <span className="text-[12px] text-muted-foreground">{b.items.length ? `${b.items.length} fecha${b.items.length === 1 ? '' : 's'}` : 'Sin fechas'}</span>
-        <button type="button" onClick={onClose} aria-label="Cerrar detalle del período" className="press ml-auto flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"><XIcon className="size-3.5" /></button>
+        <button type="button" onClick={onClose} aria-label="Cerrar detalle del período" className="press ml-auto flex size-9 sm:size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"><XIcon className="size-3.5" /></button>
       </div>
       {b.items.length > 0 && (
         <ul className="mt-1.5 grid gap-0.5">

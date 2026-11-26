@@ -243,8 +243,8 @@
   --secondary: rgb(255 255 255 / 0.06);
   --secondary-foreground: #F2F5F4;
   --muted: rgb(255 255 255 / 0.06);
-  --muted-foreground: #BFCFCB;
-  --faint: #9DB3AE;
+  --muted-foreground: #DCE6E3;
+  --faint: #CAD8D4;
   --hairline: rgb(255 255 255 / 0.2);
   --accent: rgb(255 255 255 / 0.08);
   --accent-foreground: #F2F5F4;
@@ -256,7 +256,7 @@
   --chart-ink: #F2F5F4;
   --chart-grid: rgb(255 255 255 / 0.1);
   --chart-hatch: rgb(242 245 244 / 0.36);
-  --chart-axis: #86A09A;
+  --chart-axis: #CAD8D4;
   --tooltip: #0E201D;
   --tooltip-foreground: #F2F5F4;
   --tooltip-muted: #A9BCB7;
@@ -265,7 +265,7 @@
   --sidebar-accent: rgb(255 255 255 / 0.06);
   --sidebar-border: rgb(255 255 255 / 0.07);
   --good: #5FDCAB;
-  --bad: #FF957C;
+  --bad: #FFC2B3;
   --warn: #F0BE5A;
   --proj: #F2C67E;
   --proj-line: rgb(242 198 126 / 0.5);
@@ -317,7 +317,7 @@
 [data-theme="atmosphere"] [data-slot="inset-shell"] {
   background-color: #061210;
   background-image:
-    radial-gradient(900px 640px at 4% -6%, rgb(70 190 150 / 0.62), transparent 64%),
+    radial-gradient(900px 640px at 4% -6%, rgb(62 176 140 / 0.5), transparent 64%),
     radial-gradient(760px 560px at 98% 30%, rgb(36 140 132 / 0.50), transparent 62%),
     radial-gradient(900px 620px at 46% 50%, rgb(26 104 84 / 0.34), transparent 70%),
     radial-gradient(1200px 760px at 60% 120%, rgb(26 96 76 / 0.55), transparent 62%);

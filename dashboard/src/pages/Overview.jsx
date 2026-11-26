@@ -93,7 +93,8 @@ export default function Overview() {
   const setLayout = (fn) => setLayoutState((cur) => { const next = typeof fn === 'function' ? fn(cur) : fn; ls(LAYOUT_KEY, JSON.stringify(next)); return next; });
   const sameAsPreset = (p, items) => JSON.stringify(items.map((i) => [i.id, i.size])) === JSON.stringify(PRESETS[p].items);
   const setItems = (items) => setLayout((l) => { const next = typeof items === 'function' ? items(l.items) : items; return { ...l, items: next, custom: !sameAsPreset(l.preset, next) }; });
-  useEffect(() => { if (!editing) return undefined; const k = (e) => { if (e.key !== 'Escape') return; if (document.querySelector('[role="dialog"], [role="menu"], [role="listbox"]')) return; setEditing(false); }; // Escape cierra primero la capa de encima window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [editing]);
+  // Escape cierra primero la capa de encima (paleta, menú); sólo después sale del modo personalizar.
+  useEffect(() => { if (!editing) return undefined; const k = (e) => { if (e.key !== 'Escape') return; if (document.querySelector('[role="dialog"], [role="menu"], [role="listbox"]')) return; setEditing(false); }; window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [editing]);
 
   const brands = data.finance.brands;
   const scopeName = brand ? brands.find((b) => b.id === brand)?.name : 'Paradisio Entertainment Group';

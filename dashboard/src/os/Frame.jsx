@@ -20,7 +20,7 @@ import { cn, brandColor } from '../lib.js';
 export function GroupLogo({ className }) {
   return (
     <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-md bg-[#0B0B0B] px-[3px] ring-1 ring-black/5 dark:ring-white/10', className)}>
-      <img alt="" className="w-full" src="/administracion/logos/paradisio-orange.png" />
+      <img alt="" width="22" height="9" className="w-full" src="/administracion/logos/paradisio-orange.png" />
     </span>
   );
 }

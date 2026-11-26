@@ -41,7 +41,7 @@ const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k)
 // ---------- Widgets y presets ----------
 const LinkAction = ({ to, children = 'Ver todo', label }) => {
   const navigate = useNavigate();
-  return <button type="button" onClick={() => navigate(to)} aria-label={label} className="inline-flex h-7 items-center gap-0.5 rounded-md px-1.5 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">{children}<ArrowUpRightIcon className="size-3.5" /></button>;
+  return <button type="button" onClick={() => navigate(to)} aria-label={label} className="inline-flex h-9 sm:h-7 items-center gap-0.5 rounded-md px-1.5 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">{children}<ArrowUpRightIcon className="size-3.5" /></button>;
 };
 export const REGISTRY = {
   attention: { title: 'Requiere atención', render: (c) => <AttentionWidget items={c.attention} />, action: <LinkAction to="/atencion" label="Abrir la bandeja de atención">Bandeja</LinkAction> },
@@ -90,7 +90,8 @@ export default function Overview() {
   const [layout, setLayoutState] = useState(loadLayout);
   const [editing, setEditing] = useState(false);
   const setLayout = (fn) => setLayoutState((cur) => { const next = typeof fn === 'function' ? fn(cur) : fn; ls(LAYOUT_KEY, JSON.stringify(next)); return next; });
-  const setItems = (items) => setLayout((l) => ({ ...l, items: typeof items === 'function' ? items(l.items) : items, custom: true }));
+  const sameAsPreset = (p, items) => JSON.stringify(items.map((i) => [i.id, i.size])) === JSON.stringify(PRESETS[p].items);
+  const setItems = (items) => setLayout((l) => { const next = typeof items === 'function' ? items(l.items) : items; return { ...l, items: next, custom: !sameAsPreset(l.preset, next) }; });
   useEffect(() => { if (!editing) return undefined; const k = (e) => e.key === 'Escape' && setEditing(false); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [editing]);
 
   const brands = data.finance.brands;
@@ -117,7 +118,7 @@ export default function Overview() {
   const restore = () => setLayout((l) => ({ preset: l.preset, items: presetItems(l.preset), custom: false }));
   const removeWidget = (item, index) => {
     setItems((items) => items.filter((x) => x.id !== item.id));
-    flash(`Quitaste "${REGISTRY[item.id].title}"`, { action: { label: 'Deshacer', run: () => setItems((items) => (items.some((x) => x.id === item.id) ? items : [...items.slice(0, index), item, ...items.slice(index)])) } });
+    flash(`Quitaste “${REGISTRY[item.id].title}”`, { action: { label: 'Deshacer', run: () => setItems((items) => (items.some((x) => x.id === item.id) ? items : [...items.slice(0, index), item, ...items.slice(index)])) } });
   };
   const urgent = attention.filter((a) => a.level !== 'low');
 
@@ -153,8 +154,8 @@ export default function Overview() {
           <Tooltip>
             <TooltipTrigger asChild>
               <button type="button" onClick={() => setEditing(!editing)} aria-pressed={editing} aria-label="Personalizar el resumen"
-                className={cn('press flex size-8 items-center justify-center rounded-md border outline-none focus-visible:ring-2 focus-visible:ring-ring', editing ? 'border-foreground bg-foreground text-background' : 'border-panel-border bg-panel text-muted-foreground hover:text-foreground')}>
-                <SlidersHorizontalIcon className="size-4" />
+                className={cn('press flex h-8 items-center justify-center gap-1.5 rounded-md border px-2 text-[13px] lg:px-2.5 outline-none focus-visible:ring-2 focus-visible:ring-ring', editing ? 'border-foreground bg-foreground text-background' : 'border-panel-border bg-panel text-muted-foreground hover:text-foreground')}>
+                <SlidersHorizontalIcon className="size-4" /><span className="hidden lg:inline">{editing ? 'Personalizando' : 'Personalizar'}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent>Personalizar</TooltipContent>
@@ -163,7 +164,7 @@ export default function Overview() {
       </div>
 
       <div className={cn('flex flex-col gap-4 transition-opacity duration-[var(--dur-standard)] md:gap-5', loading && 'opacity-60')}>
-        <PrimaryChart from={from} to={to} rangeLabel={rangeLabel} />
+        <PrimaryChart from={from} to={to} rangeLabel={rangeLabel} actual={S.actual} />
 
         {/* Móvil: lo importante de la bandeja justo después de la cifra principal */}
         {urgent.length > 0 && layout.items.some((i) => i.id === 'attention') && (

@@ -120,7 +120,7 @@ export function EventsWidget({ S }) {
   const rows = S.events.filter((f) => f.kind === 'actual' && S.actual.events.includes(f.id)).sort((a, b) => b.date.localeCompare(a.date));
   if (!rows.length) return <EmptyState text="Sin fechas cerradas en este período." />;
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" tabIndex={0} role="region" aria-label="Rendimiento por fecha, desplazable">
       <table className="w-full min-w-[560px] text-[13px]">
         <thead>
           <tr className="text-left text-[12px] text-muted-foreground [&>th]:h-8 [&>th]:border-b [&>th]:border-divider [&>th]:font-normal">
@@ -193,7 +193,7 @@ export function MiniLines({ title, lines }) {
   );
 }
 
-const TextBtn = ({ children, muted, ...p }) => <button type="button" className={cn('inline-flex h-7 items-center gap-1 rounded-md text-[13px] font-medium underline-offset-4 outline-none transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring', muted ? 'text-muted-foreground hover:text-foreground' : 'text-foreground')} {...p}>{children}</button>;
+const TextBtn = ({ children, muted, ...p }) => <button type="button" className={cn('inline-flex h-9 items-center sm:h-7 gap-1 rounded-md text-[13px] font-medium underline-offset-4 outline-none transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring', muted ? 'text-muted-foreground hover:text-foreground' : 'text-foreground')} {...p}>{children}</button>;
 const Btn = ({ children, className, ...p }) => <button type="button" className={cn('press inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-[12px] transition-colors hover:bg-muted', className)} {...p}>{children}</button>;
 
 // ---------- Agenda de producción (próximas fechas) ----------
@@ -253,7 +253,7 @@ export function UpcomingWidget({ S }) {
                     <StageBadge stage={f.stage} stages={data.os.stages} />
                     <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
                       <span className="flex gap-0.5" aria-hidden>{checks.map(([l, ok]) => <i key={l} className={cn('h-1.5 w-3 rounded-full', ok ? 'bg-foreground/70' : 'bg-bad/70')} />)}</span>
-                      {ready === 3 ? 'Lista para producir' : `Falta ${missing.join(' y ')}`}
+                      {ready === 3 ? 'Lista para producir' : `${missing.length > 1 ? 'Faltan' : 'Falta'} ${missing.length > 1 ? `${missing.slice(0, -1).join(', ')} y ${missing[missing.length - 1]}` : missing[0]}`}
                     </span>
                   </span>
                 </span>
@@ -287,7 +287,9 @@ function CreateEventBtn() {
 const SNOOZE_KEY = 'os_snoozed';
 const readSnoozed = () => { try { const o = JSON.parse(localStorage.getItem(SNOOZE_KEY) || '{}'); const now = Date.now(); return Object.fromEntries(Object.entries(o).filter(([, until]) => until > now)); } catch { return {}; } };
 const keyOf = (a) => `${a.title}|${a.event || a.route || ''}`;
-const LEVEL = { high: { label: 'Urgente', dot: 'bg-bad', text: 'text-bad' }, med: { label: 'Importante', dot: 'bg-warn', text: 'text-warn' }, low: { label: 'Aviso', dot: 'bg-faint', text: 'text-muted-foreground' } };
+// El nivel se lee por forma y palabra, no por un ámbar que se confunda con lo proyectado:
+// urgente = punto rojo lleno; importante = anillo en tinta; aviso = punto gris pequeño.
+const LEVEL = { high: { label: 'Urgente', dot: 'size-2 bg-bad', text: 'text-bad' }, med: { label: 'Importante', dot: 'size-2 border-[1.5px] border-foreground', text: 'text-foreground/80' }, low: { label: 'Aviso', dot: 'size-1.5 mt-[8px] bg-faint', text: 'text-muted-foreground' } };
 const numbers = (a) => `/finanzas/datos?evento=${a.event}`;
 export const ATTENTION_GUIDE = {
   'Presupuesto sin costos': { why: 'Sin costos no hay utilidad proyectada: no sabes si la fecha será rentable.', action: 'Cargar costos', to: numbers },
@@ -359,7 +361,7 @@ export function AttentionWidget({ items, compact = false }) {
               return (
                 <motion.li key={g.title} layout="position" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={tr.layout} className="overflow-hidden border-t border-divider first:border-t-0">
                   <div className="flex gap-3 px-4 py-3">
-                    <span className={cn('mt-[7px] size-2 shrink-0 rounded-full', lv.dot)} aria-hidden />
+                    <span className={cn('mt-[7px] shrink-0 rounded-full', lv.dot)} aria-hidden />
                     <div className="min-w-0 flex-1">
                       <p className="flex flex-wrap items-baseline gap-x-2 text-[14px] font-medium leading-snug">
                         <span>{g.title}{many && <span className="num font-normal text-muted-foreground"> ({g.items.length})</span>}</span>
@@ -394,7 +396,7 @@ export function AttentionWidget({ items, compact = false }) {
                         </ul>
                       )}
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                        {!many && <button type="button" onClick={() => act(a)} className="press inline-flex h-7 items-center gap-1 rounded-md bg-primary px-2.5 text-[13px] font-medium text-primary-foreground outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">{guide.action || 'Revisar'}</button>}
+                        {!many && <button type="button" onClick={() => act(a)} className="press inline-flex h-9 items-center sm:h-7 gap-1 rounded-md bg-primary px-2.5 text-[13px] font-medium text-primary-foreground outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">{guide.action || 'Revisar'}</button>}
                         {!many && a.event && guide.to && <TextBtn muted onClick={() => setDrawer({ type: 'event', id: a.event })}>Ver la fecha</TextBtn>}
                         {!compact && !g.items.every((x) => snoozed[keyOf(x)]) && <TextBtn muted onClick={() => snooze(g.items)}><ClockIcon className="size-3" />Posponer 24 h</TextBtn>}
                       </div>

@@ -35,6 +35,24 @@ export function Sparkline({ values, kind = 'line', tone, className, label }) {
   );
 }
 
+// Miniaturas sin historia inventada: comparan cifras reales que ya existen.
+function Versus({ income, cost }) {
+  const max = Math.max(income, cost, 1);
+  return (
+    <span className="flex w-[88px] shrink-0 flex-col gap-1 pb-1" role="img" aria-label={`Ingresos ${money(income)} contra costos ${money(cost)}`}>
+      <span className="block h-1.5 rounded-full bg-chart-ink" style={{ width: `${(income / max) * 100}%` }} />
+      <span className="hatch-ink block h-1.5 rounded-full border border-chart-ink/60" style={{ width: `${(cost / max) * 100}%` }} />
+    </span>
+  );
+}
+function Readiness({ done, total }) {
+  return (
+    <span className="flex shrink-0 gap-1 pb-1.5" role="img" aria-label={`${done} de ${total} presupuestos con costos`}>
+      {Array.from({ length: total }).map((_, i) => <i key={i} className={cn('h-2 w-5 rounded-[2px]', i < done ? 'bg-proj' : 'proj-hatch border border-dashed border-proj')} />)}
+    </span>
+  );
+}
+
 function Cell({ label, children, sub, onClick, proj, spark, className }) {
   return (
     <button type="button" onClick={onClick}
@@ -68,8 +86,8 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
   return (
     <section aria-label="Indicadores" className="surface grid grid-cols-1 divide-y divide-divider overflow-hidden sm:grid-cols-2 sm:divide-y-0 xl:grid-cols-4 [&>*]:border-divider sm:[&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(-n+2)]:border-b xl:[&>*]:border-b-0 xl:[&>*:not(:last-child)]:border-r">
       <Cell label="Resultado real" onClick={onMetric('result')}
-        sub={A.count ? (A.margin != null ? `Margen ${pct(A.margin)} en ${A.count} fecha${A.count === 1 ? '' : 's'} cerrada${A.count === 1 ? '' : 's'}` : `${A.count} fecha${A.count === 1 ? '' : 's'} cerrada${A.count === 1 ? '' : 's'}`) : 'Sin fechas cerradas en el período'}
-        spark={<Sparkline values={results} kind="bar" label={`Resultado por fecha: ${results.map((r) => money(r)).join(', ')}`} />}>
+        sub={A.count ? (A.margin != null ? `Margen ${pct(A.margin).replace('-', '−')} en ${A.count} fecha${A.count === 1 ? '' : 's'} cerrada${A.count === 1 ? '' : 's'}` : `${A.count} fecha${A.count === 1 ? '' : 's'} cerrada${A.count === 1 ? '' : 's'}`) : 'Sin fechas cerradas en el período'}
+        spark={results.length >= 3 ? <Sparkline values={results} kind="bar" label={`Resultado por fecha: ${results.map((r) => money(r)).join(', ')}`} /> : A.count ? <Versus income={A.revenue} cost={A.costs} /> : null}>
         {A.count ? <span className={cn(A.result < 0 && 'text-bad')}>{A.result < 0 ? '−' : ''}<Fig value={Math.abs(A.result)} /></span> : <NA>Sin cierres</NA>}
       </Cell>
       <Cell label="Caja disponible" onClick={() => (hasAccounts ? navigate('/finanzas/cuentas') : setDrawer({ type: 'account' }))}
@@ -77,12 +95,13 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
         {cashOk ? <Fig value={LS.cash} /> : <NA />}
       </Cell>
       <Cell label="Por cobrar" onClick={() => navigate('/finanzas/por-pagar')}
-        sub={payables ? (payables.overdue ? <span className="text-bad">{payables.overdue} pago{payables.overdue === 1 ? '' : 's'} vencido{payables.overdue === 1 ? '' : 's'}</span> : payables.count ? `${payables.count} pago${payables.count === 1 ? '' : 's'} pendiente${payables.count === 1 ? '' : 's'}: ${money(payables.total)}` : 'Ningún pago pendiente') : 'Sin movimientos registrados'}
+        sub={LS && LS.hasData ? (payables.overdue ? <span className="text-bad">{payables.overdue} pago{payables.overdue === 1 ? '' : 's'} por hacer vencido{payables.overdue === 1 ? '' : 's'}</span> : `${LS.receivables.count} cobro${LS.receivables.count === 1 ? '' : 's'} pendiente${LS.receivables.count === 1 ? '' : 's'}${payables.count ? `; debes ${money(payables.total)}` : ''}`) : 'Sin movimientos registrados'}
         spark={null}>
         {LS && LS.hasData ? <Fig value={LS.receivables.total} /> : <NA />}
       </Cell>
-      <Cell proj label="Utilidad proyectada" onClick={onMetric('projProfit')}
+      <Cell proj label="Rentabilidad proyectada" onClick={onMetric('projProfit')}
         sub={P.count ? `${P.completeCount} de ${P.count} presupuesto${P.count === 1 ? '' : 's'} con costos` : 'Sin fechas por venir'}
+        spark={P.count ? <Readiness done={P.completeCount} total={P.count} /> : null}
         className="bg-proj-soft/40">
         {P.profit == null ? <NA>Incompleta</NA> : <span className="text-proj">{P.profit < 0 ? '−' : '+'}<Fig value={Math.abs(P.profit)} /></span>}
       </Cell>

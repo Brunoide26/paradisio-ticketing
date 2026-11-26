@@ -63,10 +63,12 @@ function useTween(target, sig, reduce) {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [target, sig, reduce]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Antes de que corra el efecto, el estado puede ser del render anterior: nunca devolver series de otro largo.
+  if (prev.current.sig !== sig || !cur || cur.real.length !== target.real.length) return target;
   return cur;
 }
 
-export default function PrimaryChart({ from, to, rangeLabel }) {
+export default function PrimaryChart({ from, to, rangeLabel, actual }) {
   const { data, workspace, setDrawer, withTaxes } = useOS();
   const brand = workspace === 'group' ? null : workspace;
   const today = limaISO();
@@ -95,7 +97,7 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
   const continuous = metric.curve === 'smooth';
   const buckets = useMemo(() => buildBuckets(points, { group, from, to, today, continuous }), [points, group, from, to, today, continuous]);
   const R = readout(buckets);
-  const fewReal = !continuous && R.realPeriods < 2; // con menos de 2 períodos reales no se dibuja tendencia: se marca el punto.
+  const fewReal = R.realPeriods < 2; // con menos de 2 períodos con valor no se dibuja tendencia (ni continua): se marca el punto.
 
   // Período anterior (mismo largo): sólo se ofrece cuando ambos lados tienen al menos 2 períodos con valor.
   const prevR = previousRange(from, to, today);
@@ -120,7 +122,7 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
   const width = useSize(boxRef);
   const mobile = width > 0 && width < 560;
   const H = mobile ? 210 : 272;
-  const M = { top: 18, right: 8, bottom: 26, left: mobile ? 44 : 56 };
+  const M = { top: 26, right: 8, bottom: 26, left: mobile ? 44 : 56 };
   const W = Math.max(0, width - M.left - M.right);
   const n = buckets.length;
   const bw = n ? W / n : 0;
@@ -169,7 +171,7 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
     const cur = active == null ? (todayIdx >= 0 ? todayIdx : n - 1) : active;
     const go = { ArrowRight: cur + 1, ArrowLeft: cur - 1, Home: 0, End: n - 1, PageUp: cur - 4, PageDown: cur + 4 }[e.key];
     if (go != null) { e.preventDefault(); setActive(Math.max(0, Math.min(n - 1, go))); return; }
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (active != null) setPinned(pinned === active ? null : active); return; }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActive(cur); setPinned(pinned === cur ? null : cur); return; }
     if (e.key === 'Escape') { setPinned(null); setActive(null); }
   };
   useEffect(() => { setActive(null); setPinned(null); }, [workspace, from, to]);
@@ -187,7 +189,7 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
   const summaryText = !n ? 'Sin datos en este rango.'
     : `${metric.long} ${rangeLabel.toLowerCase()}: ${R.hasReal ? money(R.total) : 'sin datos reales'}` +
       `${R.realPeriods ? ` en ${R.realPeriods} ${R.realPeriods === 1 ? unit[0] : unit[1]} con valor` : ''}.` +
-      `${R.hasProj ? ` Proyectado aparte: ${money(R.projTotal)}.` : ''}${R.missing ? ` ${R.missing} dato${R.missing === 1 ? '' : 's'} pendiente${R.missing === 1 ? '' : 's'}.` : ''}`;
+      `${R.hasProj ? ` Proyectado aparte: ${money(R.projTotal)}.` : ''}${R.missing ? ` ${R.missing} fecha${R.missing === 1 ? '' : 's'} sin liquidar.` : ''}${R.incomplete ? ` ${R.incomplete} presupuesto${R.incomplete === 1 ? '' : 's'} incompleto${R.incomplete === 1 ? '' : 's'}.` : ''}`;
   const announce = shown ? describeBucket(shown, group) : '';
 
   return (
@@ -200,7 +202,7 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
             <GlossaryButton g={glossary} onOpen={() => setDrawer({ type: 'metric', id: metric.glossary })} serverMetric={!!data.os.metrics[metric.glossary]} />
           </h2>
           <Figure metric={metric} R={R} isCash={isCash} cash={avail.cash} />
-          <Context metric={metric} R={R} change={change} prevR={prevR} unit={unit} />
+          <Context metric={metric} R={R} change={change} prevR={prevR} unit={unit} actual={actual} onResult={() => setMetric('profit')} />
         </div>
         <MetricPicker metric={metric} avail={avail} onPick={setMetric} />
       </div>
@@ -236,8 +238,8 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
                 <div style={{ height: H }} className="flex items-center text-[13px] text-muted-foreground">{width === 0 ? '' : metric.id === 'web' ? 'La web de tickets no registra ventas pagadas en este rango.' : 'No hay fechas con datos en este rango. Prueba con "Todo el historial".'}</div>
               ) : (
                 <div ref={plotRef} tabIndex={0} role="group" aria-roledescription="gráfico" aria-label={`${summaryText} Usa las flechas para recorrer los períodos y Enter para ver sus fechas.`}
-                  onKeyDown={onKey} onPointerMove={(e) => setActive(idxAt(e.clientX))} onPointerLeave={() => setActive(null)}
-                  onClick={(e) => { const i = idxAt(e.clientX); setPinned(pinned === i ? null : i); setActive(i); }}
+                  onKeyDown={onKey} onPointerMove={(e) => { if (e.pointerType !== 'touch') setActive(idxAt(e.clientX)); }} onPointerLeave={() => setActive(null)}
+                  onPointerUp={(e) => { const i = idxAt(e.clientX); setPinned(pinned === i ? null : i); setActive(e.pointerType === 'touch' ? null : i); }}
                   className="chart-plot relative cursor-crosshair touch-pan-y select-none">
                   <svg width={width} height={H} aria-hidden className="block overflow-visible">
                     <defs>
@@ -259,29 +261,53 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
                     {/* Hoy: separa lo ocurrido de lo que viene */}
                     {todayIdx >= 0 && todayIdx < n - 1 && (
                       <g>
-                        <line x1={xc(todayIdx) + bw / 2} x2={xc(todayIdx) + bw / 2} y1={M.top - 6} y2={H - M.bottom} stroke="var(--hairline)" strokeDasharray="1 3" />
-                        <text x={xc(todayIdx) + bw / 2 + 6} y={M.top - 2} className="chart-axis">hoy</text>
+                        <line x1={xc(todayIdx) + bw / 2} x2={xc(todayIdx) + bw / 2} y1={6} y2={H - M.bottom} stroke="var(--hairline)" strokeDasharray="1 3" />
+                        <text x={xc(todayIdx) + bw / 2 + 6} y={12} className="chart-axis">hoy</text>
                       </g>
                     )}
 
                     {/* Datos faltantes: banda rayada gris, sin línea encima */}
-                    {buckets.map((b, i) => b.missing.length > 0 && b.real == null && b.proj == null && (
+                    {buckets.map((b, i) => b.missing.length > 0 && (
                       <g key={'m' + i}>
-                        <rect x={xc(i) - bw / 2 + 1} y={M.top} width={Math.max(bw - 2, 2)} height={H - M.top - M.bottom} fill={`url(#${uid}-miss)`} />
-                        <circle cx={xc(i)} cy={base} r="3.5" fill="var(--panel)" stroke="var(--missing)" strokeDasharray="2 1.5" />
+                        {b.real == null && b.proj == null && <rect x={xc(i) - bw / 2 + 1} y={M.top} width={Math.max(bw - 2, 2)} height={H - M.top - M.bottom} fill={`url(#${uid}-miss)`} />}
+                        <circle cx={xc(i) + (b.proj != null ? Math.min(10, bw / 4) : 0)} cy={base} r="3.5" fill="var(--panel)" stroke="var(--missing)" strokeDasharray="2 1.5" />
                       </g>
                     ))}
+
+                    {/* Fin de la cobertura de una serie continua: desde aquí no hay dato (no es cero) */}
+                    {continuous && (() => { const last = buckets.reduce((k, b, i) => (b.covered ? i : k), -1); return last >= 0 && last < n - 1 ? (
+                      <g>
+                        <line x1={xc(last) + bw / 2} x2={xc(last) + bw / 2} y1={M.top} y2={H - M.bottom} stroke="var(--missing)" strokeDasharray="2 3" />
+                        <text x={xc(last) + bw / 2 + 6} y={M.top + 10} className="chart-axis">datos hasta {dm(buckets[last].end)}</text>
+                      </g>
+                    ) : null; })()}
 
                     {/* Período anterior: línea tenue, sólo como referencia */}
                     {compare && canCompare && <path d={pathFor(tw.prev, false)} fill="none" stroke="var(--chart-axis)" strokeOpacity="0.7" strokeWidth="1" strokeDasharray="2 3" />}
 
                     {/* Proyectado: rayado ámbar y trazo punteado, separado de lo real */}
-                    {tw.proj.some((v) => v != null) && (
-                      <>
-                        <path d={pathFor(tw.proj, true)} fill={`url(#${uid}-proj)`} />
-                        <path d={pathFor(tw.proj, true)} fill="none" stroke="var(--proj)" strokeWidth="1.25" strokeDasharray="4 3" strokeLinejoin="round" />
-                      </>
-                    )}
+                    {/* Proyectado: área escalonada sólo con 2 o más períodos seguidos; si no, el punto con su fecha */}
+                    {tw.proj.some((v) => v != null) && (() => {
+                      const long = runs(tw.proj).filter((r) => r.to > r.from);
+                      const lone = runs(tw.proj).filter((r) => r.to === r.from).map((r) => r.from);
+                      const vals = tw.proj.map((v, i) => (long.some((r) => i >= r.from && i <= r.to) ? v : null));
+                      return (
+                        <>
+                          {long.length > 0 && <path d={pathFor(vals, true)} fill={`url(#${uid}-proj)`} />}
+                          {long.length > 0 && <path d={pathFor(vals, true)} fill="none" stroke="var(--proj)" strokeWidth="1.25" strokeDasharray="4 3" strokeLinejoin="round" />}
+                          {lone.filter((i) => buckets[i]).map((i) => {
+                            const names = buckets[i].items.filter((it) => it.state === 'proj');
+                            return (
+                              <g key={'pj' + i}>
+                                <line x1={xc(i)} x2={xc(i)} y1={base} y2={y(tw.proj[i])} stroke="var(--proj)" strokeWidth="1.25" strokeDasharray="3 3" />
+                                <circle cx={xc(i)} cy={y(tw.proj[i])} r="4.5" fill="var(--panel)" stroke="var(--proj)" strokeWidth="1.5" strokeDasharray="2.5 1.5" />
+                                {!mobile && names.length > 0 && <text x={xc(i) > width * 0.66 ? xc(i) - 10 : xc(i) + 10} textAnchor={xc(i) > width * 0.66 ? 'end' : 'start'} y={y(tw.proj[i]) - 4} className="chart-axis" style={{ fill: 'var(--proj)' }}>{names[0].name}{names.length > 1 ? ` y ${names.length - 1} más` : ''}</text>}
+                              </g>
+                            );
+                          })}
+                        </>
+                      );
+                    })()}
 
                     {/* Real: trazo fino continuo y relleno rayado que se desvanece hacia la base */}
                     {!fewReal && !splitOn && (
@@ -293,12 +319,12 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
                     {splitOn && brandSeries.map((s) => <path key={s.id} d={pathFor(s.values, false)} fill="none" stroke={brandColor(s.id)} strokeWidth="1.5" strokeLinejoin="round" />)}
 
                     {/* Pocos datos reales: el punto real, con su fecha, sin inventar una tendencia */}
-                    {fewReal && buckets.map((b, i) => b.hasReal && (
+                    {fewReal && buckets.map((b, i) => b.hasReal && tw.real[i] !== undefined && (
                       <g key={'p' + i}>
                         <line x1={xc(i)} x2={xc(i)} y1={base} y2={y(tw.real[i] ?? b.real)} stroke="var(--chart-ink)" strokeWidth="1" strokeDasharray="2 2" />
                         <circle cx={xc(i)} cy={y(tw.real[i] ?? b.real)} r="4.5" fill="var(--chart-ink)" />
                         {!mobile && (
-                          <text x={xc(i) + 10} y={y(tw.real[i] ?? b.real) - 4} className="chart-axis" style={{ fill: 'var(--foreground)' }}>
+                          <text x={xc(i) > width * 0.66 ? xc(i) - 10 : xc(i) + 10} textAnchor={xc(i) > width * 0.66 ? 'end' : 'start'} y={y(tw.real[i] ?? b.real) - 4} className="chart-axis" style={{ fill: 'var(--foreground)' }}>
                             {b.items.filter((it) => it.state === 'real').map((it) => it.name).slice(0, 1).join('')}
                             {b.items.filter((it) => it.state === 'real').length > 1 ? ` y ${b.items.filter((it) => it.state === 'real').length - 1} más` : ''}
                           </text>
@@ -347,7 +373,7 @@ export default function PrimaryChart({ from, to, rangeLabel }) {
           {!metric.projOnly && !splitOn && <Legend swatch={<i className="hatch-ink inline-block h-2.5 w-3.5 rounded-[2px] border-t-[1.5px] border-chart-ink" />}>Real</Legend>}
           {splitOn && brandSeries.map((s) => <Legend key={s.id} swatch={<i className="inline-block h-0.5 w-3.5 rounded-full" style={{ background: brandColor(s.id) }} />}>{s.name}</Legend>)}
           {R.hasProj && <Legend swatch={<i className="proj-hatch inline-block h-2.5 w-3.5 rounded-[2px] border border-dashed border-proj" />}>Proyectado</Legend>}
-          {R.missing > 0 && <Legend swatch={<i className="hatch-muted inline-block h-2.5 w-3.5 rounded-[2px]" />}>Sin dato</Legend>}
+          {R.missing + R.incomplete > 0 && <Legend swatch={<i className="hatch-muted inline-block h-2.5 w-3.5 rounded-[2px]" />}>Sin dato</Legend>}
           {compare && canCompare && <Legend swatch={<i className="inline-block w-3.5 border-t border-dashed border-faint" />}>Período anterior</Legend>}
           <span className="ml-auto">{source && <>{source.name}{source.lastSync ? <>, actualizado <time dateTime={source.lastSync}>{stamp(source.lastSync)}</time></> : null}</>}</span>
         </div>
@@ -390,8 +416,12 @@ function Figure({ metric, R, isCash, cash }) {
   );
 }
 
-function Context({ metric, R, change, prevR, unit }) {
+function Context({ metric, R, change, prevR, unit, actual, onResult }) {
   const bits = [];
+  // Ingresos sin su resultado engañan: si hubo cierres, el resultado real va al lado (con su signo y color real).
+  if (metric.id === 'revenue' && actual && actual.count > 0 && actual.result != null) {
+    bits.push(<button key="r" type="button" onClick={onResult} className="rounded underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">Resultado real <span className={cn('num', actual.result < 0 ? 'text-bad' : 'text-good')}>{actual.result < 0 ? '−' : '+'}{money(Math.abs(actual.result))}</span></button>);
+  }
   if (!metric.projOnly && R.hasReal && metric.source === 'events') bits.push(<span key="n">{R.realItems} fecha{R.realItems === 1 ? '' : 's'} con cierre real</span>);
   if (!metric.projOnly && R.hasReal && metric.source !== 'events') bits.push(<span key="n">{R.realPeriods} {R.realPeriods === 1 ? unit[0] : unit[1]} con movimiento</span>);
   if (change != null) {
@@ -405,7 +435,8 @@ function Context({ metric, R, change, prevR, unit }) {
   }
   if (!metric.projOnly && R.hasProj) bits.push(<span key="p" className="text-proj"><i className="proj-hatch mr-1.5 inline-block size-2.5 rounded-[2px] border border-dashed border-proj align-[-1px]" />Proyectado aparte: <span className="num">{money(R.projTotal)}</span> en {R.projCount} fecha{R.projCount === 1 ? '' : 's'}</span>);
   if (metric.projOnly && R.projCount) bits.push(<span key="pc">{R.projCount} fecha{R.projCount === 1 ? '' : 's'} con presupuesto</span>);
-  if (R.missing) bits.push(<span key="m">{R.missing} pendiente{R.missing === 1 ? '' : 's'} de datos</span>);
+  if (R.missing) bits.push(<span key="m">{R.missing} fecha{R.missing === 1 ? '' : 's'} sin liquidar</span>);
+  if (R.incomplete) bits.push(<span key="i">{R.incomplete} presupuesto{R.incomplete === 1 ? '' : 's'} incompleto{R.incomplete === 1 ? '' : 's'}</span>);
   if (R.best) bits.push(<span key="b">Mejor {unit[0]}: <span className="num text-foreground">{money(R.best.real)}</span></span>);
   if (R.avg != null) bits.push(<span key="a">Promedio: <span className="num text-foreground">{money(R.avg)}</span></span>);
   if (!bits.length) return <div className="h-5" />;
@@ -474,7 +505,7 @@ function Segmented({ value, onChange, options, label }) {
         {options.map((o) => (
           <HighlightItem key={o.id} value={o.id} asChild>
             <button type="button" role="radio" aria-checked={value === o.id} disabled={o.disabled} title={o.disabled ? o.hint : undefined} onClick={() => onChange(o.id)}
-              className={cn('relative z-10 flex h-7 items-center rounded-md px-2.5 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40', value === o.id ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground')}>{o.label}</button>
+              className={cn('relative z-10 flex h-9 items-center rounded-md px-3 text-[13px] sm:h-7 sm:px-2.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40', value === o.id ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground')}>{o.label}</button>
           </HighlightItem>
         ))}
       </div>
@@ -487,7 +518,7 @@ function Toggle({ on, disabled, onClick, children, hint }) {
   const btn = (
     <button type="button" aria-pressed={on} aria-disabled={disabled || undefined} onClick={disabled ? undefined : onClick}
       className={cn('press flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
-        on ? 'border-hairline bg-accent text-foreground' : 'border-panel-border text-muted-foreground hover:text-foreground', disabled && 'hidden cursor-not-allowed opacity-50 hover:text-muted-foreground sm:flex')}>
+        on ? 'border-hairline bg-accent text-foreground' : 'border-panel-border text-muted-foreground hover:text-foreground', disabled && 'hidden cursor-not-allowed border-dashed text-faint hover:text-faint sm:flex')}>
       {children}
     </button>
   );
@@ -499,20 +530,21 @@ const Legend = ({ swatch, children }) => <span className="inline-flex items-cent
 
 // ---------- Tooltip flotante ----------
 function ChartTip({ b, idx, x, yv, width, group, metric, brandSeries }) {
-  const W = 248;
-  const left = Math.max(0, Math.min(width - W, x - W / 2));
-  const top = Math.max(0, yv - 16);
+  // Al lado del punto (como Midday), nunca encima de los controles: se queda dentro del área del gráfico.
+  const W = 232;
+  const left = x + 16 + W < width ? x + 16 : Math.max(0, x - 16 - W);
+  const top = Math.max(0, yv - 36);
   return (
     <AnimatePresence>
       {b && (
         <motion.div key="tip" role="presentation" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1, x: left, y: top }} exit={{ opacity: 0, transition: { duration: 0.1 } }}
           transition={{ x: { duration: 0.18, ease: [0.2, 0, 0, 1] }, y: { duration: 0.18, ease: [0.2, 0, 0, 1] }, opacity: { duration: 0.12 } }}
-          style={{ width: W }} className="float-shadow pointer-events-none absolute left-0 top-0 z-20 -translate-y-full rounded-lg bg-tooltip px-3 py-2.5 text-[12px] text-tooltip-foreground">
+          style={{ width: W }} className="float-shadow pointer-events-none absolute left-0 top-0 z-20 rounded-lg bg-tooltip px-3 py-2.5 text-[12px] text-tooltip-foreground">
           <div className="flex items-baseline justify-between gap-3">
             <span className="font-mono text-[14px] font-light tracking-[-0.02em]">{b.real != null ? money(b.real, 2) : b.proj != null ? money(b.proj, 2) : '—'}</span>
             <span className="text-tooltip-muted">{periodLabel(b.key, group)}</span>
           </div>
-          {b.real == null && b.missing.length > 0 && <p className="mt-1 text-tooltip-muted">Sin dato real: {b.missing[0].note.toLowerCase()}.</p>}
+          {b.missing.length > 0 && <p className="mt-1 text-tooltip-muted">{b.future ? 'Presupuesto incompleto' : 'Sin dato real'}: {b.missing[0].note.toLowerCase()}{b.missing.length > 1 ? ` (y ${b.missing.length - 1} más)` : ''}.</p>}
           {b.real === 0 && !b.missing.length && <p className="mt-1 text-tooltip-muted">{metric.source === 'events' ? `Sin fechas cerradas en este ${UNIT[group][0]}.` : `Sin ventas en este ${UNIT[group][0]}.`}</p>}
           {b.real == null && b.future && !b.missing.length && b.proj == null && <p className="mt-1 text-tooltip-muted">Todavía no ocurre.</p>}
           {b.real != null && b.proj != null && <p className="mt-1 flex justify-between gap-3"><span className="text-tooltip-muted">Proyectado aparte</span><span className="num">{money(b.proj)}</span></p>}
@@ -529,7 +561,7 @@ function ChartTip({ b, idx, x, yv, width, group, metric, brandSeries }) {
               {b.items.length > 3 && <li className="text-tooltip-muted">y {b.items.length - 3} más</li>}
             </ul>
           )}
-          {b.items.some((it) => it.id) && <p className="mt-1.5 text-[11px] text-tooltip-muted">Clic o Enter para ver {b.items.length === 1 ? 'la fecha' : `las ${b.items.length} fechas`}</p>}
+          {b.items.some((it) => it.id) && <p className="mt-1.5 text-[11px] text-tooltip-muted">Selecciona el período para ver {b.items.length === 1 ? 'la fecha' : `sus ${b.items.length} fechas`}</p>}
         </motion.div>
       )}
     </AnimatePresence>
@@ -546,7 +578,7 @@ function PeriodDetail({ b, group, onClose, onOpen }) {
         <button type="button" onClick={onClose} aria-label="Cerrar detalle del período" className="press ml-auto flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"><XIcon className="size-3.5" /></button>
       </div>
       {b.items.length > 0 && (
-        <ul className="mt-1.5 grid gap-1 sm:grid-cols-2">
+        <ul className="mt-1.5 grid gap-0.5">
           {b.items.map((it, i) => (
             <li key={i}>
               <button type="button" disabled={!it.id} onClick={() => it.id && onOpen(it.id)}
@@ -567,7 +599,7 @@ function PeriodDetail({ b, group, onClose, onOpen }) {
 function DataTable({ buckets, group, metric }) {
   const rows = buckets.filter((b) => b.hasReal || b.proj != null || b.missing.length);
   return (
-    <div className="mt-3 overflow-x-auto">
+    <div className="mt-3 overflow-x-auto" tabIndex={0} role="region" aria-label={`Datos de ${metric.long}`}>
       <table className="w-full min-w-[480px] text-[13px]">
         <caption className="sr-only">{metric.long} por {UNIT[group][0]}</caption>
         <thead><tr className="text-left text-[12px] text-muted-foreground [&>th]:h-8 [&>th]:border-b [&>th]:border-divider [&>th]:font-normal"><th>Período</th><th className="text-right">Real</th><th className="text-right">Proyectado</th><th className="pl-4">Fechas</th></tr></thead>

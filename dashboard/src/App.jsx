@@ -32,6 +32,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <Shell />,
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <Overview />, handle: { crumb: 'Resumen ejecutivo' } },
       { path: 'atencion', element: <Attention />, handle: { crumb: 'Atención' } },
@@ -72,6 +73,22 @@ const router = createBrowserRouter([
     ],
   },
 ], { basename: '/administracion' });
+
+// Error inesperado al mostrar una sección: se explica y se ofrece cómo seguir (los datos no se tocan).
+function RouteError() {
+  return (
+    <div role="alert" className="flex min-h-full items-start justify-center bg-shell p-6 pt-[16vh] text-foreground">
+      <div className="surface w-full max-w-md px-5 py-4">
+        <h1 className="text-[14px] font-medium">Esta sección no se pudo mostrar</h1>
+        <p className="mt-1 text-[13px] text-muted-foreground">Fue un error de la pantalla, no de tus datos: no se guardó ni se borró nada. Recarga la página; si vuelve a pasar, vuelve al resumen.</p>
+        <div className="mt-3 flex gap-2">
+          <Button size="sm" onClick={() => window.location.reload()}>Recargar</Button>
+          <Button size="sm" variant="outline" onClick={() => { window.location.href = '/administracion/'; }}>Ir al resumen</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Gate() {
   const { data, pass, login, loading } = useOS();

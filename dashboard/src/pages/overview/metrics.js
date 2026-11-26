@@ -35,13 +35,13 @@ export function periodLabel(d, g) {
 // `curve`: step para datos discretos por fecha, smooth (monótona) para series continuas.
 export const METRICS = [
   { id: 'revenue', label: 'Ingresos', long: 'Ingresos reales', kind: 'event', curve: 'step', glossary: 'revenue', source: 'events' },
-  { id: 'profit', label: 'Utilidad neta', long: 'Resultado real', kind: 'event', curve: 'step', glossary: 'result', source: 'events', signed: true },
+  { id: 'profit', label: 'Utilidad neta', long: 'Utilidad neta real', kind: 'event', curve: 'step', glossary: 'result', source: 'events', signed: true },
   { id: 'expenses', label: 'Gastos', long: 'Costos reales', kind: 'event', curve: 'step', glossary: 'costs', source: 'events' },
   { id: 'cash', label: 'Caja disponible', long: 'Caja disponible', kind: 'balance', glossary: 'cash', source: 'ledger' },
   { id: 'cashflow', label: 'Flujo de caja', long: 'Flujo de caja neto', kind: 'flow', curve: 'step', glossary: 'cashflow', source: 'ledger', signed: true, groups: ['week', 'month'] },
   { id: 'web', label: 'Venta web', long: 'Venta web cobrada', kind: 'daily', curve: 'smooth', glossary: 'web', source: 'tickets' },
   { id: 'projRevenue', label: 'Ingresos proyectados', long: 'Ingresos proyectados', kind: 'event', curve: 'step', glossary: 'projRevenue', source: 'events', projOnly: true },
-  { id: 'projProfit', label: 'Rentabilidad proyectada', long: 'Utilidad proyectada', kind: 'event', curve: 'step', glossary: 'projProfit', source: 'events', projOnly: true, signed: true },
+  { id: 'projProfit', label: 'Rentabilidad proyectada', long: 'Rentabilidad proyectada', kind: 'event', curve: 'step', glossary: 'projProfit', source: 'events', projOnly: true, signed: true },
 ];
 export const metricById = (id) => METRICS.find((m) => m.id === id) || METRICS[0];
 
@@ -165,13 +165,14 @@ export function readout(buckets) {
   const projTotal = buckets.reduce((s, b) => s + (b.proj || 0), 0);
   const projCount = buckets.reduce((s, b) => s + b.items.filter((i) => i.state === 'proj').length, 0);
   const realItems = buckets.reduce((s, b) => s + b.items.filter((i) => i.state === 'real' && i.value).length, 0);
-  const missing = buckets.reduce((s, b) => s + b.missing.length, 0);
+  const missing = buckets.reduce((s, b) => s + (b.future ? 0 : b.missing.length), 0);
+  const incomplete = buckets.reduce((s, b) => s + (b.future ? b.missing.length : 0), 0);
   // Mejor, peor y promedio sólo con 3 o más períodos con valor: con menos no dicen nada.
   const meaningful = withValue.length >= 3;
   const best = meaningful ? withValue.reduce((m, b) => (b.real > m.real ? b : m)) : null;
   const low = meaningful ? withValue.reduce((m, b) => (b.real < m.real ? b : m)) : null;
   const avg = meaningful ? withValue.reduce((s, b) => s + b.real, 0) / withValue.length : null;
-  return { total, hasReal: withValue.length > 0, realPeriods: withValue.length, realItems, projTotal, projCount, hasProj: buckets.some((b) => b.proj != null), missing, best, low, avg };
+  return { total, hasReal: withValue.length > 0, realPeriods: withValue.length, realItems, projTotal, projCount, hasProj: buckets.some((b) => b.proj != null), missing, incomplete, best, low, avg };
 }
 
 // Período anterior del mismo largo, sólo si el rango tiene inicio.

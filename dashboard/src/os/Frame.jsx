@@ -39,7 +39,7 @@ function NavItem({ item, collapsed, onNavigate }) {
   const active = isActive(item, pathname);
   const link = (
     <NavLink to={item.to} end={item.end} onClick={onNavigate} aria-current={active ? 'page' : undefined} data-current={active || undefined}
-      className={cn('press relative z-10 flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50',
+      className={cn('press relative z-10 flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
         '[&>svg]:size-4 [&>svg]:shrink-0',
         active ? 'font-medium text-foreground [&>svg]:text-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent/70 hover:text-foreground [&>svg]:text-muted-foreground',
         'collapsed:mx-auto collapsed:size-8 collapsed:justify-center collapsed:px-0')}>
@@ -92,7 +92,7 @@ function SidebarBody({ groups, collapsed, onToggle, onNavigate, note, account })
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-12 shrink-0 items-center gap-2 pl-3.5 pr-2 collapsed:justify-center collapsed:px-0">
-        <Link to="/" onClick={onNavigate} className="flex min-w-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/50 collapsed:hidden">
+        <Link to="/" onClick={onNavigate} className="flex min-w-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring collapsed:hidden">
           <GroupLogo />
           <span className="min-w-0 leading-none">
             <span className="block truncate text-[13px] font-semibold tracking-tight">Paradisio OS</span>
@@ -137,12 +137,12 @@ export function BrandSwitch({ value, onChange, brands, counts, className }) {
   const id = useId();
   return (
     <LayoutGroup id={id}>
-      <div role="tablist" aria-label="Marca" className={cn('relative flex h-8 items-center gap-0.5 rounded-lg bg-muted p-0.5', className)}>
+      <div role="tablist" aria-label="Marca" className={cn('relative flex h-10 items-center md:h-8 gap-0.5 rounded-lg bg-muted p-0.5', className)}>
         {opts.map((o) => {
           const on = value === o.id;
           return (
             <button key={o.id} type="button" role="tab" aria-selected={on} title={o.full} onClick={() => onChange(o.id)}
-              className={cn('press relative flex h-7 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50',
+              className={cn('press relative flex h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-[13px] md:h-7 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
                 on ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground')}>
               {on && <motion.span layoutId="brand-pill" transition={spring.indicator} className="absolute inset-0 rounded-md bg-panel shadow-[0_0_0_1px_var(--panel-border)]" />}
               <span className="relative flex items-center gap-1.5">
@@ -174,7 +174,7 @@ export function Notifications({ items, onOpen, onAction, onSeeAll }) {
               <AnimatePresence>
                 {items.length > 0 && (
                   <motion.span key={items.length} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.4, opacity: 0 }} transition={spring.indicator}
-                    className={cn('num absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] font-semibold text-white ring-2 ring-shell', high ? 'bg-bad' : 'bg-foreground/60')}>{items.length}</motion.span>
+                    className={cn('num absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] font-semibold text-background ring-2 ring-shell', high ? 'bg-bad' : 'bg-foreground/60')}>{items.length}</motion.span>
                 )}
               </AnimatePresence>
             </button>
@@ -197,7 +197,7 @@ export function Notifications({ items, onOpen, onAction, onSeeAll }) {
             {list.map((a, i) => (
               <motion.li key={a.title + (a.event || '') + i} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={t.standard} className="group border-b border-divider last:border-0">
                 <div className="flex gap-2.5 px-3 py-2.5">
-                  <span className={cn('mt-[5px] size-1.5 shrink-0 rounded-full', a.level === 'high' ? 'bg-bad' : a.level === 'med' ? 'bg-warn' : 'bg-faint')} />
+                  <span className={cn('mt-[5px] size-1.5 shrink-0 rounded-full', a.level === 'high' ? 'bg-bad' : a.level === 'med' ? 'border border-foreground' : 'bg-faint')} />
                   <div className="min-w-0 flex-1">
                     <button type="button" onClick={() => onOpen(a)} className="block text-left text-[13px] font-medium hover:underline">{a.title}</button>
                     <p className="text-[12px] leading-snug text-muted-foreground">{a.text}</p>
@@ -303,7 +303,7 @@ export function SyncSources({ generatedAt, integrations, loading, onRefresh, onO
 // ---------- Cuenta ----------
 export function AccountMenu({ collapsed, staff, theme, onTheme, withTaxes, onTaxes, onExport, onRefresh, onEdit, onLogout }) {
   const trigger = (
-    <button type="button" className="press flex h-9 w-full items-center gap-2.5 rounded-md px-1.5 text-left outline-none hover:bg-sidebar-accent/70 focus-visible:ring-2 focus-visible:ring-ring/50 data-[state=open]:bg-sidebar-accent collapsed:mx-auto collapsed:w-9 collapsed:justify-center collapsed:px-0">
+    <button type="button" className="press flex h-9 w-full items-center gap-2.5 rounded-md px-1.5 text-left outline-none hover:bg-sidebar-accent/70 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-sidebar-accent collapsed:mx-auto collapsed:w-9 collapsed:justify-center collapsed:px-0">
       <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">PE</span>
       <span className="min-w-0 flex-1 leading-none collapsed:hidden">
         <span className="block truncate text-[13px] font-medium">Dirección</span>

@@ -39,9 +39,9 @@ export function Sparkline({ values, kind = 'line', tone, className, label }) {
 function Versus({ income, cost }) {
   const max = Math.max(income, cost, 1);
   return (
-    <span className="flex w-[88px] shrink-0 flex-col gap-1 pb-1" role="img" aria-label={`Ingresos ${money(income)} contra costos ${money(cost)}`}>
-      <span className="block h-1.5 rounded-full bg-chart-ink" style={{ width: `${(income / max) * 100}%` }} />
-      <span className="hatch-ink block h-1.5 rounded-full border border-chart-ink/60" style={{ width: `${(cost / max) * 100}%` }} />
+    <span className="grid w-[120px] shrink-0 grid-cols-[38px_1fr] items-center gap-x-1.5 gap-y-1 pb-0.5 text-[11px] text-muted-foreground" role="img" aria-label={`Ingresos ${money(income)} contra costos ${money(cost)}`}>
+      <span aria-hidden>ingresos</span><span className="block h-1.5 rounded-full bg-chart-ink" style={{ width: `${(income / max) * 100}%` }} />
+      <span aria-hidden>costos</span><span className="hatch-ink block h-1.5 rounded-full border border-chart-ink/60" style={{ width: `${(cost / max) * 100}%` }} />
     </span>
   );
 }
@@ -99,11 +99,11 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
         spark={null}>
         {LS && LS.hasData ? <Fig value={LS.receivables.total} /> : <NA />}
       </Cell>
-      <Cell proj label="Rentabilidad proyectada" onClick={onMetric('projProfit')}
+      <Cell proj label="Utilidad proyectada" onClick={onMetric('projProfit')}
         sub={P.count ? `${P.completeCount} de ${P.count} presupuesto${P.count === 1 ? '' : 's'} con costos` : 'Sin fechas por venir'}
         spark={P.count ? <Readiness done={P.completeCount} total={P.count} /> : null}
         className="bg-proj-soft/40">
-        {P.profit == null ? <NA>Incompleta</NA> : <span className="text-proj">{P.profit < 0 ? '−' : '+'}<Fig value={Math.abs(P.profit)} /></span>}
+        {P.profit == null ? <NA>Incompleta</NA> : <span className="text-proj">{P.profit < 0 ? '−' : '+'}<Fig value={Math.abs(P.profit)} />{P.completeCount < P.count && <span className="ml-2 text-[13px] tracking-normal text-foreground">parcial</span>}</span>}
       </Cell>
     </section>
   );

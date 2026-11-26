@@ -90,7 +90,7 @@ export function BreakdownWidget({ S }) {
       <Row title="Ingresos" value={A.revenue} items={incItems} list={incItems} base={A.revenue} />
       <Row title="Costos" value={A.costs} items={costItems} list={costItems} base={A.costs} />
       <div className="mt-auto grid grid-cols-3 gap-3 border-t border-divider pt-3 text-[12px]">
-        <div><p className="text-muted-foreground">Stock final</p><p className="num mt-0.5 text-[13px]">{A.stock ? `+ ${money(A.stock)}` : '—'}</p></div>
+        <div><p className="text-muted-foreground">Stock final</p><p className="num mt-0.5 text-[13px]">{A.stock ? `+${money(A.stock)}` : '—'}</p></div>
         <div><p className="text-muted-foreground">Resultado</p><p className={cn('num mt-0.5 text-[13px] font-medium', A.result < 0 ? 'text-bad' : 'text-good')}>{money(A.result)}</p></div>
         <div className="min-h-9">
           <AnimatePresence mode="wait" initial={false}>
@@ -121,10 +121,10 @@ export function EventsWidget({ S }) {
   if (!rows.length) return <EmptyState text="Sin fechas cerradas en este período." />;
   return (
     <div className="overflow-x-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" tabIndex={0} role="region" aria-label="Rendimiento por fecha, desplazable">
-      <table className="w-full min-w-[560px] text-[13px]">
+      <table className="w-full min-w-[340px] text-[13px] sm:min-w-[560px]">
         <thead>
           <tr className="text-left text-[12px] text-muted-foreground [&>th]:h-8 [&>th]:border-b [&>th]:border-divider [&>th]:font-normal">
-            <th className="pl-4">Fecha</th><th className="text-right">Ingresos</th><th className="text-right">Costos</th><th className="text-right">Resultado</th><th className="text-right">Margen</th><th className="w-10 pr-2" />
+            <th className="pl-4">Fecha</th><th className="text-right">Ingresos</th><th className="hidden text-right sm:table-cell">Costos</th><th className="text-right">Resultado</th><th className="hidden text-right sm:table-cell">Margen</th><th className="w-10 pr-2" />
           </tr>
         </thead>
         <tbody>
@@ -137,14 +137,14 @@ export function EventsWidget({ S }) {
                 <tr onClick={() => setOpen(on ? null : f.id)} aria-expanded={on} className={cn('cursor-pointer border-b border-divider transition-colors hover:bg-muted/50', on && 'bg-muted/40')}>
                   <td className="py-2.5 pl-4">
                     <span className="flex items-center gap-2.5">
-                      <i className="h-6 w-[3px] shrink-0 rounded-full" style={{ background: brandColor(f.brand) }} />
+                      <i className="size-2 shrink-0 rounded-full" style={{ background: brandColor(f.brand) }} aria-hidden />
                       <span className="min-w-0"><span className="block truncate font-medium">{f.name}</span><span className="block text-[12px] text-muted-foreground">{fmtDay(f.date)}, {f.venue || 'sin local'}</span></span>
                     </span>
                   </td>
                   <td className="num text-right">{money(f.revenue)}</td>
-                  <td className="num text-right text-muted-foreground">{money(f.costs)}</td>
+                  <td className="num hidden text-right text-muted-foreground sm:table-cell">{money(f.costs)}</td>
                   <td className={cn('num text-right font-medium', f.result < 0 ? 'text-bad' : 'text-good')}>{money(f.result)}</td>
-                  <td className="num text-right text-muted-foreground">{pct(f.margin)}</td>
+                  <td className="num hidden text-right text-muted-foreground sm:table-cell">{pct(f.margin).replace('-', '−')}</td>
                   <td className="pr-2 text-right"><ChevronRightIcon className={cn('ml-auto size-4 text-muted-foreground transition-transform duration-[var(--dur-standard)]', on && 'rotate-90')} /></td>
                 </tr>
                 <tr>
@@ -194,7 +194,7 @@ export function MiniLines({ title, lines }) {
 }
 
 const TextBtn = ({ children, muted, ...p }) => <button type="button" className={cn('inline-flex h-9 items-center sm:h-7 gap-1 rounded-md text-[13px] font-medium underline-offset-4 outline-none transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring', muted ? 'text-muted-foreground hover:text-foreground' : 'text-foreground')} {...p}>{children}</button>;
-const Btn = ({ children, className, ...p }) => <button type="button" className={cn('press inline-flex h-7 items-center gap-1 rounded-md border bg-background px-2 text-[12px] transition-colors hover:bg-muted', className)} {...p}>{children}</button>;
+const Btn = ({ children, className, ...p }) => <button type="button" className={cn('press inline-flex h-9 items-center sm:h-7 gap-1 rounded-md border bg-background px-2 text-[12px] transition-colors hover:bg-muted', className)} {...p}>{children}</button>;
 
 // ---------- Agenda de producción (próximas fechas) ----------
 // Una cinta de las próximas 6 semanas con cada fecha en su día, y debajo la corrida de producción:
@@ -374,8 +374,8 @@ export function AttentionWidget({ items, compact = false }) {
                         </p>
                       )}
                       {!a.event && !many && <p className="mt-0.5 text-[13px] text-muted-foreground">Todo el grupo</p>}
-                      <p className="mt-1 text-[13px] leading-snug text-foreground/85">{guide.why || a.text}</p>
-                      {guide.why && !many && !compact && <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{a.text}</p>}
+                      <p className="mt-1 text-[13px] leading-snug text-foreground/85" title={guide.why ? a.text : undefined}>{guide.why || a.text}</p>
+                      
                       {many && (
                         <button type="button" onClick={() => setOpen(isOpen ? null : g.title)} aria-expanded={isOpen} className="mt-1 inline-flex items-center gap-1 text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
                           <ChevronRightIcon className={cn('size-3.5 transition-transform duration-[var(--dur-standard)]', isOpen && 'rotate-90')} />{isOpen ? 'Ocultar' : `Ver las ${g.items.length}`}
@@ -396,7 +396,7 @@ export function AttentionWidget({ items, compact = false }) {
                         </ul>
                       )}
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                        {!many && <button type="button" onClick={() => act(a)} className="press inline-flex h-9 items-center sm:h-7 gap-1 rounded-md bg-primary px-2.5 text-[13px] font-medium text-primary-foreground outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">{guide.action || 'Revisar'}</button>}
+                        {!many && <button type="button" onClick={() => act(a)} className="press inline-flex h-9 items-center gap-1 rounded-md bg-primary px-2.5 text-[13px] font-medium text-primary-foreground outline-none hover:opacity-90 sm:h-7 dark:border dark:border-hairline dark:bg-accent dark:text-foreground dark:hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">{guide.action || 'Revisar'}</button>}
                         {!many && a.event && guide.to && <TextBtn muted onClick={() => setDrawer({ type: 'event', id: a.event })}>Ver la fecha</TextBtn>}
                         {!compact && !g.items.every((x) => snoozed[keyOf(x)]) && <TextBtn muted onClick={() => snooze(g.items)}><ClockIcon className="size-3" />Posponer 24 h</TextBtn>}
                       </div>
@@ -476,7 +476,7 @@ export function PortfolioWidget({ S }) {
         return (
           <li key={b.brand}>
             <button type="button" onClick={() => navigate(`/marcas/${b.brand}`)} className="group flex w-full items-center gap-3 border-t border-divider px-4 py-2.5 text-left transition-colors first:border-0 hover:bg-muted/50">
-              <i className="h-7 w-[3px] shrink-0 rounded-full" style={{ background: brandColor(b.brand) }} />
+              <i className="size-2 shrink-0 rounded-full" style={{ background: brandColor(b.brand) }} aria-hidden />
               <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-medium">{br?.name}</span><span className="block text-[12px] text-muted-foreground">{b.count} cerrada{b.count === 1 ? '' : 's'}, {up} por venir</span></span>
               <span className="text-right">
                 {b.count ? <><span className={cn('num block text-[13px] font-medium', b.result < 0 ? 'text-bad' : 'text-good')}>{money(b.result)}</span><span className="num block text-[12px] text-muted-foreground">{money(b.revenue)} de ingresos</span></> : <NA className="text-[12px]">sin fechas cerradas</NA>}
@@ -553,7 +553,7 @@ export function ActivityWidget() {
                   <span className="block truncate text-[12px] text-muted-foreground">{names.slice(0, 4).join(', ')}{names.length > 4 ? ` y ${names.length - 4} más` : ''}</span></>
               ) : (
                 <><span className="text-muted-foreground">{actionLabel(a.action).toLowerCase()} </span>
-                  {a.event && a.action?.startsWith('event') ? <button type="button" className="font-medium underline-offset-4 hover:underline" onClick={() => setDrawer({ type: 'event', id: a.event })}>{a.name || a.event}</button> : <span className="font-medium">{a.name || (a.events ? `${a.events} eventos` : '')}</span>}</>
+                  {a.event && a.action?.startsWith('event') ? <button type="button" className="text-left font-medium underline-offset-4 hover:underline" onClick={() => setDrawer({ type: 'event', id: a.event })}>{a.name || a.event}</button> : <span className="font-medium">{a.name || (a.events ? `${a.events} eventos` : '')}</span>}</>
               )}
             </span>
             <time dateTime={a.at} className="num shrink-0 pt-px text-[12px] text-muted-foreground">{fmtStamp(a.at)}</time>

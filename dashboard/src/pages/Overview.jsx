@@ -59,7 +59,8 @@ export const REGISTRY = {
   sponsors: { title: 'Sponsors', kind: 'proj', render: () => <SponsorsWidget />, action: <LinkAction to="/sponsors" label="Ver sponsors" /> },
 };
 export const PRESETS = {
-  executive: { label: 'Dirección', hint: 'Lo urgente, lo que viene y el resultado', items: [['attention', 'm'], ['upcoming', 'm'], ['breakdown', 'l'], ['portfolio', 's'], ['events', 'l'], ['cash', 's'], ['variance', 'm'], ['activity', 'm']] },
+  // Filas emparejadas por altura de contenido; caja y real vs. presupuesto se añaden cuando haya datos (la franja de indicadores ya pide las cuentas).
+  executive: { label: 'Dirección', hint: 'Lo urgente, lo que viene y el resultado', items: [['attention', 'm'], ['upcoming', 'm'], ['breakdown', 'l'], ['activity', 's'], ['portfolio', 'm'], ['events', 'm']] },
   finance: { label: 'Finanzas', hint: 'Caja, costos y desviaciones', items: [['cash', 'm'], ['breakdown', 'm'], ['events', 'f'], ['staff', 's'], ['variance', 's'], ['inventory', 's'], ['attention', 'm'], ['activity', 'm']] },
   production: { label: 'Producción de eventos', hint: 'Fechas, tareas, staff y barra', items: [['upcoming', 'l'], ['tasks', 's'], ['attention', 'm'], ['staff', 's'], ['inventory', 's'], ['activity', 'f']] },
   commercial: { label: 'Comercial', hint: 'Audiencia, sponsors y marcas', items: [['audience', 's'], ['sponsors', 's'], ['portfolio', 's'], ['upcoming', 'l'], ['attention', 's'], ['events', 'f']] },
@@ -121,6 +122,7 @@ export default function Overview() {
     flash(`Quitaste “${REGISTRY[item.id].title}”`, { action: { label: 'Deshacer', run: () => setItems((items) => (items.some((x) => x.id === item.id) ? items : [...items.slice(0, index), item, ...items.slice(index)])) } });
   };
   const urgent = attention.filter((a) => a.level !== 'low');
+  const todayEvent = data.finance.events.find((e) => e.date === limaISO() && e.stage !== 'cancelled' && (!brand || e.brand === brand));
 
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-4 md:gap-5">
@@ -162,6 +164,14 @@ export default function Overview() {
           </Tooltip>
         </div>
       </div>
+
+      {todayEvent && (
+        <button type="button" onClick={() => navigate('/en-vivo')} className="surface flex items-center gap-3 px-4 py-3 text-left outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
+          <span className="size-2 animate-pulse rounded-full bg-bad motion-reduce:animate-none" aria-hidden />
+          <span className="min-w-0 flex-1 text-[13px]"><span className="font-medium">Hoy es {todayEvent.name}.</span> <span className="text-muted-foreground">Ingresos y asistencia en tiempo real.</span></span>
+          <span className="text-[13px] font-medium">Abrir En vivo</span>
+        </button>
+      )}
 
       <div className={cn('flex flex-col gap-4 transition-opacity duration-[var(--dur-standard)] md:gap-5', loading && 'opacity-60')}>
         <PrimaryChart from={from} to={to} rangeLabel={rangeLabel} actual={S.actual} />

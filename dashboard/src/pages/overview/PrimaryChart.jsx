@@ -136,7 +136,8 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
   }, [buckets, compare, canCompare, prevBuckets, brandSeries]);
   const sig = `${group}|${n}|${buckets[0] && buckets[0].key}`;
   const tw = useTween(target, sig, reduce);
-  const ticks = niceDomain([tw.lo, tw.hi]).ticks.filter((t) => t >= tw.lo - 1e-6 && t <= tw.hi + 1e-6);
+  const emptyDomain = niceDomain([...target.real, ...target.proj]).empty;
+  const ticks = emptyDomain ? [0] : niceDomain([tw.lo, tw.hi]).ticks.filter((t) => t >= tw.lo - 1e-6 && t <= tw.hi + 1e-6);
   const y = (v) => M.top + (H - M.top - M.bottom) * (1 - (v - tw.lo) / (tw.hi - tw.lo || 1));
   const base = y(Math.max(tw.lo, Math.min(0, tw.hi)));
 
@@ -168,7 +169,8 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
   };
   const onKey = (e) => {
     if (!n) return;
-    const cur = active == null ? (todayIdx >= 0 ? todayIdx : n - 1) : active;
+    const lastReal = buckets.reduce((k, b, i) => (b.hasReal ? i : k), -1);
+    const cur = active == null ? (lastReal >= 0 ? lastReal : todayIdx >= 0 ? todayIdx : n - 1) : active;
     const go = { ArrowRight: cur + 1, ArrowLeft: cur - 1, Home: 0, End: n - 1, PageUp: cur - 4, PageDown: cur + 4 }[e.key];
     if (go != null) { e.preventDefault(); setActive(Math.max(0, Math.min(n - 1, go))); return; }
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActive(cur); setPinned(pinned === cur ? null : cur); return; }
@@ -183,6 +185,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
     ? (data.os.integrations || []).find((i) => i.id === 'tickets')
     : metric.source === 'ledger' ? { name: 'Libro de transacciones', lastSync: data.ledger && data.ledger.updatedAt } : { name: 'Liquidaciones y presupuestos', lastSync: data.generatedAt };
   const unit = UNIT[group];
+  const nextDate = events.filter((f) => f.kind === 'budget' && f.date >= today && (!brand || f.brand === brand)).sort((a, b) => a.date.localeCompare(b.date))[0];
   const isCash = metric.id === 'cash';
 
   // Texto para lectores de pantalla y para el resumen visible.
@@ -202,7 +205,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
             <GlossaryButton g={glossary} onOpen={() => setDrawer({ type: 'metric', id: metric.glossary })} serverMetric={!!data.os.metrics[metric.glossary]} />
           </h2>
           <Figure metric={metric} R={R} isCash={isCash} cash={avail.cash} />
-          <Context metric={metric} R={R} change={change} prevR={prevR} unit={unit} actual={actual} onResult={() => setMetric('profit')} />
+          <Context metric={metric} R={R} change={change} prevR={prevR} unit={unit} actual={actual} onResult={() => setDrawer({ type: 'metric', id: 'result' })} />
         </div>
         <MetricPicker metric={metric} avail={avail} onPick={setMetric} />
       </div>
@@ -301,7 +304,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                               <g key={'pj' + i}>
                                 <line x1={xc(i)} x2={xc(i)} y1={base} y2={y(tw.proj[i])} stroke="var(--proj)" strokeWidth="1.25" strokeDasharray="3 3" />
                                 <circle cx={xc(i)} cy={y(tw.proj[i])} r="4.5" fill="var(--panel)" stroke="var(--proj)" strokeWidth="1.5" strokeDasharray="2.5 1.5" />
-                                {!mobile && names.length > 0 && <text x={xc(i) > width * 0.66 ? xc(i) - 10 : xc(i) + 10} textAnchor={xc(i) > width * 0.66 ? 'end' : 'start'} y={y(tw.proj[i]) - 4} className="chart-axis" style={{ fill: 'var(--proj)' }}>{names[0].name}{names.length > 1 ? ` y ${names.length - 1} más` : ''}</text>}
+                                {!mobile && active !== i && names.length > 0 && <text x={xc(i) > width * 0.66 ? xc(i) - 10 : xc(i) + 10} textAnchor={xc(i) > width * 0.66 ? 'end' : 'start'} y={y(tw.proj[i]) - 4} className="chart-axis" style={{ fill: 'var(--proj)' }}>{names[0].name}{names.length > 1 ? ` y ${names.length - 1} más` : ''}</text>}
                               </g>
                             );
                           })}
@@ -323,7 +326,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                       <g key={'p' + i}>
                         <line x1={xc(i)} x2={xc(i)} y1={base} y2={y(tw.real[i] ?? b.real)} stroke="var(--chart-ink)" strokeWidth="1" strokeDasharray="2 2" />
                         <circle cx={xc(i)} cy={y(tw.real[i] ?? b.real)} r="4.5" fill="var(--chart-ink)" />
-                        {!mobile && (
+                        {!mobile && active !== i && (
                           <text x={xc(i) > width * 0.66 ? xc(i) - 10 : xc(i) + 10} textAnchor={xc(i) > width * 0.66 ? 'end' : 'start'} y={y(tw.real[i] ?? b.real) - 4} className="chart-axis" style={{ fill: 'var(--foreground)' }}>
                             {b.items.filter((it) => it.state === 'real').map((it) => it.name).slice(0, 1).join('')}
                             {b.items.filter((it) => it.state === 'real').length > 1 ? ` y ${b.items.filter((it) => it.state === 'real').length - 1} más` : ''}
@@ -347,7 +350,12 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                       <text key={'x' + i} x={xc(i)} y={H - 6} textAnchor="middle" className="chart-axis">{tickLabel(b.key, group, multiYear)}</text>
                     ))}
                   </svg>
-                  <ChartTip b={shown} idx={active} x={shown ? xc(active) : 0} yv={shown ? y(Math.max(tw.real[active] ?? 0, tw.proj[active] ?? 0)) : 0} width={width} group={group} metric={metric} brandSeries={brandSeries} />
+                  {emptyDomain && (
+                    <p className="pointer-events-none absolute inset-x-0 top-1/3 text-center text-[13px] text-muted-foreground">
+                      {nextDate ? `Sin valores todavía. Próxima fecha: ${nextDate.name}, ${dm(nextDate.date)}.` : 'Sin valores en este rango.'}
+                    </p>
+                  )}
+                  <ChartTip H={H} b={shown} idx={active} x={shown ? xc(active) : 0} yv={shown ? y(Math.max(tw.real[active] ?? 0, tw.proj[active] ?? 0)) : 0} width={width} group={group} metric={metric} brandSeries={brandSeries} />
                 </div>
               )}
             </motion.div>
@@ -370,7 +378,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
       {/* Leyenda y fuente */}
       {!isCash && (
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t border-divider pt-3 text-[12px] text-muted-foreground">
-          {!metric.projOnly && !splitOn && <Legend swatch={<i className="hatch-ink inline-block h-2.5 w-3.5 rounded-[2px] border-t-[1.5px] border-chart-ink" />}>Real</Legend>}
+          {!metric.projOnly && !splitOn && R.hasReal && <Legend swatch={<i className="hatch-ink inline-block h-2.5 w-3.5 rounded-[2px] border-t-[1.5px] border-chart-ink" />}>Real</Legend>}
           {splitOn && brandSeries.map((s) => <Legend key={s.id} swatch={<i className="inline-block h-0.5 w-3.5 rounded-full" style={{ background: brandColor(s.id) }} />}>{s.name}</Legend>)}
           {R.hasProj && <Legend swatch={<i className="proj-hatch inline-block h-2.5 w-3.5 rounded-[2px] border border-dashed border-proj" />}>Proyectado</Legend>}
           {R.missing + R.incomplete > 0 && <Legend swatch={<i className="hatch-muted inline-block h-2.5 w-3.5 rounded-[2px]" />}>Sin dato</Legend>}
@@ -420,9 +428,9 @@ function Context({ metric, R, change, prevR, unit, actual, onResult }) {
   const bits = [];
   // Ingresos sin su resultado engañan: si hubo cierres, el resultado real va al lado (con su signo y color real).
   if (metric.id === 'revenue' && actual && actual.count > 0 && actual.result != null) {
-    bits.push(<button key="r" type="button" onClick={onResult} className="rounded underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">Resultado real <span className={cn('num', actual.result < 0 ? 'text-bad' : 'text-good')}>{actual.result < 0 ? '−' : '+'}{money(Math.abs(actual.result))}</span></button>);
+    bits.push(<button key="r" type="button" onClick={onResult} className="-my-1.5 rounded py-1.5 underline decoration-hairline underline-offset-4 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring">Resultado real <span className={cn('num', actual.result < 0 ? 'text-bad' : 'text-good')}>{actual.result < 0 ? '−' : '+'}{money(Math.abs(actual.result))}</span></button>);
   }
-  if (!metric.projOnly && R.hasReal && metric.source === 'events') bits.push(<span key="n">{R.realItems} fecha{R.realItems === 1 ? '' : 's'} con cierre real</span>);
+  if (!metric.projOnly && R.hasReal && metric.source === 'events') bits.push(<span key="n" className="hidden sm:inline">{R.realItems} fecha{R.realItems === 1 ? '' : 's'} con cierre real</span>);
   if (!metric.projOnly && R.hasReal && metric.source !== 'events') bits.push(<span key="n">{R.realPeriods} {R.realPeriods === 1 ? unit[0] : unit[1]} con movimiento</span>);
   if (change != null) {
     bits.push(
@@ -434,9 +442,9 @@ function Context({ metric, R, change, prevR, unit, actual, onResult }) {
     );
   }
   if (!metric.projOnly && R.hasProj) bits.push(<span key="p" className="text-proj"><i className="proj-hatch mr-1.5 inline-block size-2.5 rounded-[2px] border border-dashed border-proj align-[-1px]" />Proyectado aparte: <span className="num">{money(R.projTotal)}</span> en {R.projCount} fecha{R.projCount === 1 ? '' : 's'}</span>);
-  if (metric.projOnly && R.projCount) bits.push(<span key="pc">{R.projCount} fecha{R.projCount === 1 ? '' : 's'} con presupuesto</span>);
+  if (metric.projOnly && R.projCount) bits.push(<span key="pc" className="text-foreground">{R.incomplete ? `Parcial: ${R.projCount} de ${R.projCount + R.incomplete} fechas con presupuesto completo` : `${R.projCount} fecha${R.projCount === 1 ? '' : 's'} con presupuesto`}</span>);
   if (R.missing) bits.push(<span key="m">{R.missing} fecha{R.missing === 1 ? '' : 's'} sin liquidar</span>);
-  if (R.incomplete) bits.push(<span key="i">{R.incomplete} presupuesto{R.incomplete === 1 ? '' : 's'} incompleto{R.incomplete === 1 ? '' : 's'}</span>);
+  if (R.incomplete) bits.push(<span key="i" className="hidden sm:inline">{R.incomplete} presupuesto{R.incomplete === 1 ? '' : 's'} incompleto{R.incomplete === 1 ? '' : 's'}</span>);
   if (R.best) bits.push(<span key="b">Mejor {unit[0]}: <span className="num text-foreground">{money(R.best.real)}</span></span>);
   if (R.avg != null) bits.push(<span key="a">Promedio: <span className="num text-foreground">{money(R.avg)}</span></span>);
   if (!bits.length) return <div className="h-5" />;
@@ -484,7 +492,7 @@ function GlossaryButton({ g, onOpen, serverMetric }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" aria-label={`Qué es ${g.label}`} className="press inline-flex size-5 translate-y-[3px] items-center justify-center rounded text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><InfoIcon className="size-3.5" /></button>
+        <button type="button" aria-label={`Qué es ${g.label}`} className="press -my-1.5 inline-flex size-8 translate-y-[3px] items-center sm:size-5 sm:my-0 justify-center rounded text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><InfoIcon className="size-3.5" /></button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 text-[13px]">
         <p className="font-medium">{g.label}</p>
@@ -505,7 +513,7 @@ function Segmented({ value, onChange, options, label }) {
         {options.map((o) => (
           <HighlightItem key={o.id} value={o.id} asChild>
             <button type="button" role="radio" aria-checked={value === o.id} disabled={o.disabled} title={o.disabled ? o.hint : undefined} onClick={() => onChange(o.id)}
-              className={cn('relative z-10 flex h-9 items-center rounded-md px-3 text-[13px] sm:h-7 sm:px-2.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40', value === o.id ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground')}>{o.label}</button>
+              className={cn('relative z-10 flex h-9 items-center rounded-md px-3 text-[13px] sm:h-8 sm:px-2.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40', value === o.id ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground')}>{o.label}</button>
           </HighlightItem>
         ))}
       </div>
@@ -529,11 +537,11 @@ function Toggle({ on, disabled, onClick, children, hint }) {
 const Legend = ({ swatch, children }) => <span className="inline-flex items-center gap-1.5">{swatch}{children}</span>;
 
 // ---------- Tooltip flotante ----------
-function ChartTip({ b, idx, x, yv, width, group, metric, brandSeries }) {
+function ChartTip({ b, idx, x, yv, width, group, metric, brandSeries, H }) {
   // Al lado del punto (como Midday), nunca encima de los controles: se queda dentro del área del gráfico.
   const W = 232;
   const left = x + 16 + W < width ? x + 16 : Math.max(0, x - 16 - W);
-  const top = Math.max(0, yv - 36);
+  const top = Math.max(0, Math.min(yv - 36, (H || 272) - 160));
   return (
     <AnimatePresence>
       {b && (
@@ -552,9 +560,9 @@ function ChartTip({ b, idx, x, yv, width, group, metric, brandSeries }) {
           {b.items.length > 0 && (
             <ul className="mt-2 border-t border-white/10 pt-1.5">
               {b.items.slice(0, 3).map((it, i) => (
-                <li key={i} className="flex items-center gap-1.5 truncate text-tooltip-muted">
-                  <i className="size-1.5 shrink-0 rounded-full" style={{ background: it.brand ? brandColor(it.brand) : 'currentColor' }} />
-                  <span className="truncate">{it.name}</span>
+                <li key={i} className="flex items-start gap-1.5 text-tooltip-muted">
+                  <i className="mt-[5px] size-1.5 shrink-0 rounded-full" style={{ background: it.brand ? brandColor(it.brand) : 'currentColor' }} />
+                  <span className="line-clamp-2">{it.name}</span>
                   {it.state !== 'real' && <span className="ml-auto shrink-0 text-[11px]">{it.state === 'proj' ? 'proyectado' : 'sin dato'}</span>}
                 </li>
               ))}

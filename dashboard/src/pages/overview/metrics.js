@@ -36,12 +36,12 @@ export function periodLabel(d, g) {
 export const METRICS = [
   { id: 'revenue', label: 'Ingresos', long: 'Ingresos reales', kind: 'event', curve: 'step', glossary: 'revenue', source: 'events' },
   { id: 'profit', label: 'Utilidad neta', long: 'Utilidad neta real', kind: 'event', curve: 'step', glossary: 'result', source: 'events', signed: true },
-  { id: 'expenses', label: 'Gastos', long: 'Costos reales', kind: 'event', curve: 'step', glossary: 'costs', source: 'events' },
+  { id: 'expenses', label: 'Gastos', long: 'Gastos reales', kind: 'event', curve: 'step', glossary: 'costs', source: 'events' },
   { id: 'cash', label: 'Caja disponible', long: 'Caja disponible', kind: 'balance', glossary: 'cash', source: 'ledger' },
   { id: 'cashflow', label: 'Flujo de caja', long: 'Flujo de caja neto', kind: 'flow', curve: 'step', glossary: 'cashflow', source: 'ledger', signed: true, groups: ['week', 'month'] },
   { id: 'web', label: 'Venta web', long: 'Venta web cobrada', kind: 'daily', curve: 'smooth', glossary: 'web', source: 'tickets' },
   { id: 'projRevenue', label: 'Ingresos proyectados', long: 'Ingresos proyectados', kind: 'event', curve: 'step', glossary: 'projRevenue', source: 'events', projOnly: true },
-  { id: 'projProfit', label: 'Rentabilidad proyectada', long: 'Rentabilidad proyectada', kind: 'event', curve: 'step', glossary: 'projProfit', source: 'events', projOnly: true, signed: true },
+  { id: 'projProfit', label: 'Utilidad proyectada', long: 'Utilidad proyectada', kind: 'event', curve: 'step', glossary: 'projProfit', source: 'events', projOnly: true, signed: true },
 ];
 export const metricById = (id) => METRICS.find((m) => m.id === id) || METRICS[0];
 
@@ -127,7 +127,8 @@ export function buildBuckets(points, { group, from, to, today, continuous }) {
     let s0 = startOf(start, group), count = 0;
     for (let d = s0; d <= end && count < 7; d = nextOf(d, group)) count++;
     const prevOf = (d) => (group === 'day' ? iso(utc(d) - DAY) : group === 'week' ? iso(utc(d) - 7 * DAY) : startOf(iso(utc(d) - DAY), 'month'));
-    while (count < 6) { s0 = prevOf(s0); count++; }
+    const min = group === 'month' ? 3 : 6;
+    while (count < min) { s0 = prevOf(s0); count++; }
     start = s0;
   }
   const covFrom = continuous ? dates[0] : null;
@@ -218,9 +219,9 @@ export function runs(values) {
 export function niceDomain(values) {
   const v = values.filter((x) => x != null && isFinite(x));
   let lo = Math.min(0, ...v), hi = Math.max(0, ...v);
-  if (hi === lo) hi = lo + 1;
+  if (hi === lo) return { lo: 0, hi: 1000, ticks: [], empty: true }; // sin valores: sin escala inventada
   const span = hi - lo, step0 = span / 4, mag = 10 ** Math.floor(Math.log10(step0)), r = step0 / mag;
-  const step = (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * mag;
+  const step = Math.max(1, (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * mag); // pasos en soles enteros
   lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
   const ticks = []; for (let x = lo; x <= hi + step / 2; x += step) ticks.push(Math.round(x * 100) / 100);
   return { lo, hi, ticks };

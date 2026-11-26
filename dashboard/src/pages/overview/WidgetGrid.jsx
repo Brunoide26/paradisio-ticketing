@@ -97,7 +97,7 @@ export default function WidgetGrid({ items, setItems, registry, editing, ctx, on
         if (from >= 0 && to >= 0) setItems(arrayMove(items, from, to));
       }}>
       <SortableContext items={shown.map((i) => i.id)} strategy={noStrategy}>
-        <div className="grid grid-flow-row-dense grid-cols-12 items-start gap-4">
+        <div className="grid grid-flow-row-dense grid-cols-12 gap-4">
           <AnimatePresence initial={false}>
             {shown.map((item) => (
               <Sortable key={item.id} item={item} def={registry[item.id]} editing={editing} render={() => registry[item.id].render(ctx)}

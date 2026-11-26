@@ -75,12 +75,20 @@
   --color-proj: var(--proj);
   --color-proj-line: var(--proj-line);
   --color-proj-soft: var(--proj-soft);
+  --color-panel: var(--panel);
+  --color-panel-border: var(--panel-border);
+  --color-hairline: var(--hairline);
+  --color-missing: var(--missing);
+  --color-chart-ink: var(--chart-ink);
+  --color-tooltip: var(--tooltip);
+  --color-tooltip-foreground: var(--tooltip-foreground);
+  --color-tooltip-muted: var(--tooltip-muted);
 }
 
 :root {
   --radius: 0.5rem;
 
-  /* Movimiento: los mismos tiempos y curvas en todo el OS (los de JS están en os/motion.js). */
+  /* Movimiento: los mismos tiempos y curvas en todo el OS (los de JS están en os/motion.jsx). */
   --dur-micro: 120ms;     /* hover, presión, color */
   --dur-standard: 200ms;  /* menús, pestañas, aparecer */
   --dur-layout: 300ms;    /* paneles, barra lateral, cambios de tamaño */
@@ -89,97 +97,183 @@
   --ease-enter: cubic-bezier(0, 0, 0, 1);
   --ease-exit: cubic-bezier(0.3, 0, 1, 1);
 
-  --shell: #F2F2F0;
+  /*
+   * Tema Claro: blanco monocromático. Contraste medido sobre el panel blanco:
+   * tinta 19.8:1, secundaria 6.7:1, terciaria 4.9:1 (AA para texto). --hairline sólo para líneas, nunca para texto.
+   */
+  --shell: #F5F5F3;
   --background: #FFFFFF;
   --surface: #F8F8F7;
-  --foreground: #0B0B0A;
+  --panel: #FFFFFF;
+  --panel-border: #E8E8E5;
+  --foreground: #0A0A0A;
   --card: #FFFFFF;
-  --card-foreground: #0B0B0A;
+  --card-foreground: #0A0A0A;
   --popover: #FFFFFF;
-  --popover-foreground: #0B0B0A;
-  --primary: #111110;
+  --popover-foreground: #0A0A0A;
+  --primary: #0A0A0A;
   --primary-foreground: #FAFAF9;
   --secondary: #F2F2F0;
   --secondary-foreground: #111110;
-  --muted: #F4F4F2;
-  --muted-foreground: #6B6B67;
-  --faint: #A1A19C;
+  --muted: #F3F3F1;
+  --muted-foreground: #5C5C57;
+  --faint: #71716C;
+  --hairline: #C9C9C4;
   --accent: #EFEFEC;
   --accent-foreground: #111110;
-  --destructive: #D23A16;
-  --border: #E7E7E4;
-  --divider: #F0F0EE;
-  --input: #E1E1DD;
-  --ring: #9C9C97;
-  --chart-1: #111110;
-  --chart-2: #6B6B67;
+  --destructive: #C2350F;
+  --border: #E8E8E5;
+  --divider: #EFEFEC;
+  --input: #DEDEDA;
+  --ring: #0A0A0A;
+  --chart-1: #0A0A0A;
+  --chart-2: #5C5C57;
   --chart-3: #A1A19C;
   --chart-4: #C9C9C5;
   --chart-5: #E4E4E0;
-  --chart-grid: #EFEFEC;
+  --chart-ink: #0A0A0A;
+  --chart-grid: #E3E3E0;
+  --chart-hatch: color-mix(in oklab, #0A0A0A 26%, transparent);
+  --chart-axis: #71716C;
+  --tooltip: #0A0A0A;
+  --tooltip-foreground: #F5F5F3;
+  --tooltip-muted: #A3A39E;
   --sidebar: var(--shell);
-  --sidebar-foreground: #45453F;
-  --sidebar-primary: #111110;
+  --sidebar-foreground: #3F3F3B;
+  --sidebar-primary: #0A0A0A;
   --sidebar-primary-foreground: #FAFAF9;
-  --sidebar-accent: #E6E6E3;
-  --sidebar-accent-foreground: #0B0B0A;
+  --sidebar-accent: #E9E9E6;
+  --sidebar-accent-foreground: #0A0A0A;
   --sidebar-border: #E2E2DF;
-  --sidebar-ring: #9C9C97;
-  --good: #0E8A5F;
-  --bad: #D23A16;
-  --warn: #B87503;
+  --sidebar-ring: #0A0A0A;
+  --good: #0B7A54;
+  --bad: #C2350F;
+  --warn: #9A6200;
   --proj: #8A5A12;
-  --proj-line: #D9BE8E;
-  --proj-soft: #FCF8F1;
-  --panel-shadow: 0 0 0 1px rgb(0 0 0 / 0.04), 0 1px 2px rgb(0 0 0 / 0.04);
+  --proj-line: #D3B67F;
+  --proj-soft: #FBF7EF;
+  --missing: #9C9C97;
+  --panel-shadow: 0 0 0 1px rgb(0 0 0 / 0.045);
+  --float-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.18), 0 2px 6px rgb(0 0 0 / 0.06);
+  --glass-blur: none;
   color-scheme: light;
 }
 
+/*
+ * Midnight (tema oscuro principal, dirección Midday): casi negros con separación tonal sutil.
+ * El negro y los casi negros marcan jerarquía: lienzo #050505, panel #0A0A0A, elevado #111.
+ * Contraste sobre el panel: tinta 17.7:1, secundaria 7.8:1, terciaria 4.9:1.
+ */
 .dark {
-  --shell: #060606;
-  --background: #0C0C0C;
-  --surface: #111111;
-  --foreground: #EDEDEB;
-  --card: #0C0C0C;
-  --card-foreground: #EDEDEB;
-  --popover: #121212;
-  --popover-foreground: #EDEDEB;
-  --primary: #EDEDEB;
-  --primary-foreground: #0C0C0C;
-  --secondary: #171717;
-  --secondary-foreground: #EDEDEB;
-  --muted: #141414;
-  --muted-foreground: #8C8C88;
-  --faint: #5A5A57;
-  --accent: #1A1A1A;
-  --accent-foreground: #EDEDEB;
+  --shell: #050505;
+  --background: #0A0A0A;
+  --surface: #0E0E0E;
+  --panel: #0A0A0A;
+  --panel-border: #1C1C1C;
+  --foreground: #F2F2F0;
+  --card: #0A0A0A;
+  --card-foreground: #F2F2F0;
+  --popover: #111111;
+  --popover-foreground: #F2F2F0;
+  --primary: #F2F2F0;
+  --primary-foreground: #0A0A0A;
+  --secondary: #151515;
+  --secondary-foreground: #F2F2F0;
+  --muted: #131313;
+  --muted-foreground: #A3A39E;
+  --faint: #7E7E79;
+  --hairline: #333331;
+  --accent: #181818;
+  --accent-foreground: #F2F2F0;
   --destructive: #F2643F;
-  --border: #1E1E1E;
-  --divider: #171717;
+  --border: #1C1C1C;
+  --divider: #161616;
   --input: #262626;
-  --ring: #555552;
-  --chart-1: #EDEDEB;
-  --chart-2: #9A9A96;
+  --ring: #F2F2F0;
+  --chart-1: #F2F2F0;
+  --chart-2: #A3A39E;
   --chart-3: #6A6A67;
   --chart-4: #3E3E3C;
   --chart-5: #262626;
-  --chart-grid: #191919;
+  --chart-ink: #F2F2F0;
+  --chart-grid: #232323;
+  --chart-hatch: color-mix(in oklab, #F2F2F0 22%, transparent);
+  --chart-axis: #7E7E79;
+  --tooltip: #141414;
+  --tooltip-foreground: #F2F2F0;
+  --tooltip-muted: #A3A39E;
   --sidebar: var(--shell);
-  --sidebar-foreground: #B5B5B1;
-  --sidebar-primary: #EDEDEB;
-  --sidebar-primary-foreground: #0C0C0C;
-  --sidebar-accent: #161616;
-  --sidebar-accent-foreground: #EDEDEB;
-  --sidebar-border: #1A1A1A;
-  --sidebar-ring: #555552;
+  --sidebar-foreground: #B8B8B3;
+  --sidebar-primary: #F2F2F0;
+  --sidebar-primary-foreground: #0A0A0A;
+  --sidebar-accent: #141414;
+  --sidebar-accent-foreground: #F2F2F0;
+  --sidebar-border: #181818;
+  --sidebar-ring: #F2F2F0;
   --good: #3CC48F;
   --bad: #F2643F;
   --warn: #E0A53A;
   --proj: #D9A85B;
-  --proj-line: #5E4A2A;
-  --proj-soft: #15120D;
-  --panel-shadow: 0 0 0 1px rgb(255 255 255 / 0.05);
+  --proj-line: #6A532C;
+  --proj-soft: #14110C;
+  --missing: #5E5E5A;
+  --panel-shadow: 0 0 0 1px #161616;
+  --float-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.06);
   color-scheme: dark;
+}
+
+/*
+ * Atmosphere (dirección Dashtrans, en verde): un solo gradiente atmosférico en el lienzo de toda la app
+ * y superficies de vidrio translúcido. El gradiente nunca va dentro de tarjetas ni detrás de texto suelto.
+ * Contraste medido sobre el vidrio (≈ #0D211E): tinta 15.3:1, secundaria 8.4:1, terciaria 6:1.
+ */
+[data-theme="atmosphere"] {
+  --shell: #061210;
+  --background: #0B1C19;
+  --surface: rgb(255 255 255 / 0.035);
+  --panel: rgb(255 255 255 / 0.045);
+  --panel-border: rgb(255 255 255 / 0.09);
+  --foreground: #F2F5F4;
+  --card: rgb(255 255 255 / 0.045);
+  --card-foreground: #F2F5F4;
+  --popover: #0C1C19;
+  --popover-foreground: #F2F5F4;
+  --primary: #F2F5F4;
+  --primary-foreground: #071412;
+  --secondary: rgb(255 255 255 / 0.06);
+  --secondary-foreground: #F2F5F4;
+  --muted: rgb(255 255 255 / 0.06);
+  --muted-foreground: #A9BCB7;
+  --faint: #86A09A;
+  --hairline: rgb(255 255 255 / 0.2);
+  --accent: rgb(255 255 255 / 0.08);
+  --accent-foreground: #F2F5F4;
+  --destructive: #FF7A5C;
+  --border: rgb(255 255 255 / 0.09);
+  --divider: rgb(255 255 255 / 0.06);
+  --input: rgb(255 255 255 / 0.12);
+  --ring: #F2F5F4;
+  --chart-ink: #F2F5F4;
+  --chart-grid: rgb(255 255 255 / 0.1);
+  --chart-hatch: rgb(242 245 244 / 0.24);
+  --chart-axis: #86A09A;
+  --tooltip: #0E201D;
+  --tooltip-foreground: #F2F5F4;
+  --tooltip-muted: #A9BCB7;
+  --sidebar: transparent;
+  --sidebar-foreground: #C3D2CE;
+  --sidebar-accent: rgb(255 255 255 / 0.06);
+  --sidebar-border: rgb(255 255 255 / 0.07);
+  --good: #4FD1A0;
+  --bad: #FF7A5C;
+  --warn: #F0BE5A;
+  --proj: #E2B66A;
+  --proj-line: rgb(226 182 106 / 0.42);
+  --proj-soft: rgb(226 182 106 / 0.06);
+  --missing: #5F7772;
+  --panel-shadow: none;
+  --float-shadow: 0 20px 50px -12px rgb(0 0 0 / 0.65), 0 0 0 1px rgb(255 255 255 / 0.08);
+  --glass-blur: blur(20px) saturate(1.15);
 }
 
 @layer base {
@@ -206,19 +300,50 @@
 
 /* Relleno rayado para todo lo proyectado. */
 .proj-hatch { background-image: repeating-linear-gradient(135deg, var(--color-proj-line) 0 1px, transparent 1px 6px); }
-.hatch-muted { background-image: repeating-linear-gradient(135deg, var(--border) 0 1px, transparent 1px 5px); }
+.hatch-muted { background-image: repeating-linear-gradient(135deg, var(--hairline) 0 1px, transparent 1px 5px); }
+.hatch-ink { background-image: repeating-linear-gradient(135deg, var(--chart-hatch) 0 1px, transparent 1px 5px); }
 
 .scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
 .scroll-thin::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
 
-/* Shell inset: un punteado muy tenue sobre el fondo; el panel de la página lo tapa. */
-[data-slot="inset-shell"] {
-  background-color: var(--shell);
-  background-image: radial-gradient(color-mix(in oklab, var(--shell), var(--foreground) 7%) 1px, transparent 1px);
-  background-size: 18px 18px;
-}
+/* Shell inset: lienzo liso (sin punteado). En Atmosphere el lienzo lleva el único gradiente de la app. */
+[data-slot="inset-shell"] { background-color: var(--shell); }
 [data-slot="workspace"] { background: var(--background); box-shadow: var(--panel-shadow); }
+[data-theme="atmosphere"] body,
+[data-theme="atmosphere"] [data-slot="inset-shell"] {
+  background-color: #061210;
+  background-image:
+    radial-gradient(1100px 680px at 8% -8%, rgb(40 132 110 / 0.40), transparent 62%),
+    radial-gradient(900px 640px at 96% 4%, rgb(24 92 104 / 0.34), transparent 60%),
+    radial-gradient(1200px 760px at 55% 118%, rgb(20 74 62 / 0.42), transparent 62%);
+  background-attachment: fixed;
+}
+[data-theme="atmosphere"] [data-slot="workspace"] { background: transparent; box-shadow: none; }
+
+/* Superficie: panel plano con borde fino (Claro, Midnight); vidrio translúcido en Atmosphere. */
+.surface { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; }
+[data-theme="atmosphere"] .surface,
+[data-theme="atmosphere"] [data-slot="card"],
+[data-theme="atmosphere"] [data-slot="sheet-content"],
+[data-theme="atmosphere"] [data-slot="dialog-content"] { -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+[data-theme="atmosphere"] [data-slot="sheet-content"],
+[data-theme="atmosphere"] [data-slot="dialog-content"] { background: rgb(9 24 21 / 0.86); }
+[data-theme="atmosphere"] [data-slot="dropdown-menu-content"],
+[data-theme="atmosphere"] [data-slot="popover-content"] { background: rgb(12 28 25 / 0.92); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+.float-shadow { box-shadow: var(--float-shadow); }
+
+/* Cifra dominante (dirección Midday): Geist Mono liviana, números tabulares. */
+.figure-hero { font-family: var(--font-mono); font-weight: 300; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; line-height: 1; }
+
+/* Gráfico: foco visible del área interactiva y textos del eje. */
+.chart-plot:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 6px; }
+.chart-axis { font-size: 11px; fill: var(--chart-axis); font-variant-numeric: tabular-nums; }
+
+/* Superficies del navegador: selección, caret y foco con la paleta del tema. */
+::selection { background: color-mix(in oklab, var(--foreground) 16%, transparent); }
+input, textarea { caret-color: var(--foreground); }
+:focus-visible { outline-color: var(--ring); }
 
 /* Cambio de tema suave: sólo mientras dura el cambio (la clase se pone y se quita desde el store). */
 html.theme-transition, html.theme-transition *, html.theme-transition *::before, html.theme-transition *::after {

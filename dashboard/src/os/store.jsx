@@ -5,6 +5,23 @@ import { ss } from '../lib.js';
 // trabajo (grupo o marca), impuestos, tema y paneles abiertos.
 
 const Ctx = createContext(null);
+
+// Temas: un solo sistema de tokens (index.css); el tema sólo cambia la luz.
+export const THEMES = [
+  { id: 'light', label: 'Claro', meta: '#F5F5F3' },
+  { id: 'midnight', label: 'Midnight', meta: '#050505' },
+  { id: 'atmosphere', label: 'Atmosphere', meta: '#061210' },
+];
+// "dark" era el nombre anterior de Midnight: se conserva la preferencia guardada.
+const normTheme = (t) => (t === 'dark' ? 'midnight' : THEMES.some((x) => x.id === t) ? t : 'light');
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.dataset.theme = theme;
+  root.classList.toggle('dark', theme !== 'light');
+  root.style.colorScheme = theme === 'light' ? 'light' : 'dark';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', THEMES.find((x) => x.id === theme).meta);
+}
 export const useOS = () => useContext(Ctx);
 
 const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { /* sin storage */ } return null; };
@@ -37,26 +54,31 @@ export function OSProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [workspace, setWorkspaceState] = useState(ls('os_workspace') || 'group');
   const [withTaxes, setWithTaxes] = useState(true);
-  const [theme, setThemeState] = useState(ls('os_theme') || 'light');
+  const [theme, setThemeState] = useState(() => normTheme(ls('os_theme')));
   const [drawer, setDrawer] = useState(null); // { type: 'event', id } | { type: 'metric', id, scope }
   const [creating, setCreating] = useState(false);
   const [cmd, setCmd] = useState(false);
   const [toast, setToast] = useState('');
   const toastTimer = useRef(null);
 
-  const flash = useCallback((m) => { setToast(m); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 2800); }, []);
+  // Aviso breve. Con `action` ({ label, run }) el aviso ofrece deshacer y dura más.
+  const flash = useCallback((m, opts = {}) => {
+    const t = { id: Date.now(), message: m, action: opts.action || null };
+    setToast(t); clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), opts.action ? 6000 : 2800);
+  }, []);
+  const dismissToast = useCallback(() => { clearTimeout(toastTimer.current); setToast(''); }, []);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.documentElement.style.colorScheme = theme;
-  }, [theme]);
+  useEffect(() => { applyTheme(theme); }, [theme]);
   // Cambio de tema suave: la transición de colores sólo dura lo que dura el cambio.
   const setTheme = (t) => {
     const root = document.documentElement;
     root.classList.add('theme-transition');
-    setThemeState(t); ls('os_theme', t);
+    const n = normTheme(t);
+    setThemeState(n); ls('os_theme', n);
     window.setTimeout(() => root.classList.remove('theme-transition'), 350);
   };
+  const cycleTheme = () => setTheme(THEMES[(THEMES.findIndex((x) => x.id === theme) + 1) % THEMES.length].id);
   const setWorkspace = (w) => { setWorkspaceState(w); ls('os_workspace', w); };
 
   const logout = useCallback(() => { ss('ceo_pass', null); setPass(''); setData(null); }, []);
@@ -136,8 +158,8 @@ export function OSProvider({ children }) {
 
   const value = useMemo(() => ({
     pass, data, loading, login, logout, load, osApi: (b) => osApi(pass, b),
-    workspace, setWorkspace, withTaxes, setWithTaxes, theme, setTheme,
-    drawer, setDrawer, creating, setCreating, cmd, setCmd, toast, flash,
+    workspace, setWorkspace, withTaxes, setWithTaxes, theme, setTheme, cycleTheme,
+    drawer, setDrawer, creating, setCreating, cmd, setCmd, toast, flash, dismissToast,
     updateEvent, createEvent, saveFinance, upsertAccount, upsertTx, deleteTx, deleteTxs, upsertProduct, addMoves, deleteMove, duplicateEvent, saveEventNumbers, promo, opsAct, com,
   }), [pass, data, loading, workspace, withTaxes, theme, drawer, creating, cmd, toast]); // eslint-disable-line react-hooks/exhaustive-deps
 

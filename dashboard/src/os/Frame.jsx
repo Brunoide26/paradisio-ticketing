@@ -270,7 +270,7 @@ export function SyncSources({ generatedAt, integrations, loading, onRefresh, onO
     <Popover>
       <PopoverTrigger asChild>
         <button type="button" aria-label={`Datos ${loading ? 'sincronizando' : `actualizados ${ago(generatedAt)}`}. Ver fuentes`}
-          className="press flex h-8 items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+          className="press flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
           <span className={cn('size-1.5 rounded-full', loading ? 'animate-pulse bg-warn' : bad ? 'bg-bad' : 'bg-good')} />
           <span className="hidden xl:inline">{loading ? 'Sincronizando…' : ago(generatedAt)}</span>
         </button>

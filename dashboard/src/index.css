@@ -243,8 +243,8 @@
   --secondary: rgb(255 255 255 / 0.06);
   --secondary-foreground: #F2F5F4;
   --muted: rgb(255 255 255 / 0.06);
-  --muted-foreground: #A9BCB7;
-  --faint: #86A09A;
+  --muted-foreground: #BFCFCB;
+  --faint: #9DB3AE;
   --hairline: rgb(255 255 255 / 0.2);
   --accent: rgb(255 255 255 / 0.08);
   --accent-foreground: #F2F5F4;
@@ -264,8 +264,8 @@
   --sidebar-foreground: #C3D2CE;
   --sidebar-accent: rgb(255 255 255 / 0.06);
   --sidebar-border: rgb(255 255 255 / 0.07);
-  --good: #4FD1A0;
-  --bad: #FF7A5C;
+  --good: #5FDCAB;
+  --bad: #FF957C;
   --warn: #F0BE5A;
   --proj: #F2C67E;
   --proj-line: rgb(242 198 126 / 0.5);

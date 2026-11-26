@@ -120,7 +120,7 @@ function Login({ onLogin, waiting }) {
           {[['club', 'Paradisio Club'], ['beats', 'Paradisio Beats'], ['icon', 'Icon']].map(([id, name], i) => (
             <motion.div key={id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.08 }} className="flex items-center gap-3">
               <BrandTile id={id} size="md" />
-              <span className="text-[15px] font-medium">{name}</span>
+              <span className="text-[14px] font-medium">{name}</span>
             </motion.div>
           ))}
         </div>

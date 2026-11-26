@@ -200,10 +200,10 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
       {/* Cabecera: métrica (dominante), selector y lectura de contexto */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 id={`${uid}-h`} className="text-[13px] text-muted-foreground">
-            {metric.long}, {rangeLabel.toLowerCase()}{' '}
+          <div className="text-[13px] text-muted-foreground">
+            <h2 id={`${uid}-h`} className="inline">{metric.long}, {rangeLabel.toLowerCase()}</h2>{' '}
             <GlossaryButton g={glossary} onOpen={() => setDrawer({ type: 'metric', id: metric.glossary })} serverMetric={!!data.os.metrics[metric.glossary]} />
-          </h2>
+          </div>
           <Figure metric={metric} R={R} isCash={isCash} cash={avail.cash} />
           <Context metric={metric} R={R} change={change} prevR={prevR} unit={unit} actual={actual} onResult={() => setDrawer({ type: 'metric', id: 'result' })} />
         </div>
@@ -355,7 +355,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                       {nextDate ? `Sin valores todavía. Próxima fecha: ${nextDate.name}, ${dm(nextDate.date)}.` : 'Sin valores en este rango.'}
                     </p>
                   )}
-                  <ChartTip H={H} b={shown} idx={active} x={shown ? xc(active) : 0} yv={shown ? y(Math.max(tw.real[active] ?? 0, tw.proj[active] ?? 0)) : 0} width={width} group={group} metric={metric} brandSeries={brandSeries} />
+                  <ChartTip H={H} b={pinned === active ? null : shown} idx={active} x={shown ? xc(active) : 0} yv={shown ? y(Math.max(tw.real[active] ?? 0, tw.proj[active] ?? 0)) : 0} width={width} group={group} metric={metric} brandSeries={brandSeries} />
                 </div>
               )}
             </motion.div>
@@ -394,7 +394,8 @@ const stamp = (iso) => new Date(iso).toLocaleString('es-PE', { timeZone: 'Americ
 
 function describeBucket(b, group) {
   const parts = [periodLabel(b.key, group)];
-  if (b.real != null) parts.push(`real ${money(b.real)}`);
+  if (b.real === 0) parts.push(b.items.length ? 'real S/ 0' : 'sin fechas ni ventas (cero confirmado)');
+  else if (b.real != null) parts.push(`real ${money(b.real)}`);
   else if (b.missing.length) parts.push('sin dato real');
   else if (b.future) parts.push('todavía no ocurre');
   if (b.proj != null) parts.push(`proyectado ${money(b.proj)}`);

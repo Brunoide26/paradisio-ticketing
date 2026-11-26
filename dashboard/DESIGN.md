@@ -23,8 +23,8 @@ colors:
   atmosphere-glow-green: "#2C8A72"
   atmosphere-glow-deep: "#0B2A26"
   atmosphere-ink: "#F2F5F4"
-  atmosphere-ink-2: "#A9BCB7"
-  atmosphere-ink-3: "#86A09A"
+  atmosphere-ink-2: "#BFCFCB"
+  atmosphere-ink-3: "#9DB3AE"
   positive: "#3CC48F"
   negative: "#F2643F"
   projected: "#D9A85B"
@@ -143,14 +143,14 @@ Tres temas elegibles (cabecera, menú de cuenta, paleta ⌘K y ⇧D). La prefere
 
 - **Claro**: monocromo blanco refinado. Lienzo `{colors.light-canvas}`, panel `{colors.light-panel}`, bordes mínimos `{colors.light-hairline}`, tipografía fuerte.
 - **Midnight** (tema oscuro principal, Midday): casi negros usados con intención para la jerarquía: lienzo `{colors.midnight-canvas}`, panel `{colors.midnight-panel}`, elevado `{colors.midnight-raised}`, líneas `{colors.midnight-hairline}`. Gráficos blancos, sin gradientes ni brillo. El negro puro no es obligatorio en cada superficie: la separación tonal sutil es la herramienta.
-- **Atmosphere** (Dashtrans en verde): un solo gradiente atmosférico en el lienzo de toda la app (radiales verde `{colors.atmosphere-glow-green}` y verde profundo sobre `{colors.atmosphere-canvas}`), fijo al hacer scroll. Paneles de vidrio `rgba(255,255,255,0.045)` con borde `rgba(255,255,255,0.09)` y `backdrop-filter: blur(20px)`. El panel de la página es transparente para que el gradiente sea coherente; menús y paneles laterales usan vidrio más opaco por legibilidad. Acentos de marca sólo en sus datos.
+- **Atmosphere** (Dashtrans en verde): un solo gradiente atmosférico en el lienzo de toda la app (radiales verde `{colors.atmosphere-glow-green}` y verde profundo sobre `{colors.atmosphere-canvas}`), fijo al hacer scroll. Paneles de vidrio `rgba(255,255,255,0.065)` con borde `rgba(255,255,255,0.11)`, brillo superior de 1 px, radio de 16 px y `backdrop-filter: blur(20px)`. El panel de la página es transparente para que el gradiente sea coherente; menús y paneles laterales usan vidrio más opaco por legibilidad. Acentos de marca sólo en sus datos.
 
 ### Contraste (medido)
 | Tema | Tinta | Secundaria | Terciaria (`--faint`) |
 |---|---|---|---|
-| Claro, sobre panel | 19.8:1 | 6.7:1 | 4.9:1 |
+| Claro, sobre panel | 19.8:1 | 6.7:1 | 5.4:1 (5.0:1 sobre el lienzo) |
 | Midnight, sobre panel | 17.7:1 | 7.8:1 | 4.9:1 |
-| Atmosphere, sobre vidrio | 15.3:1 | 8.4:1 | 6.0:1 |
+| Atmosphere, sobre el vidrio más claro | 7.0:1 | 4.8:1 | 4.9:1 |
 
 `--hairline` y `--chart-grid` son sólo para líneas; nunca para texto. El anillo de foco usa la tinta del tema (`--ring`).
 
@@ -193,7 +193,7 @@ Geist para todo; **Geist Mono liviana sólo para la cifra dominante** (dato de m
 - El resumen ejecutivo, de arriba abajo:
   1. Barra de página: vista guardada (preset) a la izquierda; período y "Personalizar" a la derecha.
   2. **Visualización financiera principal** (panel de ancho completo): métrica y rango como h2, cifra dominante, una línea de contexto, controles (Día/Semana/Mes, por marca, vs. período anterior, ver datos), gráfico de 272 px (210 px en móvil), leyenda y fuente con su última actualización.
-  3. En móvil: "Requiere atención" (sólo urgentes e importantes) inmediatamente después.
+  3. En móvil: "Requiere atención" (sólo urgentes e importantes) inmediatamente después. El día de una fecha, un acceso a En vivo encabeza la página.
   4. Franja de indicadores: una superficie con 4 celdas separadas por líneas.
   5. Widgets personalizables en rejilla de 12 columnas (gap 16 px).
 - Alineación a la izquierda siempre. Breakpoints de verificación: 390, 768, 1280, 1440.
@@ -212,7 +212,8 @@ Controles 6 px, superficies 10 px, píldoras sólo para contadores. Áreas de gr
 
 ### Visualización financiera principal (firma del sistema) — `src/pages/overview/PrimaryChart.jsx`
 - **Métrica elegible** (Ingresos por defecto): Ingresos, Utilidad neta, Gastos, Caja disponible, Flujo de caja, Venta web, Ingresos proyectados, Rentabilidad proyectada. Sólo se habilitan las que tienen datos; las demás aparecen desactivadas con el motivo ("Registra tus cuentas…"). Se recuerda la elegida.
-- **Cifra dominante** con NumberFlow (450 ms): total real del rango; en métricas proyectadas, el total proyectado en ámbar. Nunca se suma lo proyectado: va en la línea de contexto como "Proyectado aparte".
+- **Cifra dominante** con NumberFlow (450 ms): total real del rango, con dos decimales (sólo la cifra dominante; el resto del OS va sin decimales); en métricas proyectadas, el total proyectado en ámbar y rotulado "Parcial" si faltan presupuestos. Nunca se suma lo proyectado: va en la línea de contexto como "Proyectado aparte". Con Ingresos, el resultado real va al lado (abre su detalle).
+- **Nombres únicos**: Ingresos, Utilidad neta, Gastos, Caja disponible, Flujo de caja, Venta web, Ingresos proyectados, Utilidad proyectada; el título del gráfico usa el mismo término.
 - **Reglas de verdad** (`metrics.js`, con pruebas en `test/os-overview-metrics.test.js`):
   - Real y proyectado en series separadas; nunca se suman.
   - Faltante (fecha pasada sin liquidar, presupuesto sin costos) = hueco con banda rayada gris y marcador punteado; nunca cero ni línea.
@@ -221,20 +222,21 @@ Controles 6 px, superficies 10 px, píldoras sólo para contadores. Áreas de gr
   - Las dos fuentes de ingreso (liquidación por fecha y venta web por día) son métricas distintas; jamás se suman.
 - **Trazo**: 1.5 px en tinta; relleno de líneas diagonales a 45° (`--chart-hatch`) que se desvanece hacia la base. **Escalonado** para métricas por fecha de evento; **curva monótona** (Fritsch–Carlson, sin pasarse de los datos) para series continuas.
 - **Pocos datos**: con menos de 2 períodos reales no se dibuja tendencia: se marca el punto real con línea de referencia y el nombre de la fecha. Mejor, peor y promedio sólo con 3 o más períodos con valor. La comparación con el período anterior sólo se ofrece si ambos tienen 2 o más períodos con valor.
-- **Proyectado**: mismo escalón, trazo punteado y rayado en `--proj`.
+- **Proyectado**: escalón punteado y rayado en `--proj` sólo con 2 o más períodos seguidos; un período proyectado aislado es un punto punteado con línea de referencia y el nombre de la fecha (nunca un bloque que parezca barra). Series continuas: se marca dónde termina la cobertura ("datos hasta…"). Sin ningún valor: no hay escala inventada, se dice y se nombra la próxima fecha.
 - **Ejes**: cuadrícula horizontal punteada; eje Y a la izquierda (como Midday); etiquetas de 11 px. Línea punteada "hoy".
 - **Interacción**: crosshair vertical, marcador anillado, tooltip oscuro flotante que sigue al cursor (180 ms) con valor en mono, período, proyectado aparte, fechas del período. Clic o Enter fija el período y lista **todas** sus fechas para abrirlas. Teclado: Tab al gráfico, flechas, Inicio/Fin, Enter, Escape. Región en vivo para lectores de pantalla y botón "Ver datos" (tabla).
 - **Transiciones**: al cambiar métrica o marca sobre los mismos períodos los valores se interpolan (450 ms); al cambiar agrupación o rango, fundido.
 
 ### Indicadores — `KpiStrip.jsx`
-Cuatro celdas en una superficie: Resultado real, Caja disponible, Por cobrar, Utilidad proyectada (ámbar, rayado). Cada celda abre de dónde sale su número; la flecha es visible siempre (no sólo al pasar el mouse). Miniaturas (línea, área o barras de 88×28 px) sólo con serie real de 3 o más puntos; si no, cifra limpia.
+Cuatro celdas en una superficie: Resultado real, Caja disponible, Por cobrar, Utilidad proyectada (ámbar, rayado, "parcial" si faltan costos). Cada celda abre de dónde sale su número; la flecha es visible siempre (no sólo al pasar el mouse). Miniaturas (línea, área o barras de 88×28 px) sólo con serie real de 3 o más puntos. Sin historia suficiente, una miniatura sin inventar nada: ingresos contra costos reales, o presupuestos completos de los totales; si no, cifra limpia.
 
 ### Widgets personalizables — `WidgetGrid.jsx`
-- **Modo normal**: limpio, sin controles de edición; cada widget es un panel plano con título h2 de 14 px y un enlace a su sección.
+- **Modo normal**: limpio, sin controles de edición; cada widget es un panel plano con título h2 de 14 px y un enlace a su sección. Filas de igual altura (como Midday) y presets emparejados por altura de contenido; la rejilla se compacta al quitar un widget.
+- **Dirección** (preset por defecto): Requiere atención + Agenda de producción; Composición del resultado + Actividad reciente; Marcas + Rendimiento por fecha. Caja y Real vs. presupuesto se añaden cuando haya datos.
 - **Modo personalizar**: barra flotante propia (añadir, restaurar, listo); en cada widget asa de arrastre, tamaño (S/M/L/XL) y quitar. Quitar ofrece **Deshacer** (6 s). Orden con teclado (dnd-kit, anuncios en español). Presets guardados por vista; se conserva lo guardado por el usuario.
 
 ### Bandeja de atención
-Cada alerta: qué pasó (título), nivel en texto (Urgente / Importante / Aviso), a qué fecha y marca afecta, por qué importa, y una acción principal con nombre de verbo ("Cargar costos"). Alertas repetidas se agrupan con su cuenta. Posponer 24 h.
+Cada alerta: qué pasó (título), nivel en texto y forma (Urgente: punto rojo; Importante: anillo en tinta; Aviso: punto gris; el ámbar queda sólo para lo proyectado), a qué fecha y marca afecta, por qué importa, y una acción principal con nombre de verbo ("Cargar costos"; en temas oscuros, sin relleno blanco para no deslumbrar de noche). Alertas repetidas se agrupan con su cuenta. Posponer 24 h.
 
 ### Agenda de producción
 Cinta de las próximas 6 semanas con cada fecha en su día (punto de marca) y debajo la corrida: bloque de fecha, marca y cuenta regresiva, nombre, etapa (StageBadge), preparación (ingresos, costos, local) y lo proyectado en ámbar.

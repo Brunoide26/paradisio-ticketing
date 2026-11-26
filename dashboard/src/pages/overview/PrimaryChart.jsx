@@ -202,7 +202,7 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
         <div className="min-w-0">
           <div className="flex items-start gap-1 text-[13px] text-muted-foreground">
             <h2 id={`${uid}-h`} className="min-w-0 pt-px">{metric.long}, {rangeLabel.toLowerCase()}</h2>
-            <GlossaryButton g={glossary} onOpen={() => setDrawer({ type: 'metric', id: metric.glossary })} serverMetric={!!data.os.metrics[metric.glossary]} />
+            <GlossaryButton name={metric.long} g={glossary} onOpen={() => setDrawer({ type: 'metric', id: metric.glossary })} serverMetric={!!data.os.metrics[metric.glossary]} />
           </div>
           <Figure metric={metric} R={R} isCash={isCash} cash={avail.cash} />
           <Context metric={metric} R={R} change={change} prevR={prevR} unit={unit} actual={actual} onResult={() => setDrawer({ type: 'metric', id: 'result' })} />
@@ -484,9 +484,9 @@ function MetricPicker({ metric, avail, onPick }) {
               {ids.map((id) => {
                 const m = METRICS.find((x) => x.id === id); const a = avail[id];
                 return (
-                  <DropdownMenuRadioItem key={id} value={id} disabled={!a.ok} className="items-start py-1.5">
+                  <DropdownMenuRadioItem key={id} value={id} disabled={!a.ok} className="items-start py-1.5 data-[disabled]:opacity-100">
                     <span className="min-w-0">
-                      <span className="block text-[13px]">{m.label}</span>
+                      <span className={cn('block text-[13px]', !a.ok && 'text-muted-foreground line-through decoration-hairline')}>{m.label}</span>
                       {!a.ok && <span className="block text-[12px] leading-snug text-muted-foreground">{a.reason}</span>}
                     </span>
                   </DropdownMenuRadioItem>
@@ -500,11 +500,11 @@ function MetricPicker({ metric, avail, onPick }) {
   );
 }
 
-function GlossaryButton({ g, onOpen, serverMetric }) {
+function GlossaryButton({ g, name, onOpen, serverMetric }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" aria-label={`Qué es ${g.label}`} className="press -my-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded sm:my-0 sm:size-6 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><InfoIcon className="size-3.5" /></button>
+        <button type="button" aria-label={`Qué es ${(name || g.label).toLowerCase()}`} className="press -my-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded sm:my-0 sm:size-6 text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"><InfoIcon className="size-3.5" /></button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 text-[13px]">
         <p className="font-medium">{g.label}</p>

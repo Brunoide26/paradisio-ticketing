@@ -79,7 +79,7 @@ function NavGroup({ group, collapsed, onNavigate }) {
       ) : <p className="mb-0.5 flex h-7 items-center px-2.5 text-[12px] text-faint collapsed:hidden">{group.label}</p>}
       <div aria-hidden className="mx-2 mb-2 hidden h-px bg-sidebar-border collapsed:block" />
       <div className="grid transition-[grid-template-rows] duration-[var(--dur-layout)] ease-[var(--ease-standard)] motion-reduce:transition-none" style={{ gridTemplateRows: shown ? '1fr' : '0fr' }} inert={!shown}>
-        <ul id={listId} className="min-h-0 space-y-px overflow-hidden">
+        <ul id={listId} className="-m-[3px] min-h-0 space-y-px overflow-hidden p-[3px]">
           {group.items.map((item) => <li key={item.to + item.title}><NavItem item={item} collapsed={collapsed} onNavigate={onNavigate} /></li>)}
         </ul>
       </div>

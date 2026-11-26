@@ -93,7 +93,7 @@ export default function Overview() {
   const setLayout = (fn) => setLayoutState((cur) => { const next = typeof fn === 'function' ? fn(cur) : fn; ls(LAYOUT_KEY, JSON.stringify(next)); return next; });
   const sameAsPreset = (p, items) => JSON.stringify(items.map((i) => [i.id, i.size])) === JSON.stringify(PRESETS[p].items);
   const setItems = (items) => setLayout((l) => { const next = typeof items === 'function' ? items(l.items) : items; return { ...l, items: next, custom: !sameAsPreset(l.preset, next) }; });
-  useEffect(() => { if (!editing) return undefined; const k = (e) => e.key === 'Escape' && setEditing(false); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [editing]);
+  useEffect(() => { if (!editing) return undefined; const k = (e) => { if (e.key !== 'Escape') return; if (document.querySelector('[role="dialog"], [role="menu"], [role="listbox"]')) return; setEditing(false); }; // Escape cierra primero la capa de encima window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [editing]);
 
   const brands = data.finance.brands;
   const scopeName = brand ? brands.find((b) => b.id === brand)?.name : 'Paradisio Entertainment Group';
@@ -119,7 +119,13 @@ export default function Overview() {
   const restore = () => setLayout((l) => ({ preset: l.preset, items: presetItems(l.preset), custom: false }));
   const removeWidget = (item, index) => {
     setItems((items) => items.filter((x) => x.id !== item.id));
-    flash(`Quitaste “${REGISTRY[item.id].title}”`, { action: { label: 'Deshacer', run: () => setItems((items) => (items.some((x) => x.id === item.id) ? items : [...items.slice(0, index), item, ...items.slice(index)])) } });
+    flash(`Quitaste “${REGISTRY[item.id].title}”`, { action: { label: 'Deshacer', run: () => {
+      setItems((items) => (items.some((x) => x.id === item.id) ? items : [...items.slice(0, index), item, ...items.slice(index)]));
+      // El foco vuelve al widget restaurado (su asa de arrastre) o, si no, a "Listo".
+      setTimeout(() => (document.querySelector(`[aria-label^="Mover ${REGISTRY[item.id].title}"]`) || document.querySelector('[data-edit-done]'))?.focus(), 350);
+    } } });
+    // Tras quitar, el foco va a "Deshacer" para poder revertir con Enter.
+    setTimeout(() => document.querySelector('[data-toast-action]')?.focus(), 60);
   };
   const urgent = attention.filter((a) => a.level !== 'low');
   const todayEvent = data.finance.events.find((e) => e.date === limaISO() && e.stage !== 'cancelled' && (!brand || e.brand === brand));
@@ -199,7 +205,7 @@ export default function Overview() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Button size="sm" variant="ghost" className="h-8" onClick={restore} disabled={!layout.custom}><RotateCcwIcon />Restaurar</Button>
-              <Button size="sm" className="h-8" onClick={() => setEditing(false)}><CheckIcon />Listo</Button>
+              <Button size="sm" data-edit-done className="h-8" onClick={() => setEditing(false)}><CheckIcon />Listo</Button>
             </motion.div>
           )}
         </AnimatePresence>

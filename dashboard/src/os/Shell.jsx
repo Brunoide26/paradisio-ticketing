@@ -186,6 +186,22 @@ function MetricDrawer({ id, summary, onClose }) {
 function Palette() {
   const { cmd, setCmd, data, setDrawer, setCreating, withTaxes, setWithTaxes, theme, setTheme, load, setWorkspace } = useOS();
   const themeIcon = { light: <SunIcon />, midnight: <MoonIcon />, atmosphere: <SparklesIcon /> };
+  // Al cerrar la paleta (abierta con ⌘K) el foco vuelve a donde estaba, no al inicio de la página.
+  const back = useRef(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    // Último elemento con foco fuera de cualquier diálogo (Radix mueve el foco al abrir, antes de este efecto).
+    const track = (e) => { if (!e.target.closest || !e.target.closest('[role="dialog"]')) back.current = e.target; };
+    document.addEventListener('focusin', track);
+    return () => document.removeEventListener('focusin', track);
+  }, []);
+  useEffect(() => {
+    if (cmd) { wasOpen.current = true; return; }
+    if (!wasOpen.current) return;
+    wasOpen.current = false;
+    const el = back.current;
+    if (el && el !== document.body && document.contains(el)) setTimeout(() => el.focus(), 30);
+  }, [cmd]);
   const navigate = useNavigate();
   const brands = data.finance.brands || [];
   const events = data.finance.events.slice().sort((a, b) => b.date.localeCompare(a.date));
@@ -193,7 +209,7 @@ function Palette() {
   return (
     <CommandDialog open={cmd} onOpenChange={setCmd} title="Buscar" description="Busca páginas, eventos o acciones">
       <CommandInput placeholder="Busca páginas, eventos o acciones…" />
-      <CommandList className="scroll-thin">
+      <CommandList className="scroll-thin" label="Resultados">
         <CommandEmpty>Nada encontrado.</CommandEmpty>
         <CommandGroup heading="Acciones">
           <CommandItem onSelect={() => run(() => setCreating(true))}><PlusIcon />Nuevo evento<Kbd>C</Kbd></CommandItem>
@@ -385,7 +401,7 @@ export default function Shell() {
             role="status" aria-live="polite" className="float-shadow fixed bottom-5 left-4 right-4 z-[60] flex items-center gap-3 rounded-lg bg-tooltip px-3.5 py-2.5 text-[13px] text-tooltip-foreground sm:left-auto sm:max-w-sm">
             <span className="min-w-0 flex-1">{toast.message}</span>
             {toast.action && (
-              <button type="button" onClick={() => { toast.action.run(); dismissToast(); }} className="press -my-1 shrink-0 rounded-md px-2 py-1 text-[13px] font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-tooltip-foreground">{toast.action.label}</button>
+              <button type="button" data-toast-action onClick={() => { toast.action.run(); dismissToast(); }} className="press -my-1 shrink-0 rounded-md px-2 py-1 text-[13px] font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-tooltip-foreground">{toast.action.label}</button>
             )}
           </motion.div>
         )}

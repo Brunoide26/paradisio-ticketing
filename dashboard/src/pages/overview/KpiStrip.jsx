@@ -47,7 +47,7 @@ function Versus({ income, cost }) {
 }
 function Readiness({ done, total }) {
   return (
-    <span className="flex shrink-0 gap-1 pb-1.5" role="img" aria-label={`${done} de ${total} presupuestos con costos`}>
+    <span className="flex shrink-0 gap-1 pb-1.5" aria-hidden="true">
       {Array.from({ length: total }).map((_, i) => <i key={i} className={cn('h-2 w-5 rounded-[2px]', i < done ? 'bg-proj' : 'proj-hatch border border-dashed border-proj')} />)}
     </span>
   );
@@ -72,8 +72,8 @@ function Cell({ label, children, sub, onClick, proj, spark, className }) {
 }
 
 // NumberFlow anima dígito por dígito: el lector de pantalla recibe la cifra completa aparte.
-const Fig = ({ value, className }) => (
-  <><span className="sr-only">{money(value)}</span><NumberFlow aria-hidden="true" value={value} locales="es-PE" format={{ style: 'currency', currency: 'PEN', maximumFractionDigits: 0 }} className={cn('num', className)} transformTiming={NUM} spinTiming={NUM} willChange /></>
+const Fig = ({ value, className, sign = '' }) => (
+  <><span className="sr-only">{sign}{money(value)}</span><NumberFlow aria-hidden="true" value={value} locales="es-PE" format={{ style: 'currency', currency: 'PEN', maximumFractionDigits: 0 }} className={cn('num', className)} transformTiming={NUM} spinTiming={NUM} willChange /></>
 );
 const NA = ({ children = 'No disponible' }) => <span className="text-[20px] text-muted-foreground">{children}</span>;
 
@@ -88,7 +88,7 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
       <Cell label="Resultado real" onClick={onMetric('result')}
         sub={A.count ? (A.margin != null ? `Margen ${pct(A.margin).replace('-', '−')} en ${A.count} fecha${A.count === 1 ? '' : 's'} cerrada${A.count === 1 ? '' : 's'}` : `${A.count} fecha${A.count === 1 ? '' : 's'} cerrada${A.count === 1 ? '' : 's'}`) : 'Sin fechas cerradas en el período'}
         spark={results.length >= 3 ? <Sparkline values={results} kind="bar" label={`Resultado por fecha: ${results.map((r) => money(r)).join(', ')}`} /> : A.count ? <Versus income={A.revenue} cost={A.costs} /> : null}>
-        {A.count ? <span className={cn(A.result < 0 && 'text-bad')}>{A.result < 0 ? '−' : ''}<Fig value={Math.abs(A.result)} /></span> : <NA>Sin cierres</NA>}
+        {A.count ? <span className={cn(A.result < 0 && 'text-bad')}><span aria-hidden="true">{A.result < 0 ? '−' : ''}</span><Fig sign={A.result < 0 ? '−' : ''} value={Math.abs(A.result)} /></span> : <NA>Sin cierres</NA>}
       </Cell>
       <Cell label="Caja disponible" onClick={() => (hasAccounts ? navigate('/finanzas/cuentas') : setDrawer({ type: 'account' }))}
         sub={cashOk ? `${LS.accounts.length} cuenta${LS.accounts.length === 1 ? '' : 's'}` : hasAccounts ? 'Falta el saldo inicial de una cuenta: complétalo' : 'Registra tus cuentas para calcularla'}>
@@ -103,7 +103,7 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
         sub={P.count ? `${P.completeCount} de ${P.count} fecha${P.count === 1 ? '' : 's'} con costos presupuestados` : 'Sin fechas por venir'}
         spark={P.count ? <Readiness done={P.completeCount} total={P.count} /> : null}
         className="bg-proj-soft/40">
-        {P.profit == null ? <NA>Incompleta</NA> : <span className="text-proj">{P.profit < 0 ? '−' : '+'}<Fig value={Math.abs(P.profit)} />{P.completeCount < P.count && <span className="ml-1.5 text-[13px] tracking-normal text-foreground">parcial</span>}</span>}
+        {P.profit == null ? <NA>Incompleta</NA> : <span className="text-proj"><span aria-hidden="true">{P.profit < 0 ? '−' : '+'}</span><Fig sign={P.profit < 0 ? '−' : '+'} value={Math.abs(P.profit)} />{P.completeCount < P.count && <span className="ml-1.5 text-[13px] tracking-normal text-foreground">parcial</span>}</span>}
       </Cell>
     </section>
   );

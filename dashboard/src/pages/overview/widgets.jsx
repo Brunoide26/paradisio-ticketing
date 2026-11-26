@@ -124,7 +124,7 @@ export function EventsWidget({ S }) {
       <table className="w-full min-w-[340px] text-[13px] sm:min-w-[560px]">
         <thead>
           <tr className="text-left text-[12px] text-muted-foreground [&>th]:h-8 [&>th]:border-b [&>th]:border-divider [&>th]:font-normal">
-            <th className="pl-4">Fecha</th><th className="text-right">Ingresos</th><th className="hidden text-right sm:table-cell">Costos</th><th className="text-right">Resultado</th><th className="hidden text-right sm:table-cell">Margen</th><th className="w-10 pr-2" />
+            <th className="pl-4">Fecha</th><th className="text-right">Ingresos</th><th className="hidden text-right sm:table-cell">Costos</th><th className="text-right">Resultado</th><th className="hidden text-right sm:table-cell">Margen</th><th className="w-10 pr-2"><span className="sr-only">Detalle</span></th>
           </tr>
         </thead>
         <tbody>

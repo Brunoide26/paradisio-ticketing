@@ -264,8 +264,8 @@ export default function PrimaryChart({ from, to, rangeLabel, actual }) {
                     {/* Hoy: separa lo ocurrido de lo que viene */}
                     {todayIdx >= 0 && todayIdx < n - 1 && (
                       <g>
-                        <line x1={xc(todayIdx) + bw / 2} x2={xc(todayIdx) + bw / 2} y1={6} y2={H - M.bottom} stroke="var(--hairline)" strokeDasharray="1 3" />
-                        <text x={xc(todayIdx) + bw / 2 - 6} y={12} textAnchor="end" className="chart-axis">hoy</text>
+                        <line x1={xc(todayIdx) + bw / 2} x2={xc(todayIdx) + bw / 2} y1={M.top} y2={H - M.bottom} stroke="var(--hairline)" strokeDasharray="1 3" />
+                        <text x={xc(todayIdx) + bw / 2 - 5} y={H - M.bottom - 5} textAnchor="end" className="chart-axis">hoy</text>
                       </g>
                     )}
 
@@ -401,7 +401,7 @@ const stamp = (iso) => new Date(iso).toLocaleString('es-PE', { timeZone: 'Americ
 
 function describeBucket(b, group) {
   const parts = [periodLabel(b.key, group)];
-  if (b.real === 0) parts.push(b.items.length ? 'real S/ 0' : 'sin fechas ni ventas (cero confirmado)');
+  if (b.real === 0) parts.push(b.items.length ? 'real S/ 0' : 'sin movimientos, cero');
   else if (b.real != null) parts.push(`real ${money(b.real)}`);
   else if (b.missing.length) parts.push('sin dato real');
   else if (b.future) parts.push('todavía no ocurre');
@@ -422,7 +422,8 @@ function Figure({ metric, R, isCash, cash }) {
         </span>
       ) : (
         <>
-          <span className="text-[20px] text-muted-foreground" aria-hidden="true">{neg ? '−S/' : 'S/'}</span><span className="sr-only">{neg ? 'menos ' : ''}</span>
+          <span className="text-[20px] text-muted-foreground" aria-hidden="true">S/</span><span className="sr-only">{neg ? 'menos ' : ''}</span>
+          {neg && <span aria-hidden="true" className="figure-hero -mr-1 text-[44px] text-bad md:text-[54px]">−</span>}
           <span className="sr-only">{money(Math.abs(value), 2)}</span>
           <NumberFlow aria-hidden="true" value={Math.abs(value)} locales="es-PE" format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
             className={cn('figure-hero text-[44px] md:text-[54px]', metric.projOnly && 'text-proj')} transformTiming={NUM} spinTiming={NUM} opacityTiming={{ duration: 250, easing: 'ease-out' }} willChange />
@@ -433,6 +434,8 @@ function Figure({ metric, R, isCash, cash }) {
   );
 }
 
+// Qué le falta a un presupuesto para entrar en cada métrica (sin usar "completo" con dos sentidos).
+const LACKS = { revenue: 'ingresos', projRevenue: 'ingresos', expenses: 'costos', profit: 'costos', projProfit: 'costos' };
 function Context({ metric, R, change, prevR, unit, actual, onResult }) {
   const bits = [];
   // Ingresos sin su resultado engañan: si hubo cierres, el resultado real va al lado (con su signo y color real).
@@ -450,10 +453,10 @@ function Context({ metric, R, change, prevR, unit, actual, onResult }) {
       </span>,
     );
   }
-  if (!metric.projOnly && R.hasProj) bits.push(<span key="p" className="text-proj"><i className="proj-hatch mr-1.5 inline-block size-2.5 rounded-[2px] border border-dashed border-proj align-[-1px]" />Proyectado aparte: <span className="num">{money(R.projTotal)}</span> en {R.projCount} fecha{R.projCount === 1 ? '' : 's'}</span>);
-  if (metric.projOnly && R.projCount) bits.push(<span key="pc" className="text-foreground">{R.incomplete ? `Parcial: ${R.projCount} de ${R.projCount + R.incomplete} fechas con presupuesto completo` : `${R.projCount} fecha${R.projCount === 1 ? '' : 's'} con presupuesto`}</span>);
+  if (!metric.projOnly && R.hasProj) bits.push(<span key="p" className="text-proj"><i className="proj-hatch mr-1.5 inline-block size-2.5 rounded-[2px] border border-dashed border-proj align-[-1px]" />Proyectado aparte: <span className="num">{money(R.projTotal)}</span>{metric.source === 'events' ? ` en ${R.projCount} fecha${R.projCount === 1 ? '' : 's'}` : ''}</span>);
+  if (metric.projOnly && R.projCount) bits.push(<span key="pc" className="text-foreground">{R.incomplete ? `Parcial: ${R.projCount} de ${R.projCount + R.incomplete} fechas con ${LACKS[metric.id]} presupuestados` : `${R.projCount} fecha${R.projCount === 1 ? '' : 's'} con presupuesto`}</span>);
   if (R.missing) bits.push(<span key="m">{R.missing} fecha{R.missing === 1 ? '' : 's'} sin liquidar</span>);
-  if (R.incomplete) bits.push(<span key="i" className="hidden sm:inline">{R.incomplete} presupuesto{R.incomplete === 1 ? '' : 's'} incompleto{R.incomplete === 1 ? '' : 's'}</span>);
+  if (R.incomplete) bits.push(<span key="i" className="hidden sm:inline">{R.incomplete} presupuesto{R.incomplete === 1 ? '' : 's'} sin {LACKS[metric.id] || 'datos'} cargados</span>);
   if (R.best) bits.push(<span key="b">Mejor {unit[0]}: <span className="num text-foreground">{money(R.best.real)}</span></span>);
   if (R.avg != null) bits.push(<span key="a">Promedio: <span className="num text-foreground">{money(R.avg)}</span></span>);
   if (!bits.length) return <div className="h-5" />;
@@ -605,7 +608,7 @@ function PeriodDetail({ b, group, onClose, onOpen }) {
                 className="press flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[13px] outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:hover:bg-transparent">
                 <i className="size-2 shrink-0 rounded-full" style={{ background: it.brand ? brandColor(it.brand) : 'var(--faint)' }} />
                 <span className="min-w-0 flex-1 truncate">{it.name}</span>
-                <span className={cn('num shrink-0', it.state === 'proj' && 'text-proj', it.state === 'missing' && 'text-muted-foreground')}>{it.state === 'missing' ? it.note : money(it.value)}</span>
+                <span className={cn('num flex shrink-0 items-center gap-1.5', it.state === 'proj' && 'text-proj', it.state === 'missing' && 'text-muted-foreground')}>{it.state === 'proj' && <><i className="proj-hatch inline-block size-2.5 rounded-[2px] border border-dashed border-proj" aria-hidden /><span className="text-[12px]">proyectado</span></>}{it.state === 'missing' ? it.note : money(it.value)}</span>
               </button>
             </li>
           ))}

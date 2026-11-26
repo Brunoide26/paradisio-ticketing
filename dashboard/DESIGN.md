@@ -23,8 +23,9 @@ colors:
   atmosphere-glow-green: "#2C8A72"
   atmosphere-glow-deep: "#0B2A26"
   atmosphere-ink: "#F2F5F4"
-  atmosphere-ink-2: "#BFCFCB"
-  atmosphere-ink-3: "#9DB3AE"
+  atmosphere-ink-2: "#C9D7D3"
+  atmosphere-ink-3: "#B6C8C3"
+  atmosphere-negative: "#FFA890"
   positive: "#3CC48F"
   negative: "#F2643F"
   projected: "#D9A85B"
@@ -134,6 +135,7 @@ Orden de autoridad: estas referencias y este documento, después Impeccable, des
 - Gráficos de área con relleno rayado; escalonados para datos por fecha de evento; curva monótona para series continuas.
 - Lo proyectado siempre distinto: ámbar apagado, rayado y punteado, separado de lo real y nunca en verde o rojo.
 - Un dato faltante se dice ("no disponible", "sin dato") y se dibuja como hueco; nunca como cero.
+- "Completo" sólo significa "con costos". A un presupuesto se le nombra lo que le falta para cada métrica ("sin ingresos cargados", "sin costos cargados").
 - Movimiento que explica causa y efecto.
 
 ## Colors
@@ -150,12 +152,12 @@ Tres temas elegibles (cabecera, menú de cuenta, paleta ⌘K y ⇧D). La prefere
 |---|---|---|---|
 | Claro, sobre panel | 19.8:1 | 6.7:1 | 5.4:1 (5.0:1 sobre el lienzo) |
 | Midnight, sobre panel | 17.7:1 | 7.8:1 | 4.9:1 |
-| Atmosphere, sobre el vidrio más claro | 7.0:1 | 4.8:1 | 4.9:1 |
+| Atmosphere, medido sobre el fondo real donde se usa (incluye la zona más luminosa del gradiente) | ≥ 7.0:1 | ≥ 4.6:1 | ≥ 4.6:1 |
 
 `--hairline` y `--chart-grid` son sólo para líneas; nunca para texto. El anillo de foco usa la tinta del tema (`--ring`).
 
 ### Significado financiero
-- `--good` / `--bad`: resultado o variación real favorable o desfavorable, siempre con signo, flecha o palabra ("Pérdida"). Claro usa `{colors.light-good}` (4.5:1 sobre blanco).
+- `--good` / `--bad`: resultado o variación real favorable o desfavorable, siempre con signo, flecha o palabra ("Pérdida"). En la cifra dominante el signo menos va al tamaño de la cifra y en `--bad`. Claro usa `{colors.light-good}` (4.5:1 sobre blanco).
 - `--proj` + rayado diagonal: todo lo proyectado. Lo proyectado no usa verde ni rojo, ni siquiera una utilidad proyectada positiva: el signo (+/−) lleva el significado.
 - `--missing`: datos faltantes (rayado gris en sentido contrario al proyectado).
 

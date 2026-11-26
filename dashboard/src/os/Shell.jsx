@@ -337,7 +337,7 @@ export default function Shell() {
             <ThemeMenu theme={theme} onTheme={setTheme} />
             <Notifications items={scopeAttention} onOpen={openAttention} onAction={(a) => navigate(`/finanzas/datos?evento=${a.event}`)} onSeeAll={() => navigate('/atencion')} />
             <DropdownMenu>
-              <DropdownMenuTrigger asChild><Button size="sm" aria-label="Nuevo" className="ml-1 h-8 gap-1.5 px-2.5"><PlusIcon /><span className="hidden sm:inline">Nuevo</span></Button></DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild><Button size="sm" aria-label="Nuevo" className="ml-1 h-8 gap-1.5 px-2.5 dark:border dark:border-hairline dark:bg-accent dark:text-foreground dark:hover:bg-muted"><PlusIcon /><span className="hidden sm:inline">Nuevo</span></Button></DropdownMenuTrigger>
               <DropdownMenuContent align="end" sideOffset={6} className="w-56">
                 <DropdownMenuItem onSelect={() => setCreating(true)}><TicketIcon />Evento<Kbd>C</Kbd></DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'tx' })}><ArrowLeftRightIcon />Transacción<Kbd>T</Kbd></DropdownMenuItem>

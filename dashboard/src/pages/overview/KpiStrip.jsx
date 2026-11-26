@@ -56,17 +56,17 @@ function Readiness({ done, total }) {
 function Cell({ label, children, sub, onClick, proj, spark, className }) {
   return (
     <button type="button" onClick={onClick}
-      className={cn('group relative flex min-w-0 flex-col items-start gap-1 px-4 py-3.5 text-left outline-none transition-colors hover:bg-accent/60 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:px-5', className)}>
+      className={cn('group relative flex min-w-0 flex-col items-start gap-1 px-3 py-3 text-left sm:px-4 sm:py-3.5 outline-none transition-colors hover:bg-accent/60 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:px-5', className)}>
       <span className="flex w-full items-center gap-1.5 text-[13px] text-muted-foreground">
         {proj && <i className="proj-hatch size-2.5 shrink-0 rounded-[2px] border border-dashed border-proj" aria-hidden />}
         <span className="truncate">{label}</span>
         <ChevronRightIcon aria-hidden className="ml-auto size-3.5 shrink-0 opacity-60 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100" />
       </span>
       <span className="flex w-full items-end justify-between gap-3">
-        <span className="min-w-0 truncate text-[24px] leading-[1.15] tracking-[-0.03em]">{children}</span>
-        {spark}
+        <span className="min-w-0 truncate text-[20px] leading-[1.15] tracking-[-0.03em] sm:text-[24px]">{children}</span>
+        {spark && <span className="hidden sm:block">{spark}</span>}
       </span>
-      {sub && <span className="w-full truncate text-[12px] text-muted-foreground">{sub}</span>}
+      {sub && <span className="line-clamp-2 w-full text-[12px] text-muted-foreground sm:truncate">{sub}</span>}
     </button>
   );
 }
@@ -84,7 +84,7 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
   const cashOk = LS && LS.cash != null;
   const hasAccounts = LS && LS.accounts && LS.accounts.length;
   return (
-    <section aria-label="Indicadores" className="surface grid grid-cols-1 divide-y divide-divider overflow-hidden sm:grid-cols-2 sm:divide-y-0 xl:grid-cols-4 [&>*]:border-divider sm:[&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(-n+2)]:border-b xl:[&>*]:border-b-0 xl:[&>*:not(:last-child)]:border-r">
+    <section aria-label="Indicadores" className="surface grid grid-cols-2 overflow-hidden xl:grid-cols-4 [&>*]:border-divider [&>*:nth-child(odd)]:border-r [&>*:nth-child(-n+2)]:border-b xl:[&>*]:border-b-0 xl:[&>*:not(:last-child)]:border-r">
       <Cell label="Resultado real" onClick={onMetric('result')}
         sub={A.count ? (A.margin != null ? `Margen ${pct(A.margin).replace('-', '−')} en ${A.count} fecha${A.count === 1 ? '' : 's'} cerrada${A.count === 1 ? '' : 's'}` : `${A.count} fecha${A.count === 1 ? '' : 's'} cerrada${A.count === 1 ? '' : 's'}`) : 'Sin fechas cerradas en el período'}
         spark={results.length >= 3 ? <Sparkline values={results} kind="bar" label={`Resultado por fecha: ${results.map((r) => money(r)).join(', ')}`} /> : A.count ? <Versus income={A.revenue} cost={A.costs} /> : null}>
@@ -100,10 +100,10 @@ export default function KpiStrip({ S, LS, onMetric, navigate, setDrawer }) {
         {LS && LS.hasData ? <Fig value={LS.receivables.total} /> : <NA />}
       </Cell>
       <Cell proj label="Utilidad proyectada" onClick={onMetric('projProfit')}
-        sub={P.count ? `${P.completeCount} de ${P.count} presupuesto${P.count === 1 ? '' : 's'} con costos` : 'Sin fechas por venir'}
+        sub={P.count ? `${P.completeCount} de ${P.count} fecha${P.count === 1 ? '' : 's'} con costos presupuestados` : 'Sin fechas por venir'}
         spark={P.count ? <Readiness done={P.completeCount} total={P.count} /> : null}
         className="bg-proj-soft/40">
-        {P.profit == null ? <NA>Incompleta</NA> : <span className="text-proj">{P.profit < 0 ? '−' : '+'}<Fig value={Math.abs(P.profit)} />{P.completeCount < P.count && <span className="ml-2 text-[13px] tracking-normal text-foreground">parcial</span>}</span>}
+        {P.profit == null ? <NA>Incompleta</NA> : <span className="text-proj">{P.profit < 0 ? '−' : '+'}<Fig value={Math.abs(P.profit)} />{P.completeCount < P.count && <span className="ml-1.5 text-[13px] tracking-normal text-foreground">parcial</span>}</span>}
       </Cell>
     </section>
   );

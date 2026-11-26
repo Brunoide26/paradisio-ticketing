@@ -243,8 +243,8 @@
   --secondary: rgb(255 255 255 / 0.06);
   --secondary-foreground: #F2F5F4;
   --muted: rgb(255 255 255 / 0.06);
-  --muted-foreground: #DCE6E3;
-  --faint: #CAD8D4;
+  --muted-foreground: #C9D7D3;
+  --faint: #B6C8C3;
   --hairline: rgb(255 255 255 / 0.2);
   --accent: rgb(255 255 255 / 0.08);
   --accent-foreground: #F2F5F4;
@@ -256,7 +256,7 @@
   --chart-ink: #F2F5F4;
   --chart-grid: rgb(255 255 255 / 0.1);
   --chart-hatch: rgb(242 245 244 / 0.36);
-  --chart-axis: #CAD8D4;
+  --chart-axis: #B6C8C3;
   --tooltip: #0E201D;
   --tooltip-foreground: #F2F5F4;
   --tooltip-muted: #A9BCB7;
@@ -265,7 +265,7 @@
   --sidebar-accent: rgb(255 255 255 / 0.06);
   --sidebar-border: rgb(255 255 255 / 0.07);
   --good: #5FDCAB;
-  --bad: #FFC2B3;
+  --bad: #FFA890;
   --warn: #F0BE5A;
   --proj: #F2C67E;
   --proj-line: rgb(242 198 126 / 0.5);

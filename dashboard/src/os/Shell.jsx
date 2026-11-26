@@ -5,7 +5,7 @@ import {
   LayoutDashboardIcon, InboxIcon, CalendarDaysIcon, TicketIcon, WalletIcon, HistoryIcon, PlusIcon, BellIcon,
   RefreshCwIcon, DownloadIcon, ReceiptIcon, MoonIcon, SunIcon, ChevronsUpDownIcon, CheckIcon, Building2Icon, ExternalLinkIcon, SlidersHorizontalIcon, TriangleAlertIcon, PackageIcon, ArrowLeftRightIcon, CalculatorIcon, CopyIcon, ListTodoIcon, ShoppingBagIcon, MegaphoneIcon, WrenchIcon, UserPlusIcon, SparklesIcon, HandshakeIcon, UsersIcon, ContactIcon, FileTextIcon, RadioIcon, LineChartIcon, PlugIcon,
 } from 'lucide-react';
-import Frame, { BrandSwitch, Notifications, AccountMenu, NextEventNote } from './Frame.jsx';
+import Frame, { BrandSwitch, Notifications, AccountMenu, NextEventNote, ThemeMenu, SyncSources } from './Frame.jsx';
 import { PageTransition } from './motion.jsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { useKeypress } from '@/hooks/use-keypress';
-import { useOS } from './store.jsx';
+import { useOS, THEMES } from './store.jsx';
 import { TxForm, AccountForm, ProductForm, MoveForm, ContactForm, TaskForm, ContentForm, CampaignForm, AssetForm, DealForm, DocumentForm } from './forms.jsx';
 import { StageBadge, BrandDot, fmtDay, fmtDayYear, relDays, Unavailable, moneyOrNA } from './kit.jsx';
 import { BrandTile, KindTag } from '../ui.jsx';
@@ -99,7 +99,7 @@ function EventDrawer({ id, onClose }) {
     <>
       <SheetHeader className="border-b pb-3">
         <div className="flex items-center gap-2 text-[12px] text-muted-foreground"><BrandTile id={e.brand} size="xs" />{brand?.name}<span>·</span>{fmtDayYear(e.date)}<span>·</span>{relDays(f?.daysTo)}</div>
-        <SheetTitle className="text-[17px]">{e.name}</SheetTitle>
+        <SheetTitle className="text-[20px]">{e.name}</SheetTitle>
         <SheetDescription asChild><div className="flex items-center gap-2"><StageBadge stage={e.stage} stages={stages} /><KindTag real={isActual(e)} /></div></SheetDescription>
       </SheetHeader>
       <div className="scroll-thin flex-1 space-y-4 overflow-y-auto px-4 pb-4">
@@ -142,7 +142,7 @@ function Mini({ label, value, reason, tone, proj }) {
   return (
     <div className={cn('rounded-md border px-2.5 py-2', proj && 'border-dashed border-proj-line')}>
       <p className="text-[11px] text-muted-foreground">{label}</p>
-      {value == null ? <Unavailable reason={reason} className="text-[12px]" /> : <p className={cn('mono text-[15px] font-semibold', tone === 'good' && 'text-good', tone === 'bad' && 'text-bad')}>{value}</p>}
+      {value == null ? <Unavailable reason={reason} className="text-[12px]" /> : <p className={cn('mono text-[14px] font-semibold', tone === 'good' && 'text-good', tone === 'bad' && 'text-bad')}>{value}</p>}
     </div>
   );
 }
@@ -185,6 +185,23 @@ function MetricDrawer({ id, summary, onClose }) {
 
 function Palette() {
   const { cmd, setCmd, data, setDrawer, setCreating, withTaxes, setWithTaxes, theme, setTheme, load, setWorkspace } = useOS();
+  const themeIcon = { light: <SunIcon />, midnight: <MoonIcon />, atmosphere: <SparklesIcon /> };
+  // Al cerrar la paleta (abierta con ⌘K) el foco vuelve a donde estaba, no al inicio de la página.
+  const back = useRef(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    // Último elemento con foco fuera de cualquier diálogo (Radix mueve el foco al abrir, antes de este efecto).
+    const track = (e) => { if (!e.target.closest || !e.target.closest('[role="dialog"]')) back.current = e.target; };
+    document.addEventListener('focusin', track);
+    return () => document.removeEventListener('focusin', track);
+  }, []);
+  useEffect(() => {
+    if (cmd) { wasOpen.current = true; return; }
+    if (!wasOpen.current) return;
+    wasOpen.current = false;
+    const el = back.current;
+    if (el && el !== document.body && document.contains(el)) setTimeout(() => el.focus(), 30);
+  }, [cmd]);
   const navigate = useNavigate();
   const brands = data.finance.brands || [];
   const events = data.finance.events.slice().sort((a, b) => b.date.localeCompare(a.date));
@@ -192,7 +209,7 @@ function Palette() {
   return (
     <CommandDialog open={cmd} onOpenChange={setCmd} title="Buscar" description="Busca páginas, eventos o acciones">
       <CommandInput placeholder="Busca páginas, eventos o acciones…" />
-      <CommandList className="scroll-thin">
+      <CommandList className="scroll-thin" label="Resultados">
         <CommandEmpty>Nada encontrado.</CommandEmpty>
         <CommandGroup heading="Acciones">
           <CommandItem onSelect={() => run(() => setCreating(true))}><PlusIcon />Nuevo evento<Kbd>C</Kbd></CommandItem>
@@ -205,7 +222,7 @@ function Palette() {
           <CommandItem onSelect={() => run(() => setDrawer({ type: 'deal' }))}><HandshakeIcon />Nuevo sponsor</CommandItem>
           <CommandItem onSelect={() => run(() => setDrawer({ type: 'document' }))}><FileTextIcon />Nuevo documento</CommandItem>
           <CommandItem onSelect={() => run(() => setWithTaxes(!withTaxes))}><ReceiptIcon />{withTaxes ? 'Ver sin IGV ni renta' : 'Ver con IGV y renta'}</CommandItem>
-          <CommandItem onSelect={() => run(() => setTheme(theme === 'dark' ? 'light' : 'dark'))}>{theme === 'dark' ? <SunIcon /> : <MoonIcon />}{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</CommandItem>
+          {THEMES.filter((x) => x.id !== theme).map((x) => <CommandItem key={x.id} value={`tema ${x.label}`} onSelect={() => run(() => setTheme(x.id))}>{themeIcon[x.id]}Tema {x.label}</CommandItem>)}
           <CommandItem onSelect={() => run(() => exportCsv(data.finance, withTaxes))}><DownloadIcon />Exportar todo a CSV</CommandItem>
           <CommandItem onSelect={() => run(() => load(undefined, { quiet: false }).catch(() => {}))}><RefreshCwIcon />Actualizar datos</CommandItem>
         </CommandGroup>
@@ -234,7 +251,7 @@ function Palette() {
     </CommandDialog>
   );
 }
-const Kbd = ({ children }) => <kbd className="ml-auto rounded border bg-muted px-1.5 text-[10px] text-muted-foreground">{children}</kbd>;
+const Kbd = ({ children }) => <kbd className="ml-auto rounded border bg-muted px-1.5 text-[11px] text-muted-foreground">{children}</kbd>;
 
 // Título de cada ruta para la ruta de migas (handle.crumb en el router).
 function useCrumbs() {
@@ -252,7 +269,7 @@ function useCrumbs() {
 
 export default function Shell() {
   const os = useOS();
-  const { data, loading, setCmd, setCreating, withTaxes, setWithTaxes, drawer, setDrawer, theme, setTheme, toast, logout, load, workspace, setWorkspace } = os;
+  const { data, loading, setCmd, setCreating, withTaxes, setWithTaxes, drawer, setDrawer, theme, setTheme, cycleTheme, toast, dismissToast, logout, load, workspace, setWorkspace } = os;
   const navigate = useNavigate();
   const location = useLocation();
   const crumbs = useCrumbs();
@@ -260,7 +277,7 @@ export default function Shell() {
   useKeypress({ combo: ['meta+k', 'ctrl+k'], callback: () => setCmd((v) => !v), enableOnInputs: true });
   useKeypress({ combo: 'c', callback: () => setCreating(true) });
   useKeypress({ combo: 't', callback: () => setDrawer({ type: 'tx' }) });
-  useKeypress({ combo: 'shift+d', callback: () => setTheme(theme === 'dark' ? 'light' : 'dark') });
+  useKeypress({ combo: 'shift+d', callback: cycleTheme });
   // Atajos de marca: 0 grupo, 1 Club, 2 Beats, 3 Icon.
   const brands = data.finance.brands || [];
   useKeypress({ combo: ['0', '1', '2', '3'], callback: (e) => { const i = Number(e.key); setWorkspace(i === 0 ? 'group' : (brands[i - 1] || {}).id || workspace); } });
@@ -269,7 +286,6 @@ export default function Shell() {
   const scopeAttention = data.os.attention.filter((a) => workspace === 'group' || !a.event || (data.finance.events.find((e) => e.id === a.event) || {}).brand === workspace);
   const upcoming = data.os.summary.events.filter((f) => f.kind !== 'cancelled' && f.daysTo >= 0 && (workspace === 'group' || f.brand === workspace));
   const next = upcoming[0];
-  const updated = new Date(data.generatedAt).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' });
   const overdue = data.os.ledgerSummary.payables.overdue;
 
   const navGroups = [
@@ -329,18 +345,15 @@ export default function Shell() {
         )}
         actions={(
           <>
-            <button type="button" onClick={refresh} title={`Sincronizado ${updated}. Clic para actualizar.`}
-              className="press hidden h-8 items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground hover:bg-black/5 hover:text-foreground xl:flex dark:hover:bg-white/5">
-              <span className={cn('size-1.5 rounded-full', loading ? 'animate-pulse bg-warn' : 'bg-good')} />{loading ? 'Sincronizando' : updated}
-            </button>
-            <button type="button" onClick={refresh} aria-label="Actualizar" className="press flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-black/5 hover:text-foreground xl:hidden dark:hover:bg-white/5"><RefreshCwIcon className={cn('size-4', loading && 'animate-spin')} /></button>
+            <SyncSources generatedAt={data.generatedAt} integrations={data.os.integrations || []} loading={loading} onRefresh={refresh} onOpen={() => navigate('/integraciones')} />
             <button type="button" onClick={() => setWithTaxes(!withTaxes)} aria-pressed={withTaxes} title="Incluir IGV y renta en los costos"
               className={cn('press hidden h-8 items-center gap-1.5 rounded-md px-2 text-[12px] transition-colors lg:flex', withTaxes ? 'text-foreground hover:bg-black/5 dark:hover:bg-white/5' : 'text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5')}>
               <ReceiptIcon className="size-3.5" />{withTaxes ? 'Con IGV' : 'Sin IGV'}
             </button>
+            <ThemeMenu theme={theme} onTheme={setTheme} />
             <Notifications items={scopeAttention} onOpen={openAttention} onAction={(a) => navigate(`/finanzas/datos?evento=${a.event}`)} onSeeAll={() => navigate('/atencion')} />
             <DropdownMenu>
-              <DropdownMenuTrigger asChild><Button size="sm" className="ml-1 h-8 gap-1.5 px-2.5"><PlusIcon /><span className="hidden sm:inline">Nuevo</span></Button></DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild><Button size="sm" aria-label="Nuevo" className="ml-1 h-8 gap-1.5 px-2.5 dark:border dark:border-hairline dark:bg-accent dark:text-foreground dark:hover:bg-muted"><PlusIcon /><span className="hidden sm:inline">Nuevo</span></Button></DropdownMenuTrigger>
               <DropdownMenuContent align="end" sideOffset={6} className="w-56">
                 <DropdownMenuItem onSelect={() => setCreating(true)}><TicketIcon />Evento<Kbd>C</Kbd></DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setDrawer({ type: 'tx' })}><ArrowLeftRightIcon />Transacción<Kbd>T</Kbd></DropdownMenuItem>
@@ -358,7 +371,7 @@ export default function Shell() {
           </>
         )}
       >
-        <PageTransition id={location.pathname} className="flex min-h-full flex-col p-4 md:p-6">
+        <PageTransition id={location.pathname} className="flex min-h-full flex-col p-3 md:p-6">
           <Outlet />
         </PageTransition>
       </Frame>
@@ -384,9 +397,12 @@ export default function Shell() {
       <Palette />
       <AnimatePresence>
         {toast && (
-          <motion.div initial={{ opacity: 0, y: 10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 6, scale: 0.98 }} transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
-            role="status" className="fixed bottom-5 right-5 z-[60] flex max-w-sm items-center gap-2.5 rounded-lg bg-foreground px-3.5 py-2.5 text-[13px] text-background shadow-xl">
-            {toast}
+          <motion.div key={toast.id} initial={{ opacity: 0, y: 10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 6, scale: 0.98 }} transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+            role="status" aria-live="polite" className="float-shadow fixed bottom-5 left-4 right-4 z-[60] flex items-center gap-3 rounded-lg bg-tooltip px-3.5 py-2.5 text-[13px] text-tooltip-foreground sm:left-auto sm:max-w-sm">
+            <span className="min-w-0 flex-1">{toast.message}</span>
+            {toast.action && (
+              <button type="button" data-toast-action onClick={() => { toast.action.run(); dismissToast(); }} className="press -my-1 shrink-0 rounded-md px-2 py-1 text-[13px] font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-tooltip-foreground">{toast.action.label}</button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
